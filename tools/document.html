@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">         
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Creator - Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Documents Menu */
+        .documents-menu {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 380px;
+            max-height: 600px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .documents-menu.open {
+            display: block;
+        }
+
+        .menu-section {
+            border-bottom: 1px solid #eee;
+        }
+
+        .menu-section:last-child {
+            border-bottom: none;
+        }
+
+        .menu-section-title {
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            background: #f8f9fa;
+        }
+
+        .documents-menu-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .documents-menu-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .close-menu-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        .documents-list {
+            padding: 10px;
+        }
+
+        .document-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e0e0e0;
+        }
+
+        .document-item:hover {
+            background: #f3f4f6;
+            border-color: #2563eb;
+        }
+
+        .document-item.active {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .document-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .document-item-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .document-item-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .doc-action-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .doc-action-btn.load {
+            background: #2563eb;
+            color: white;
+        }
+
+        .doc-action-btn.delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .doc-action-btn.rename {
+            background: #ea580c;
+            color: white;
+        }
+
+        .doc-action-btn:hover {
+            opacity: 0.8;
+        }
+
+        .unsaved-badge {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+
+        .saved-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+
+        .empty-documents {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+
+        .empty-documents i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 2px;
+            padding: 0 10px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: none;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #444;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+        }
+
+        .toolbar-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .toolbar-btn.active {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .toolbar-select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            background: white;
+        }
+
+        .toolbar-select:hover {
+            border-color: #2563eb;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+        }
+
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .separator {
+            width: 1px;
+            height: 24px;
+            background: #e0e0e0;
+            margin: 0 5px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 156px);
+        }
+
+        /* Page Sidebar */
+        .pages-sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .page-thumbnail {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .page-thumbnail:hover {
+            border-color: #2563eb;
+        }
+
+        .page-thumbnail.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .page-thumbnail-label {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        .page-thumbnail-preview {
+            background: white;
+            height: 120px;
+            border: 1px solid #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 5px;
+            overflow: hidden;
+            font-size: 4px;
+            padding: 4px;
+            line-height: 1.2;
+        }
+
+        .add-page-btn {
+            width: 100%;
+            padding: 10px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .add-page-btn:hover {
+            background: #1d4ed8;
+        }
+
+        /* Document Container */
+        .document-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f0f2f5;
+        }
+
+        .page {
+            background: white;
+            width: 8.5in;
+            height: 11in;
+            padding: 1in;
+            margin: 0 auto 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .editor {
+            height: 100%;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .editor:empty:before {
+            content: 'Start typing your document...';
+            color: #aaa;
+            pointer-events: none;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 0.5in;
+            right: 1in;
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* Word Count Bar */
+        .status-bar {
+            background: #f8f9fa;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .document-container, .document-container * {
+                visibility: visible;
+            }
+            .header, .toolbar, .status-bar, .pages-sidebar, .documents-menu {
+                display: none !important;
+            }
+            .main-layout {
+                display: block;
+                height: auto;
+            }
+            .document-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            .page {
+                box-shadow: none;
+                padding: 1in;
+                margin: 0;
+                width: 8.5in;
+                height: 11in;
+                page-break-after: always;
+            }
+            .page:last-child {
+                page-break-after: auto;
+            }
+            .page-number {
+                display: block;
+            }
+            .editor {
+                border: none !important;
+                min-height: auto !important;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page {
+                padding: 30px 40px;
+            }
+            .toolbar {
+                padding: 8px 10px;
+            }
+            .toolbar-group {
+                padding: 0 5px;
+            }
+            .header h1 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            <h1><i class="fas fa-file-alt"></i> Document Creator</h1>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="toggleDocumentsMenu()">
+                <i class="fas fa-folder-open"></i> My Documents
+            </button>
+            <button class="header-btn" onclick="newDocument()">
+                <i class="fas fa-file"></i> New
+            </button>
+            <button class="header-btn" onclick="saveCurrentDocument()">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button class="header-btn" onclick="saveDocument()">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="header-btn" onclick="printDocument()">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Documents Menu -->
+    <div class="documents-menu" id="documentsMenu">
+        <div class="documents-menu-header">
+            <span class="documents-menu-title">My Documents</span>
+            <button class="close-menu-btn" onclick="toggleDocumentsMenu()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="menu-section">
+            <div class="menu-section-title">Current Document</div>
+            <div class="documents-list" id="currentDocumentSection"></div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-section-title">Saved Documents</div>
+            <div class="documents-list" id="documentsList"></div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <!-- Font Family & Size -->
+        <div class="toolbar-group">
+            <select class="toolbar-select" id="fontFamily" onchange="changeFont()">
+                <option value="Segoe UI">Segoe UI</option>
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+            </select>
+            <select class="toolbar-select" id="fontSize" onchange="changeFontSize()">
+                <option value="1">8</option>
+                <option value="2">10</option>
+                <option value="3" selected>12</option>
+                <option value="4">14</option>
+                <option value="5">18</option>
+                <option value="6">24</option>
+                <option value="7">36</option>
+            </select>
+        </div>
+
+        <!-- Text Formatting -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn" id="btn-bold" onclick="formatDoc('bold')" title="Bold (Ctrl+B)">
+                <i class="fas fa-bold"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-italic" onclick="formatDoc('italic')" title="Italic (Ctrl+I)">
+                <i class="fas fa-italic"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-underline" onclick="formatDoc('underline')" title="Underline (Ctrl+U)">
+                <i class="fas fa-underline"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-strikeThrough" onclick="formatDoc('strikeThrough')" title="Strikethrough">
+                <i class="fas fa-strikethrough"></i>
+            </button>
+        </div>
+
+        <!-- Text Color -->
+        <div class="toolbar-group">
+            <div class="color-picker-wrapper" title="Text Color">
+                <input type="color" class="color-picker" id="textColor" value="#000000" onchange="changeTextColor()">
+            </div>
+            <div class="color-picker-wrapper" title="Highlight Color">
+                <input type="color" class="color-picker" id="highlightColor" value="#ffff00" onchange="changeHighlightColor()">
+            </div>
+        </div>
+
+        <!-- Alignment -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn" id="btn-justifyLeft" onclick="formatDoc('justifyLeft')" title="Align Left">
+                <i class="fas fa-align-left"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-justifyCenter" onclick="formatDoc('justifyCenter')" title="Align Center">
+                <i class="fas fa-align-center"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-justifyRight" onclick="formatDoc('justifyRight')" title="Align Right">
+                <i class="fas fa-align-right"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-justifyFull" onclick="formatDoc('justifyFull')" title="Justify">
+                <i class="fas fa-align-justify"></i>
+            </button>
+        </div>
+
+        <!-- Lists -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn" id="btn-insertUnorderedList" onclick="formatDoc('insertUnorderedList')" title="Bullet List">
+                <i class="fas fa-list-ul"></i>
+            </button>
+            <button class="toolbar-btn" id="btn-insertOrderedList" onclick="formatDoc('insertOrderedList')" title="Numbered List">
+                <i class="fas fa-list-ol"></i>
+            </button>
+        </div>
+
+        <!-- Indent -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn" onclick="formatDoc('outdent')" title="Decrease Indent">
+                <i class="fas fa-outdent"></i>
+            </button>
+            <button class="toolbar-btn" onclick="formatDoc('indent')" title="Increase Indent">
+                <i class="fas fa-indent"></i>
+            </button>
+        </div>
+
+        <!-- Other -->
+        <div class="toolbar-group">
+            <button class="toolbar-btn" onclick="formatDoc('undo')" title="Undo (Ctrl+Z)">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button class="toolbar-btn" onclick="formatDoc('redo')" title="Redo (Ctrl+Y)">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button class="toolbar-btn" onclick="insertLink()" title="Insert Link">
+                <i class="fas fa-link"></i>
+            </button>
+            <button class="toolbar-btn" onclick="document.getElementById('imageInput').click()" title="Insert Image">
+                <i class="fas fa-image"></i>
+            </button>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="insertImage(event)">
+            <button class="toolbar-btn" onclick="formatDoc('removeFormat')" title="Clear Formatting">
+                <i class="fas fa-eraser"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Pages Sidebar -->
+        <div class="pages-sidebar">
+            <div class="sidebar-title">Pages</div>
+            <div id="pagesList"></div>
+            <button class="add-page-btn" onclick="addPage()">
+                <i class="fas fa-plus"></i> Add Page
+            </button>
+        </div>
+
+        <!-- Document Area -->
+        <div class="document-container" id="documentContainer">
+            <!-- Pages will be generated here -->
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span id="wordCount">Words: 0</span>
+            <span id="charCount">Characters: 0</span>
+        </div>
+        <div class="status-item">
+            <span id="saveStatus">Ready</span>
+        </div>
+    </div>
+
+    <script>
+        let pages = [{ id: 1, content: '' }];
+        let currentPageId = 1;
+        let currentDocumentId = null;
+        let currentDocumentName = 'Untitled Document';
+        let hasUnsavedChanges = false;
+        let savedDocuments = [];
+
+        // Initialize
+        function init() {
+            loadAllDocuments();
+
+            // Only load auto-saved content if we're starting fresh
+            // (not loading a specific saved document)
+            if (!currentDocumentId) {
+                loadSavedContent();
+            }
+
+            renderPages();
+            renderPagesList();
+        }
+
+        // Toggle documents menu
+        function toggleDocumentsMenu() {
+            const menu = document.getElementById('documentsMenu');
+            menu.classList.toggle('open');
+            if (menu.classList.contains('open')) {
+                renderDocumentsList();
+            }
+        }
+
+        // Render documents list
+        function renderDocumentsList() {
+            // Render current document section
+            const currentSection = document.getElementById('currentDocumentSection');
+            const pageCount = pages.length;
+            const preview = pages[0]?.content.replace(/<[^>]*>/g, '').substring(0, 50) || 'Empty document';
+            const statusBadge = hasUnsavedChanges ? '<span class="unsaved-badge">Unsaved</span>' :
+                                (currentDocumentId ? '<span class="saved-badge">Saved</span>' : '');
+
+            currentSection.innerHTML = `
+                <div class="document-item active">
+                    <div class="document-item-title">${currentDocumentName}${statusBadge}</div>
+                    <div class="document-item-meta">${pageCount} page${pageCount !== 1 ? 's' : ''}</div>
+                    <div class="document-item-meta" style="margin-top: 4px; font-size: 11px; color: #999;">${preview}...</div>
+                    <div class="document-item-actions">
+                        <button class="doc-action-btn load" onclick="saveCurrentDocument()">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="doc-action-btn rename" onclick="renameCurrentDocument()">
+                            <i class="fas fa-edit"></i> Rename
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Render saved documents list
+            const list = document.getElementById('documentsList');
+
+            if (savedDocuments.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-documents">
+                        <i class="fas fa-file-alt"></i>
+                        <p>No saved documents yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = savedDocuments.map((doc, index) => {
+                const date = new Date(doc.savedAt).toLocaleDateString();
+                const pageCount = doc.pages.length;
+                const preview = doc.pages[0]?.content.replace(/<[^>]*>/g, '').substring(0, 50) || 'Empty document';
+
+                return `
+                    <div class="document-item">
+                        <div class="document-item-title">${doc.name || 'Untitled Document'}</div>
+                        <div class="document-item-meta">${pageCount} page${pageCount !== 1 ? 's' : ''} • ${date}</div>
+                        <div class="document-item-meta" style="margin-top: 4px; font-size: 11px; color: #999;">${preview}...</div>
+                        <div class="document-item-actions">
+                            <button class="doc-action-btn load" onclick="loadDocument(${index})">
+                                <i class="fas fa-folder-open"></i> Load
+                            </button>
+                            <button class="doc-action-btn rename" onclick="renameSavedDocument(${index})">
+                                <i class="fas fa-edit"></i> Rename
+                            </button>
+                            <button class="doc-action-btn delete" onclick="deleteDocument(${index})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Save current document
+        async function saveCurrentDocument() {
+            try {
+                // Save as PDF download
+                await saveToFile();
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Save error:', err);
+                    alert('Failed to save document as PDF. Saving to browser storage instead.');
+                    saveToLocalStorage();
+                }
+            }
+        }
+
+        // Save and download as PDF
+        async function saveToFile() {
+            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            // Save current page content first
+            const currentPage = pages.find(p => p.id === currentPageId);
+            if (currentPage) {
+                const currentEditor = document.getElementById(`editor-${currentPageId}`);
+                if (currentEditor) {
+                    currentPage.content = currentEditor.innerHTML;
+                }
+            }
+
+            // Save all current editor contents to pages array
+            pages.forEach(page => {
+                const editor = document.getElementById(`editor-${page.id}`);
+                if (editor) {
+                    page.content = editor.innerHTML;
+                }
+            });
+
+            // Get the actual document container
+            const documentContainer = document.getElementById('documentContainer');
+
+            // Clone it to clean up for PDF
+            const clone = documentContainer.cloneNode(true);
+
+            // Remove contenteditable attributes and other interactive elements
+            const editors = clone.querySelectorAll('[contenteditable]');
+            editors.forEach(editor => {
+                editor.removeAttribute('contenteditable');
+                editor.removeAttribute('spellcheck');
+                editor.removeAttribute('oninput');
+                editor.removeAttribute('onfocus');
+            });
+
+            // Filter: find and remove empty pages from the clone
+            const clonePages = Array.from(clone.querySelectorAll('.page'));
+            clonePages.forEach(pageElement => {
+                const editor = pageElement.querySelector('.editor');
+                if (editor) {
+                    const textContent = (editor.textContent || editor.innerText || '').trim();
+                    const hasImages = editor.innerHTML.includes('<img');
+
+                    // Remove page if it's empty
+                    if (textContent.length === 0 && !hasImages) {
+                        pageElement.remove();
+                    }
+                }
+            });
+
+            console.log('Pages after filtering:', clone.querySelectorAll('.page').length);
+
+            // Create temp container
+            const tempContainer = document.createElement('div');
+            tempContainer.style.cssText = 'position: fixed; left: 0; top: 0; background: white; z-index: 9999;';
+            tempContainer.appendChild(clone);
+            document.body.appendChild(tempContainer);
+
+            // Wait for rendering
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Always ask for document name with previous name as suggestion
+            const name = prompt('Enter document name:', currentDocumentName);
+            if (name) {
+                currentDocumentName = name;
+                if (!currentDocumentId) {
+                    currentDocumentId = Date.now();
+                }
+            } else {
+                document.getElementById('saveStatus').textContent = 'Save cancelled';
+                document.body.removeChild(tempContainer);
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+                return;
+            }
+
+            // Generate PDF and download
+            const opt = {
+                margin: 0,
+                filename: currentDocumentName + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true
+                },
+                jsPDF: {
+                    unit: 'in',
+                    format: 'letter',
+                    orientation: 'portrait'
+                }
+            };
+
+            try {
+                // Generate and download PDF
+                await html2pdf().set(opt).from(tempContainer).save();
+
+                // Remove temp container
+                document.body.removeChild(tempContainer);
+
+                hasUnsavedChanges = false;
+                document.getElementById('saveStatus').textContent = 'Downloaded ' + currentDocumentName + '.pdf';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+
+                // Also save to localStorage for the menu system
+                saveToLocalStorage();
+            } catch (error) {
+                console.error('PDF generation error:', error);
+
+                // Clean up temp container on error
+                if (tempContainer && tempContainer.parentNode) {
+                    document.body.removeChild(tempContainer);
+                }
+
+                document.getElementById('saveStatus').textContent = 'PDF generation failed';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            }
+        }
+
+        // Fallback: Save to localStorage
+        function saveToLocalStorage() {
+            // Don't ask for name if we already have an ID (we got it from PDF save)
+            if (!currentDocumentId) {
+                const name = prompt('Enter document name:', currentDocumentName);
+                if (!name) return;
+                currentDocumentName = name;
+                currentDocumentId = Date.now();
+            }
+
+            // Update or create document in localStorage
+            const doc = {
+                id: currentDocumentId,
+                name: currentDocumentName,
+                pages: JSON.parse(JSON.stringify(pages)),
+                savedAt: new Date().toISOString()
+            };
+
+            const index = savedDocuments.findIndex(d => d.id === currentDocumentId);
+            if (index !== -1) {
+                savedDocuments[index] = doc;
+            } else {
+                savedDocuments.push(doc);
+            }
+
+            hasUnsavedChanges = false;
+            localStorage.setItem('savedDocuments', JSON.stringify(savedDocuments));
+
+            // Don't show status message here since PDF save already did
+            renderDocumentsList();
+        }
+
+        // Rename current document
+        function renameCurrentDocument() {
+            const name = prompt('Enter new document name:', currentDocumentName);
+            if (name && name !== currentDocumentName) {
+                currentDocumentName = name;
+                hasUnsavedChanges = true;
+                renderDocumentsList();
+            }
+        }
+
+        // Rename saved document
+        function renameSavedDocument(index) {
+            const doc = savedDocuments[index];
+            const name = prompt('Enter new document name:', doc.name);
+            if (name && name !== doc.name) {
+                doc.name = name;
+                doc.savedAt = new Date().toISOString();
+                localStorage.setItem('savedDocuments', JSON.stringify(savedDocuments));
+
+                // If this is the current document, update current name too
+                if (doc.id === currentDocumentId) {
+                    currentDocumentName = name;
+                }
+
+                renderDocumentsList();
+            }
+        }
+
+        // Load document
+        function loadDocument(index) {
+            const doc = savedDocuments[index];
+            if (doc) {
+                pages = JSON.parse(JSON.stringify(doc.pages));
+                currentDocumentId = doc.id;
+                currentDocumentName = doc.name;
+                currentPageId = pages[0]?.id || 1;
+                hasUnsavedChanges = false;
+
+                // Clear auto-save to prevent conflicts
+                localStorage.removeItem('documentContent');
+
+                renderPages();
+                renderPagesList();
+                toggleDocumentsMenu();
+                document.getElementById('saveStatus').textContent = `Loaded: ${doc.name}`;
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            }
+        }
+
+        // Delete document
+        function deleteDocument(index) {
+            if (confirm('Delete this document?')) {
+                const doc = savedDocuments[index];
+                savedDocuments.splice(index, 1);
+                localStorage.setItem('savedDocuments', JSON.stringify(savedDocuments));
+
+                if (doc.id === currentDocumentId) {
+                    currentDocumentId = null;
+                    hasUnsavedChanges = true;
+                }
+
+                renderDocumentsList();
+            }
+        }
+
+        // New document
+        function newDocument() {
+            if (hasUnsavedChanges && !confirm('You have unsaved changes. Create a new document anyway?')) {
+                return;
+            }
+
+            pages = [{ id: Date.now(), content: '' }];
+            currentPageId = pages[0].id;
+            currentDocumentId = null;
+            currentDocumentName = 'Untitled Document';
+            hasUnsavedChanges = false;
+
+            // Clear auto-save
+            localStorage.removeItem('documentContent');
+
+            renderPages();
+            renderPagesList();
+            document.getElementById('saveStatus').textContent = 'New Document Created';
+            setTimeout(() => {
+                document.getElementById('saveStatus').textContent = 'Ready';
+            }, 2000);
+        }
+
+        // Load all documents
+        function loadAllDocuments() {
+            const saved = localStorage.getItem('savedDocuments');
+            if (saved) {
+                try {
+                    savedDocuments = JSON.parse(saved);
+                } catch (e) {
+                    savedDocuments = [];
+                }
+            }
+        }
+
+        // Render pages
+        function renderPages() {
+            const container = document.getElementById('documentContainer');
+            container.innerHTML = pages.map((page, index) => `
+                <div class="page" id="page-${page.id}">
+                    <div class="editor" contenteditable="true" spellcheck="true" id="editor-${page.id}"
+                         oninput="updatePageContent(${page.id})"
+                         onfocus="currentPageId=${page.id}">${page.content}</div>
+                    <div class="page-number">Page ${index + 1}</div>
+                </div>
+            `).join('');
+
+            updateCounts();
+        }
+
+        // Render pages list
+        function renderPagesList() {
+            const list = document.getElementById('pagesList');
+            list.innerHTML = pages.map((page, index) => `
+                <div class="page-thumbnail ${page.id === currentPageId ? 'active' : ''}" onclick="selectPage(${page.id})">
+                    <div class="page-thumbnail-preview">${page.content.substring(0, 200)}</div>
+                    <div class="page-thumbnail-label">Page ${index + 1}</div>
+                </div>
+            `).join('');
+        }
+
+        // Select page
+        function selectPage(pageId) {
+            currentPageId = pageId;
+            document.getElementById(`editor-${pageId}`).focus();
+            renderPagesList();
+        }
+
+        // Add page
+        function addPage() {
+            const newPage = {
+                id: Date.now(),
+                content: ''
+            };
+            pages.push(newPage);
+            renderPages();
+            renderPagesList();
+            selectPage(newPage.id);
+            autoSave();
+        }
+
+        // Update page content
+        function updatePageContent(pageId) {
+            const page = pages.find(p => p.id === pageId);
+            if (page) {
+                page.content = document.getElementById(`editor-${pageId}`).innerHTML;
+                hasUnsavedChanges = true;
+                renderPagesList();
+                updateCounts();
+                autoSave();
+            }
+        }
+
+        // Format document
+        function formatDoc(command, value = null) {
+            document.execCommand(command, false, value);
+            const currentEditor = document.getElementById(`editor-${currentPageId}`);
+            if (currentEditor) {
+                currentEditor.focus();
+                updatePageContent(currentPageId);
+            }
+            updateToolbarState();
+        }
+
+        // Update toolbar button states based on current selection
+        function updateToolbarState() {
+            // Text formatting buttons
+            const formatCommands = ['bold', 'italic', 'underline', 'strikeThrough'];
+            formatCommands.forEach(cmd => {
+                const btn = document.getElementById('btn-' + cmd);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+
+            // Alignment buttons
+            const alignCommands = ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
+            alignCommands.forEach(cmd => {
+                const btn = document.getElementById('btn-' + cmd);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+
+            // List buttons
+            const listCommands = ['insertUnorderedList', 'insertOrderedList'];
+            listCommands.forEach(cmd => {
+                const btn = document.getElementById('btn-' + cmd);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+        }
+
+        // Change font family
+        function changeFont() {
+            const font = document.getElementById('fontFamily').value;
+            document.execCommand('fontName', false, font);
+            editor.focus();
+        }
+
+        // Change font size
+        function changeFontSize() {
+            const size = document.getElementById('fontSize').value;
+            document.execCommand('fontSize', false, size);
+            editor.focus();
+        }
+
+        // Change text color
+        function changeTextColor() {
+            const color = document.getElementById('textColor').value;
+            document.execCommand('foreColor', false, color);
+            editor.focus();
+        }
+
+        // Change highlight color
+        function changeHighlightColor() {
+            const color = document.getElementById('highlightColor').value;
+            document.execCommand('hiliteColor', false, color);
+            editor.focus();
+        }
+
+        // Insert link
+        function insertLink() {
+            const url = prompt('Enter URL:', 'https://');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+            editor.focus();
+        }
+
+        // Insert image from file
+        function insertImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto;">`;
+                    document.execCommand('insertHTML', false, img);
+                };
+                reader.readAsDataURL(file);
+            }
+            event.target.value = '';
+        }
+
+        // Update word and character count
+        function updateCounts() {
+            let totalWords = 0;
+            let totalChars = 0;
+
+            pages.forEach(page => {
+                const text = page.content.replace(/<[^>]*>/g, '');
+                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                totalWords += words;
+                totalChars += text.length;
+            });
+
+            document.getElementById('wordCount').textContent = `Words: ${totalWords}`;
+            document.getElementById('charCount').textContent = `Characters: ${totalChars}`;
+        }
+
+        // New document
+        function newDocument() {
+            if (pages.some(p => p.content) && !confirm('Start a new document? Unsaved changes will be lost.')) {
+                return;
+            }
+            pages = [{ id: 1, content: '' }];
+            currentPageId = 1;
+            currentDocumentId = null;
+            renderPages();
+            renderPagesList();
+            localStorage.removeItem('documentContent');
+            document.getElementById('saveStatus').textContent = 'New document';
+        }
+
+        // Save document as PDF file
+        function saveDocument() {
+            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            const container = document.getElementById('documentContainer');
+            const opt = {
+                margin: 0,
+                filename: 'document.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                document.getElementById('saveStatus').textContent = 'PDF Downloaded!';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            });
+        }
+
+        // Print document
+        function printDocument() {
+            window.print();
+        }
+
+        // Go back to tools hub
+        function goBack() {
+            window.location.href = '../Tools.html';
+        }
+
+        // Auto-save to localStorage
+        function autoSave() {
+            localStorage.setItem('documentContent', JSON.stringify(pages));
+            document.getElementById('saveStatus').textContent = 'Auto-saved';
+            setTimeout(() => {
+                document.getElementById('saveStatus').textContent = 'Ready';
+            }, 1000);
+        }
+
+        // Load saved content
+        function loadSavedContent() {
+            const saved = localStorage.getItem('documentContent');
+            if (saved) {
+                try {
+                    pages = JSON.parse(saved);
+                    if (pages.length === 0) {
+                        pages = [{ id: 1, content: '' }];
+                    }
+                } catch (e) {
+                    pages = [{ id: 1, content: '' }];
+                }
+            }
+        }
+
+        // Update toolbar state when selection changes
+        document.addEventListener('selectionchange', () => {
+            updateToolbarState();
+        });
+
+        // Auto-save every 30 seconds
+        setInterval(autoSave, 30000);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        saveCurrentDocument();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        formatDoc('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        formatDoc('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        formatDoc('underline');
+                        break;
+                }
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('documentsMenu');
+            const target = e.target;
+
+            // Check if click is outside menu and not on the button
+            if (!menu.contains(target) && !target.closest('.header-btn')) {
+                menu.classList.remove('open');
+            }
+        });
+
+        // Load saved content on page load
+        init();
+    </script>
+
+</body>
+</html>

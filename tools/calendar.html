@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar - Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .quick-add-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-reminder {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-reminder:hover {
+            background: #bfdbfe;
+        }
+
+        .btn-trip {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-trip:hover {
+            background: #fde68a;
+        }
+
+        .btn-absence {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-absence:hover {
+            background: #fecaca;
+        }
+
+        .mini-calendar {
+            margin-top: 10px;
+        }
+
+        .mini-calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mini-calendar-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .mini-nav-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .mini-nav-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .mini-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .mini-day-label {
+            font-size: 10px;
+            text-align: center;
+            color: #999;
+            font-weight: 600;
+            padding: 4px 0;
+        }
+
+        .mini-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mini-day:hover {
+            background: #f3f4f6;
+        }
+
+        .mini-day.today {
+            background: #2563eb;
+            color: white;
+            font-weight: 600;
+        }
+
+        .mini-day.has-event {
+            position: relative;
+        }
+
+        .mini-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background: #2563eb;
+            border-radius: 50%;
+        }
+
+        .mini-day.other-month {
+            color: #ccc;
+        }
+
+        .upcoming-events {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .event-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover {
+            transform: translateX(5px);
+        }
+
+        .event-reminder {
+            background: #dbeafe;
+            border-color: #2563eb;
+        }
+
+        .event-trip {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .event-absence {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .event-details {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .event-delete {
+            float: right;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .event-delete:hover {
+            color: #ef4444;
+        }
+
+        /* Calendar Area */
+        .calendar-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .calendar-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: #f3f4f6;
+            border: none;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .view-btn {
+            background: none;
+            border: none;
+            color: #666;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .calendar-grid-container {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            height: 100%;
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #666;
+            padding: 10px 0;
+        }
+
+        .day-cell {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+            min-height: 100px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .day-cell.today {
+            border: 2px solid #2563eb;
+            background: #eff6ff;
+        }
+
+        .day-cell.other-month {
+            background: #fafafa;
+            color: #ccc;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .day-cell.today .day-number {
+            background: #2563eb;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .day-event {
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .day-event.reminder {
+            background: #2563eb;
+            color: white;
+        }
+
+        .day-event.trip {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .day-event.absence {
+            background: #ef4444;
+            color: white;
+        }
+
+        .day-event-more {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .modal-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .modal-input, .modal-textarea, .modal-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .modal-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-input:focus, .modal-textarea:focus, .modal-select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .modal-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .modal-btn.save {
+            background: #2563eb;
+            color: white;
+        }
+
+        .modal-btn.save:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        /* Week View */
+        .week-view {
+            display: none;
+        }
+
+        .week-view.active {
+            display: block;
+        }
+
+        .week-header {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+        .week-day-header {
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .time-slot {
+            background: white;
+            padding: 5px;
+            font-size: 11px;
+            color: #999;
+            text-align: right;
+        }
+
+        .week-cell {
+            background: white;
+            min-height: 50px;
+            padding: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .week-cell:hover {
+            background: #f9fafb;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-icon {
+            font-size: 24px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .notification-text {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: 0;
+                top: 56px;
+                height: calc(100vh - 56px);
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .calendar-grid {
+                gap: 5px;
+            }
+
+            .day-cell {
+                min-height: 60px;
+                padding: 4px;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .sidebar, .event-modal {
+                display: none !important;
+            }
+            .main-container {
+                margin: 0;
+                padding: 20px;
+            }
+            .calendar-container {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            <h1><i class="fas fa-calendar-alt"></i> Calendar</h1>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="goToToday()">
+                <i class="fas fa-calendar-day"></i> Today
+            </button>
+            <button class="header-btn" onclick="printCalendar()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button class="header-btn" onclick="exportCalendar()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Quick Add</div>
+                <button class="quick-add-btn btn-reminder" onclick="openModal('reminder')">
+                    <i class="fas fa-bell"></i> Add Reminder
+                </button>
+                <button class="quick-add-btn btn-trip" onclick="openModal('trip')">
+                    <i class="fas fa-plane"></i> Add Trip
+                </button>
+                <button class="quick-add-btn btn-absence" onclick="openModal('absence')">
+                    <i class="fas fa-user-times"></i> Add Absence
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Mini Calendar</div>
+                <div class="mini-calendar">
+                    <div class="mini-calendar-header">
+                        <button class="mini-nav-btn" onclick="changeMiniMonth(-1)">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="mini-calendar-title" id="miniCalendarTitle"></span>
+                        <button class="mini-nav-btn" onclick="changeMiniMonth(1)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="mini-calendar-grid" id="miniCalendarGrid"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-section upcoming-events">
+                <div class="sidebar-title">Upcoming Events</div>
+                <div id="upcomingEventsList"></div>
+            </div>
+        </div>
+
+        <!-- Calendar Area -->
+        <div class="calendar-area">
+            <div class="calendar-header">
+                <h2 class="calendar-title" id="calendarTitle"></h2>
+                <div class="calendar-nav">
+                    <button class="nav-btn" onclick="changeMonth(-1)">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="nav-btn" onclick="changeMonth(1)">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="setView('month')">Month</button>
+                        <button class="view-btn" onclick="setView('week')">Week</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calendar-grid-container" id="monthView">
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div class="calendar-grid-container week-view" id="weekView">
+                <div class="week-header" id="weekHeader"></div>
+                <div class="week-grid" id="weekGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal">
+            <h3 id="modalTitle">Add Event</h3>
+
+            <label class="modal-label">Title</label>
+            <input type="text" class="modal-input" id="eventTitle" placeholder="Event title">
+
+            <label class="modal-label">Description</label>
+            <textarea class="modal-textarea" id="eventDescription" placeholder="Add description..."></textarea>
+
+            <label class="modal-label">Type</label>
+            <select class="modal-select" id="eventType" onchange="toggleEndDate()">
+                <option value="reminder">Reminder</option>
+                <option value="trip">Trip</option>
+                <option value="absence">Absence</option>
+            </select>
+
+            <div class="modal-row">
+                <div>
+                    <label class="modal-label">Start Date</label>
+                    <input type="date" class="modal-input" id="eventStartDate">
+                </div>
+                <div id="endDateContainer">
+                    <label class="modal-label">End Date</label>
+                    <input type="date" class="modal-input" id="eventEndDate">
+                </div>
+            </div>
+
+            <div class="modal-row" id="timeContainer">
+                <div>
+                    <label class="modal-label">Date & Time</label>
+                    <input type="time" class="modal-input" id="eventStartTime">
+                </div>
+            </div>
+
+            <label class="modal-label">Location</label>
+            <input type="text" class="modal-input" id="eventLocation" placeholder="Add location">
+
+            <label class="modal-label">Remind me</label>
+            <select class="modal-select" id="eventReminder">
+                <option value="none">No reminder</option>
+                <option value="0">At time of event</option>
+                <option value="15">15 minutes before</option>
+                <option value="30">30 minutes before</option>
+                <option value="60">1 hour before</option>
+                <option value="1440">1 day before</option>
+            </select>
+
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn save" onclick="saveEvent()">Save Event</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">🔔</div>
+        <div class="notification-content">
+            <div class="notification-title" id="notificationTitle"></div>
+            <div class="notification-text" id="notificationText"></div>
+        </div>
+    </div>
+
+    <script>
+        // Calendar state
+        let currentDate = new Date();
+        let miniDate = new Date();
+        let currentView = 'month';
+        let events = [];
+        let editingEventId = null;
+
+        // Initialize
+        function init() {
+            loadEvents();
+            renderCalendar();
+            renderMiniCalendar();
+            renderUpcomingEvents();
+            requestNotificationPermission();
+            checkReminders();
+            setInterval(checkReminders, 60000); // Check every minute
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permissionAsked = localStorage.getItem('notificationPermissionAsked');
+
+                if (!permissionAsked && Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        localStorage.setItem('notificationPermissionAsked', 'true');
+                        localStorage.setItem('notificationPermission', permission);
+                    });
+                }
+            }
+        }
+
+        // Open modal
+        function openModal(type, date = null) {
+            document.getElementById('eventModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = `Add ${capitalize(type)}`;
+            document.getElementById('eventType').value = type;
+
+            if (date) {
+                document.getElementById('eventStartDate').value = formatDateForInput(date);
+                document.getElementById('eventEndDate').value = formatDateForInput(date);
+            } else {
+                const today = formatDateForInput(new Date());
+                document.getElementById('eventStartDate').value = today;
+                document.getElementById('eventEndDate').value = today;
+            }
+
+            toggleEndDate();
+            editingEventId = null;
+        }
+
+        // Toggle end date visibility
+        function toggleEndDate() {
+            const type = document.getElementById('eventType').value;
+            const endDateContainer = document.getElementById('endDateContainer');
+            const timeContainer = document.getElementById('timeContainer');
+
+            if (type === 'reminder') {
+                endDateContainer.style.display = 'none';
+                timeContainer.style.display = 'block';
+                // Set end date same as start date for reminders
+                document.getElementById('eventEndDate').value = document.getElementById('eventStartDate').value;
+            } else {
+                endDateContainer.style.display = 'block';
+                timeContainer.style.display = 'none';
+            }
+        }
+
+        // Update end date when start date changes for reminders
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('eventStartDate').addEventListener('change', () => {
+                const type = document.getElementById('eventType').value;
+                if (type === 'reminder') {
+                    document.getElementById('eventEndDate').value = document.getElementById('eventStartDate').value;
+                }
+            });
+        });
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            // Clear form
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDescription').value = '';
+            document.getElementById('eventLocation').value = '';
+            document.getElementById('eventStartTime').value = '';
+            document.getElementById('eventEndTime').value = '';
+            editingEventId = null;
+        }
+
+        // Save event
+        function saveEvent() {
+            const title = document.getElementById('eventTitle').value.trim();
+            if (!title) {
+                alert('Please enter a title');
+                return;
+            }
+
+            const event = {
+                id: editingEventId || Date.now(),
+                title: title,
+                description: document.getElementById('eventDescription').value,
+                type: document.getElementById('eventType').value,
+                startDate: document.getElementById('eventStartDate').value,
+                endDate: document.getElementById('eventEndDate').value,
+                startTime: document.getElementById('eventStartTime').value,
+                endTime: document.getElementById('eventEndTime').value,
+                location: document.getElementById('eventLocation').value,
+                reminder: document.getElementById('eventReminder').value,
+                createdAt: editingEventId ? events.find(e => e.id === editingEventId).createdAt : new Date().toISOString()
+            };
+
+            if (editingEventId) {
+                const index = events.findIndex(e => e.id === editingEventId);
+                events[index] = event;
+            } else {
+                events.push(event);
+            }
+
+            saveEvents();
+
+            // Sync to todo list if event type is task/reminder
+            if (event.type === 'task' || event.type === 'reminder') {
+                syncToTodoList(event);
+            }
+
+            renderCalendar();
+            renderMiniCalendar();
+            renderUpcomingEvents();
+            closeModal();
+        }
+
+        // Edit event
+        function editEvent(id) {
+            const event = events.find(e => e.id === id);
+            if (event) {
+                editingEventId = id;
+                document.getElementById('modalTitle').textContent = 'Edit Event';
+                document.getElementById('eventTitle').value = event.title;
+                document.getElementById('eventDescription').value = event.description;
+                document.getElementById('eventType').value = event.type;
+                document.getElementById('eventStartDate').value = event.startDate;
+                document.getElementById('eventEndDate').value = event.endDate;
+                document.getElementById('eventStartTime').value = event.startTime || '';
+                document.getElementById('eventEndTime').value = event.endTime || '';
+                document.getElementById('eventLocation').value = event.location || '';
+                document.getElementById('eventReminder').value = event.reminder || 'none';
+                toggleEndDate();
+                document.getElementById('eventModal').classList.add('active');
+            }
+        }
+
+        // Delete event
+        function deleteEvent(id, event) {
+            if (event) event.stopPropagation();
+            if (confirm('Delete this event?')) {
+                // Remove from todo list if it was synced
+                removeFromTodoList(id);
+
+                events = events.filter(e => e.id !== id);
+                saveEvents();
+                renderCalendar();
+                renderMiniCalendar();
+                renderUpcomingEvents();
+            }
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById('calendarTitle').textContent =
+                currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const monthLength = lastDay.getDate();
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const date = new Date(year, month - 1, day);
+                grid.appendChild(createDayCell(day, date, true));
+            }
+
+            // Current month days
+            for (let day = 1; day <= monthLength; day++) {
+                const date = new Date(year, month, day);
+                grid.appendChild(createDayCell(day, date, false));
+            }
+
+            // Next month days
+            const remainingCells = 42 - (startingDayOfWeek + monthLength);
+            for (let day = 1; day <= remainingCells; day++) {
+                const date = new Date(year, month + 1, day);
+                grid.appendChild(createDayCell(day, date, true));
+            }
+        }
+
+        // Create day cell
+        function createDayCell(day, date, otherMonth) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (otherMonth) cell.classList.add('other-month');
+
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                cell.classList.add('today');
+            }
+
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            cell.appendChild(dayNumber);
+
+            const dayEvents = document.createElement('div');
+            dayEvents.className = 'day-events';
+
+            const dateStr = formatDateForInput(date);
+            const dayEventsList = events.filter(e =>
+                e.startDate <= dateStr && e.endDate >= dateStr
+            );
+
+            dayEventsList.slice(0, 3).forEach(event => {
+                const eventEl = document.createElement('div');
+                eventEl.className = `day-event ${event.type}`;
+                eventEl.textContent = event.title;
+                eventEl.onclick = (e) => {
+                    e.stopPropagation();
+                    editEvent(event.id);
+                };
+                dayEvents.appendChild(eventEl);
+            });
+
+            if (dayEventsList.length > 3) {
+                const more = document.createElement('div');
+                more.className = 'day-event-more';
+                more.textContent = `+${dayEventsList.length - 3} more`;
+                dayEvents.appendChild(more);
+            }
+
+            cell.appendChild(dayEvents);
+            cell.onclick = () => openModal('reminder', date);
+
+            return cell;
+        }
+
+        // Render mini calendar
+        function renderMiniCalendar() {
+            const year = miniDate.getFullYear();
+            const month = miniDate.getMonth();
+
+            document.getElementById('miniCalendarTitle').textContent =
+                miniDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const monthLength = lastDay.getDate();
+
+            const grid = document.getElementById('miniCalendarGrid');
+            grid.innerHTML = '';
+
+            // Day labels
+            const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            dayLabels.forEach(label => {
+                const el = document.createElement('div');
+                el.className = 'mini-day-label';
+                el.textContent = label;
+                grid.appendChild(el);
+            });
+
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const date = new Date(year, month - 1, day);
+                grid.appendChild(createMiniDay(day, date, true));
+            }
+
+            // Current month days
+            for (let day = 1; day <= monthLength; day++) {
+                const date = new Date(year, month, day);
+                grid.appendChild(createMiniDay(day, date, false));
+            }
+        }
+
+        // Create mini day
+        function createMiniDay(day, date, otherMonth) {
+            const cell = document.createElement('div');
+            cell.className = 'mini-day';
+            if (otherMonth) cell.classList.add('other-month');
+
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                cell.classList.add('today');
+            }
+
+            const dateStr = formatDateForInput(date);
+            const hasEvent = events.some(e =>
+                e.startDate <= dateStr && e.endDate >= dateStr
+            );
+            if (hasEvent) cell.classList.add('has-event');
+
+            cell.textContent = day;
+            cell.onclick = () => {
+                currentDate = new Date(date);
+                renderCalendar();
+            };
+
+            return cell;
+        }
+
+        // Render upcoming events
+        function renderUpcomingEvents() {
+            const list = document.getElementById('upcomingEventsList');
+            const today = new Date();
+            const upcoming = events
+                .filter(e => new Date(e.startDate) >= today)
+                .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+                .slice(0, 10);
+
+            if (upcoming.length === 0) {
+                list.innerHTML = '<p style="color: #999; font-size: 13px;">No upcoming events</p>';
+                return;
+            }
+
+            list.innerHTML = upcoming.map(event => {
+                const date = new Date(event.startDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                return `
+                    <div class="event-item event-${event.type}" onclick="editEvent(${event.id})">
+                        <button class="event-delete" onclick="deleteEvent(${event.id}, event)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-details">
+                            <i class="fas fa-calendar"></i> ${date}
+                            ${event.location ? `<br><i class="fas fa-map-marker-alt"></i> ${event.location}` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Change month
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        // Change mini month
+        function changeMiniMonth(delta) {
+            miniDate.setMonth(miniDate.getMonth() + delta);
+            renderMiniCalendar();
+        }
+
+        // Go to today
+        function goToToday() {
+            currentDate = new Date();
+            miniDate = new Date();
+            renderCalendar();
+            renderMiniCalendar();
+        }
+
+        // Set view
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === view);
+            });
+
+            if (view === 'month') {
+                document.getElementById('monthView').style.display = 'block';
+                document.getElementById('weekView').classList.remove('active');
+            } else {
+                document.getElementById('monthView').style.display = 'none';
+                document.getElementById('weekView').classList.add('active');
+                renderWeekView();
+            }
+        }
+
+        // Render week view
+        function renderWeekView() {
+            // Simplified week view
+            const header = document.getElementById('weekHeader');
+            const grid = document.getElementById('weekGrid');
+
+            header.innerHTML = '<div></div>';
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(day => {
+                const el = document.createElement('div');
+                el.className = 'week-day-header';
+                el.textContent = day;
+                header.appendChild(el);
+            });
+
+            grid.innerHTML = '';
+            for (let hour = 0; hour < 24; hour++) {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = `${hour}:00`;
+                grid.appendChild(timeSlot);
+
+                for (let day = 0; day < 7; day++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'week-cell';
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Check reminders
+        function checkReminders() {
+            const now = new Date();
+            const notifiedKey = 'notifiedReminders';
+            const notified = JSON.parse(localStorage.getItem(notifiedKey) || '{}');
+
+            events.forEach(event => {
+                if (event.reminder && event.reminder !== 'none') {
+                    const eventDate = new Date(event.startDate + ' ' + (event.startTime || '00:00'));
+                    const reminderMinutes = parseInt(event.reminder);
+                    const reminderTime = new Date(eventDate.getTime() - reminderMinutes * 60000);
+
+                    // Create unique key for this reminder
+                    const reminderKey = `${event.id}-${event.startDate}-${event.startTime}`;
+
+                    // Check if reminder should fire (within the last minute) and hasn't been notified yet
+                    const diff = now - reminderTime;
+                    if (diff >= 0 && diff < 60000 && !notified[reminderKey]) {
+                        const eventTypeIcon = event.type === 'trip' ? '✈️' : event.type === 'absence' ? '🏖️' : '🔔';
+                        const message = `${capitalize(event.type)} at ${event.startTime || 'all day'}${event.location ? ' - ' + event.location : ''}`;
+
+                        showNotification(event.title, message, eventTypeIcon);
+
+                        // Mark as notified
+                        notified[reminderKey] = true;
+                        localStorage.setItem(notifiedKey, JSON.stringify(notified));
+
+                        // Send browser notification
+                        sendBrowserNotification(event.title, message, eventTypeIcon);
+                    }
+                }
+            });
+
+            // Clean up old notified reminders (older than 7 days)
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            Object.keys(notified).forEach(key => {
+                const parts = key.split('-');
+                const eventDate = new Date(parts[1]);
+                if (eventDate < sevenDaysAgo) {
+                    delete notified[key];
+                }
+            });
+            localStorage.setItem(notifiedKey, JSON.stringify(notified));
+        }
+
+        // Send browser notification
+        function sendBrowserNotification(title, message, icon) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body: message,
+                    icon: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">${icon}</text></svg>`,
+                    badge: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">${icon}</text></svg>`,
+                    tag: 'calendar-reminder',
+                    requireInteraction: false,
+                    vibrate: [200, 100, 200]
+                });
+
+                // Auto close after 10 seconds
+                setTimeout(() => notification.close(), 10000);
+
+                // Click notification to focus calendar
+                notification.onclick = function() {
+                    window.focus();
+                    notification.close();
+                };
+            }
+        }
+
+        // Show notification
+        function showNotification(title, text, icon = '🔔') {
+            document.getElementById('notificationTitle').textContent = title;
+            document.getElementById('notificationText').textContent = text;
+            document.getElementById('notification').querySelector('.notification-icon').textContent = icon;
+            document.getElementById('notification').classList.add('show');
+
+            setTimeout(() => {
+                document.getElementById('notification').classList.remove('show');
+            }, 5000);
+
+            // Play notification sound
+            playNotificationSound();
+        }
+
+        // Play notification sound
+        function playNotificationSound() {
+            try {
+                // Create a simple beep sound using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Print calendar
+        function printCalendar() {
+            window.print();
+        }
+
+        // Export calendar
+        function exportCalendar() {
+            const data = events.map(e => ({
+                Title: e.title,
+                Type: e.type,
+                'Start Date': e.startDate,
+                'End Date': e.endDate,
+                'Start Time': e.startTime || '',
+                'End Time': e.endTime || '',
+                Location: e.location || '',
+                Description: e.description || ''
+            }));
+
+            let csv = 'Title,Type,Start Date,End Date,Start Time,End Time,Location,Description\n';
+            data.forEach(row => {
+                csv += `"${row.Title}","${row.Type}","${row['Start Date']}","${row['End Date']}","${row['Start Time']}","${row['End Time']}","${row.Location}","${row.Description}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'calendar.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        // Helper functions
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Save/Load events
+        // Sync event to todo list
+        function syncToTodoList(event) {
+            // Don't sync if event came from todo list originally
+            if (event.sourceTaskId) {
+                return;
+            }
+
+            // Get existing todos
+            const todos = JSON.parse(localStorage.getItem('tasks') || '[]');
+
+            // Check if todo already exists for this event
+            const existingTodo = todos.find(t => t.sourceEventId === event.id);
+
+            // Determine priority based on reminder time
+            let priority = 'medium';
+            if (event.reminder === '60' || event.reminder === '1440') {
+                priority = 'high';
+            } else if (event.reminder === '15') {
+                priority = 'low';
+            }
+
+            // Determine category based on event type
+            const category = event.type === 'task' ? 'work' : 'personal';
+
+            const todo = {
+                id: existingTodo ? existingTodo.id : Date.now(),
+                sourceEventId: event.id,
+                text: event.title + (event.description ? ` - ${event.description}` : ''),
+                completed: false,
+                category: category,
+                priority: priority,
+                dueDate: event.startDate,
+                createdAt: existingTodo ? existingTodo.createdAt : new Date().toISOString()
+            };
+
+            if (existingTodo) {
+                // Update existing todo
+                const index = todos.findIndex(t => t.id === existingTodo.id);
+                todos[index] = todo;
+            } else {
+                // Add new todo
+                todos.unshift(todo);
+            }
+
+            localStorage.setItem('tasks', JSON.stringify(todos));
+        }
+
+        // Remove from todo list
+        function removeFromTodoList(eventId) {
+            const todos = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const filtered = todos.filter(t => t.sourceEventId !== eventId);
+            localStorage.setItem('tasks', JSON.stringify(filtered));
+        }
+
+        function saveEvents() {
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+        }
+
+        function loadEvents() {
+            const saved = localStorage.getItem('calendarEvents');
+            if (saved) {
+                events = JSON.parse(saved);
+            }
+        }
+
+        // Go back
+        function goBack() {
+            window.location.href = '../Tools.html';
+        }
+
+        // Close modal on outside click
+        document.getElementById('eventModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

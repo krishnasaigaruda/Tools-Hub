@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a0a0a0;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .search-box:focus {
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 15px;
+        }
+
+        .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            min-height: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tool-btn:hover::before {
+            opacity: 1;
+        }
+
+        .tool-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .tool-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .tool-name {
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* Category Colors - Classic solid colors per group */
+
+        /* Productivity - Classic Blue */
+        .document, .spreadsheet, .presentation, .notes, .onenote, .todo, .calendar, .forms {
+            background: #2563eb;
+        }
+
+        /* Creative Tools - Classic Purple */
+        .whiteboard, .image-editor, .drawing-pad, .color-picker {
+            background: #7c3aed;
+        }
+
+        /* Time Management - Classic Orange */
+        .clock, .timer, .stopwatch, .alarm, .world-clock, .countdown, .meeting-scheduler, .timezone {
+            background: #ea580c;
+        }
+
+        /* Learning & Education - Classic Green */
+        .quiz, .study-timer, .periodic-table, .typing-test {
+            background: #16a34a;
+        }
+
+        /* Math & Science - Classic Indigo */
+        .basic-calc, .scientific-calc, .equation-solver, .graph-plotter, .matrix-calc,
+        .stats-calculator, .percentage-calc {
+            background: #4f46e5;
+        }
+
+        /* Converters - Classic Amber */
+        .currency-converter, .temp-converter, .length-converter, .weight-converter,
+        .area-converter, .speed-converter, .data-converter, .roman-numerals {
+            background: #d97706;
+        }
+
+        /* Text & Code - Classic Slate */
+        .text-editor, .markdown, .code-editor, .word-counter, .character-counter, .case-converter {
+            background: #475569;
+        }
+
+        /* Developer Tools - Classic Gray/Dark */
+        .html-preview, .binary-converter {
+            background: #1f2937;
+        }
+
+        /* Language Tools - Classic Cyan */
+        .translator, .dictionary, .thesaurus, .text-to-speech, .speech-to-text {
+            background: #0891b2;
+        }
+
+        /* Image Tools - Classic Pink */
+        .image-resizer, .image-cropper {
+            background: #db2777;
+        }
+
+        /* Document Tools - Classic Red */
+        .pdf-tools {
+            background: #dc2626;
+        }
+
+        /* Media & Audio - Classic Fuchsia */
+        .voice-recorder, .music-player, .video-player, .audio-visualizer, .metronome, .tuner {
+            background: #c026d3;
+        }
+
+        /* Utilities - Classic Sky */
+        .password-gen, .qr-generator, .barcode-generator {
+            background: #0284c7;
+        }
+
+        /* Web Tools - Classic Stone */
+        .url-shortener {
+            background: #57534e;
+        }
+
+        /* Random & Fun - Classic Yellow */
+        .random-generator, .dice-roller, .coin-flip {
+            background: #ca8a04;
+        }
+
+        .category-title {
+            color: #fff;
+            font-size: 1.3rem;
+            margin: 30px 0 15px 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .category-title:first-of-type {
+            margin-top: 0;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .tools-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 10px;
+            }
+            .tool-btn {
+                padding: 18px 12px;
+                min-height: 100px;
+            }
+            .tool-icon { font-size: 1.8rem; }
+            .tool-name { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tools Hub</h1>
+        <p class="subtitle">Your all-in-one productivity toolkit</p>
+
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search tools..." oninput="filterTools()">
+        </div>
+
+        <h2 class="category-title">Productivity</h2>
+        <div class="tools-grid">
+            <button class="tool-btn document" onclick="openTool('document')"><span class="tool-icon"><i class="fas fa-file-alt"></i></span><span class="tool-name">Document Creator</span></button>
+            <button class="tool-btn spreadsheet" onclick="openTool('spreadsheet')"><span class="tool-icon"><i class="fas fa-table"></i></span><span class="tool-name">Spreadsheet</span></button>
+            <button class="tool-btn presentation" onclick="openTool('presentation')"><span class="tool-icon"><i class="fas fa-desktop"></i></span><span class="tool-name">Presentation</span></button>
+            <button class="tool-btn notes" onclick="openTool('notes')"><span class="tool-icon"><i class="fas fa-sticky-note"></i></span><span class="tool-name">Notes</span></button>
+            <button class="tool-btn onenote" onclick="openTool('onenote')"><span class="tool-icon"><i class="fas fa-book"></i></span><span class="tool-name">Notebook</span></button>
+            <button class="tool-btn todo" onclick="openTool('todo')"><span class="tool-icon"><i class="fas fa-check-square"></i></span><span class="tool-name">To-Do List</span></button>
+            <button class="tool-btn calendar" onclick="openTool('calendar')"><span class="tool-icon"><i class="fas fa-calendar-alt"></i></span><span class="tool-name">Calendar</span></button>
+            <button class="tool-btn forms" onclick="openTool('forms')"><span class="tool-icon"><i class="fas fa-clipboard-list"></i></span><span class="tool-name">Forms</span></button>
+        </div>
+
+        <h2 class="category-title">Creative Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn whiteboard" onclick="openTool('whiteboard')"><span class="tool-icon"><i class="fas fa-chalkboard"></i></span><span class="tool-name">Whiteboard</span></button>
+            <button class="tool-btn image-and-video-editor" onclick="openTool('image-and-video-editor')"><span class="tool-icon"><i class="fas fa-image"></i></span><span class="tool-name">image-and-video-editor</span></button>
+            <button class="tool-btn drawing-pad" onclick="openTool('drawing-pad')"><span class="tool-icon"><i class="fas fa-paint-brush"></i></span><span class="tool-name">Drawing Pad</span></button>
+            <button class="tool-btn color-picker" onclick="openTool('color-picker')"><span class="tool-icon"><i class="fas fa-palette"></i></span><span class="tool-name">Color Picker & Palette</span></button>
+        </div>
+
+        <h2 class="category-title">Time Management</h2>
+        <div class="tools-grid">
+            <button class="tool-btn clock" onclick="openTool('clock')"><span class="tool-icon"><i class="fas fa-clock"></i></span><span class="tool-name">Clock</span></button>
+            <button class="tool-btn timer" onclick="openTool('timer')"><span class="tool-icon"><i class="fas fa-hourglass-half"></i></span><span class="tool-name">Timer</span></button>
+            <button class="tool-btn stopwatch" onclick="openTool('stopwatch')"><span class="tool-icon"><i class="fas fa-stopwatch"></i></span><span class="tool-name">Stopwatch</span></button>
+            <button class="tool-btn alarm" onclick="openTool('alarm')"><span class="tool-icon"><i class="fas fa-bell"></i></span><span class="tool-name">Alarm Clock</span></button>
+            <button class="tool-btn world-clock" onclick="openTool('world-clock')"><span class="tool-icon"><i class="fas fa-globe"></i></span><span class="tool-name">World Clock</span></button>
+            <button class="tool-btn countdown" onclick="openTool('countdown')"><span class="tool-icon"><i class="fas fa-hourglass-start"></i></span><span class="tool-name">Countdown Timer</span></button>
+            <button class="tool-btn meeting-scheduler" onclick="openTool('meeting-scheduler')"><span class="tool-icon"><i class="fas fa-calendar-check"></i></span><span class="tool-name">Meeting Scheduler</span></button>
+            <button class="tool-btn timezone" onclick="openTool('timezone')"><span class="tool-icon"><i class="fas fa-globe-americas"></i></span><span class="tool-name">Timezone Converter</span></button>
+        </div>
+
+        <h2 class="category-title">Learning & Education</h2>
+        <div class="tools-grid">
+            <button class="tool-btn quiz" onclick="openTool('quiz')"><span class="tool-icon"><i class="fas fa-question-circle"></i></span><span class="tool-name">Quiz Maker</span></button>
+            <button class="tool-btn study-timer" onclick="openTool('study-timer')"><span class="tool-icon"><i class="fas fa-book-reader"></i></span><span class="tool-name">Study Timer</span></button>
+            <button class="tool-btn periodic-table" onclick="openTool('periodic-table')"><span class="tool-icon"><i class="fas fa-atom"></i></span><span class="tool-name">Periodic Table</span></button>
+            <button class="tool-btn typing-test" onclick="openTool('typing-test')"><span class="tool-icon"><i class="fas fa-keyboard"></i></span><span class="tool-name">Typing Test</span></button>
+        </div>
+
+        <h2 class="category-title">Math & Science</h2>
+        <div class="tools-grid">
+            <button class="tool-btn basic-calc" onclick="openTool('calculator')"><span class="tool-icon"><i class="fas fa-calculator"></i></span><span class="tool-name">Calculator</span></button>
+            <button class="tool-btn scientific-calc" onclick="openTool('scientific-calc')"><span class="tool-icon"><i class="fas fa-square-root-alt"></i></span><span class="tool-name">Scientific Calculator</span></button>
+            <button class="tool-btn percentage-calc" onclick="openTool('percentage-calc')"><span class="tool-icon"><i class="fas fa-percent"></i></span><span class="tool-name">Percentage Calculator</span></button>
+            <button class="tool-btn equation-solver" onclick="openTool('equation-solver')"><span class="tool-icon"><i class="fas fa-superscript"></i></span><span class="tool-name">Equation Solver</span></button>
+            <button class="tool-btn graph-plotter" onclick="openTool('graph-plotter')"><span class="tool-icon"><i class="fas fa-chart-line"></i></span><span class="tool-name">Graph Plotter</span></button>
+            <button class="tool-btn matrix-calc" onclick="openTool('matrix-calc')"><span class="tool-icon"><i class="fas fa-border-all"></i></span><span class="tool-name">Matrix Calculator</span></button>
+            <button class="tool-btn stats-calculator" onclick="openTool('stats-calculator')"><span class="tool-icon"><i class="fas fa-chart-bar"></i></span><span class="tool-name">Statistics Calculator</span></button>
+        </div>
+
+        <h2 class="category-title">Converters</h2>
+        <div class="tools-grid">
+            <button class="tool-btn currency-converter" onclick="openTool('currency-converter')"><span class="tool-icon"><i class="fas fa-money-bill-wave"></i></span><span class="tool-name">Currency Converter</span></button>
+            <button class="tool-btn temp-converter" onclick="openTool('temp-converter')"><span class="tool-icon"><i class="fas fa-thermometer-half"></i></span><span class="tool-name">Temperature Converter</span></button>
+            <button class="tool-btn length-converter" onclick="openTool('length-converter')"><span class="tool-icon"><i class="fas fa-ruler"></i></span><span class="tool-name">Length Converter</span></button>
+            <button class="tool-btn weight-converter" onclick="openTool('weight-converter')"><span class="tool-icon"><i class="fas fa-balance-scale"></i></span><span class="tool-name">Weight Converter</span></button>
+            <button class="tool-btn area-converter" onclick="openTool('area-converter')"><span class="tool-icon"><i class="fas fa-vector-square"></i></span><span class="tool-name">Area Converter</span></button>
+            <button class="tool-btn speed-converter" onclick="openTool('speed-converter')"><span class="tool-icon"><i class="fas fa-tachometer-alt"></i></span><span class="tool-name">Speed Converter</span></button>
+            <button class="tool-btn data-converter" onclick="openTool('data-converter')"><span class="tool-icon"><i class="fas fa-database"></i></span><span class="tool-name">Data Size Converter</span></button>
+            <button class="tool-btn roman-numerals" onclick="openTool('roman-numerals')"><span class="tool-icon"><i class="fas fa-landmark"></i></span><span class="tool-name">Roman Numeral Converter</span></button>
+        </div>
+
+        <h2 class="category-title">Text & Code</h2>
+        <div class="tools-grid">
+            <button class="tool-btn text-editor" onclick="openTool('text-editor')"><span class="tool-icon"><i class="fas fa-edit"></i></span><span class="tool-name">Text Editor</span></button>
+            <button class="tool-btn markdown" onclick="openTool('markdown')"><span class="tool-icon"><i class="fab fa-markdown"></i></span><span class="tool-name">Markdown Editor</span></button>
+            <button class="tool-btn code-editor" onclick="openTool('code-editor')"><span class="tool-icon"><i class="fas fa-code"></i></span><span class="tool-name">Code Editor</span></button>
+            <button class="tool-btn word-counter" onclick="openTool('word-counter')"><span class="tool-icon"><i class="fas fa-spell-check"></i></span><span class="tool-name">Word Counter</span></button>
+            <button class="tool-btn character-counter" onclick="openTool('character-counter')"><span class="tool-icon"><i class="fas fa-text-width"></i></span><span class="tool-name">Character Counter</span></button>
+            <button class="tool-btn case-converter" onclick="openTool('case-converter')"><span class="tool-icon"><i class="fas fa-text-height"></i></span><span class="tool-name">Case Converter</span></button>
+        </div>
+
+        <h2 class="category-title">Developer Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn html-preview" onclick="openTool('html-preview')"><span class="tool-icon"><i class="fab fa-html5"></i></span><span class="tool-name">HTML Preview</span></button>
+            <button class="tool-btn binary-converter" onclick="openTool('binary-converter')"><span class="tool-icon"><i class="fas fa-microchip"></i></span><span class="tool-name">Binary Converter</span></button>
+        </div>
+
+        <h2 class="category-title">Language Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn translator" onclick="openTool('translator')"><span class="tool-icon"><i class="fas fa-language"></i></span><span class="tool-name">Translator</span></button>
+            <button class="tool-btn dictionary" onclick="openTool('dictionary')"><span class="tool-icon"><i class="fas fa-book"></i></span><span class="tool-name">Dictionary</span></button>
+            <button class="tool-btn thesaurus" onclick="openTool('thesaurus')"><span class="tool-icon"><i class="fas fa-scroll"></i></span><span class="tool-name">Thesaurus</span></button>
+            <button class="tool-btn text-to-speech" onclick="openTool('text-to-speech')"><span class="tool-icon"><i class="fas fa-volume-up"></i></span><span class="tool-name">Text to Speech</span></button>
+            <button class="tool-btn speech-to-text" onclick="openTool('speech-to-text')"><span class="tool-icon"><i class="fas fa-microphone"></i></span><span class="tool-name">Speech to Text</span></button>
+        </div>
+
+        <h2 class="category-title">Image Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn image-resizer" onclick="openTool('image-resizer')"><span class="tool-icon"><i class="fas fa-expand-arrows-alt"></i></span><span class="tool-name">Image Resizer</span></button>
+            <button class="tool-btn image-cropper" onclick="openTool('image-cropper')"><span class="tool-icon"><i class="fas fa-crop-alt"></i></span><span class="tool-name">Image Cropper</span></button>
+        </div>
+
+        <h2 class="category-title">Document Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn pdf-tools" onclick="openTool('pdf-tools')"><span class="tool-icon"><i class="fas fa-file-pdf"></i></span><span class="tool-name">PDF Tools</span></button>
+        </div>
+
+        <h2 class="category-title">Media & Audio</h2>
+        <div class="tools-grid">
+            <button class="tool-btn voice-recorder" onclick="openTool('voice-recorder')"><span class="tool-icon"><i class="fas fa-microphone-alt"></i></span><span class="tool-name">Voice Recorder</span></button>
+            <button class="tool-btn music-player" onclick="openTool('music-player')"><span class="tool-icon"><i class="fas fa-music"></i></span><span class="tool-name">Music Player</span></button>
+            <button class="tool-btn video-player" onclick="openTool('video-player')"><span class="tool-icon"><i class="fas fa-play-circle"></i></span><span class="tool-name">Video Player</span></button>
+            <button class="tool-btn audio-visualizer" onclick="openTool('audio-visualizer')"><span class="tool-icon"><i class="fas fa-headphones"></i></span><span class="tool-name">Audio Visualizer</span></button>
+            <button class="tool-btn metronome" onclick="openTool('metronome')"><span class="tool-icon"><i class="fas fa-drum"></i></span><span class="tool-name">Metronome</span></button>
+            <button class="tool-btn tuner" onclick="openTool('tuner')"><span class="tool-icon"><i class="fas fa-guitar"></i></span><span class="tool-name">Instrument Tuner</span></button>
+        </div>
+
+        <h2 class="category-title">Utilities</h2>
+        <div class="tools-grid">
+            <button class="tool-btn password-gen" onclick="openTool('password-gen')"><span class="tool-icon"><i class="fas fa-key"></i></span><span class="tool-name">Password Generator</span></button>
+            <button class="tool-btn qr-generator" onclick="openTool('qr-generator')"><span class="tool-icon"><i class="fas fa-qrcode"></i></span><span class="tool-name">QR Code Generator</span></button>
+            <button class="tool-btn barcode-generator" onclick="openTool('barcode-generator')"><span class="tool-icon"><i class="fas fa-barcode"></i></span><span class="tool-name">Barcode Generator</span></button>
+        </div>
+
+        <h2 class="category-title">Web Tools</h2>
+        <div class="tools-grid">
+            <button class="tool-btn url-shortener" onclick="openTool('url-shortener')"><span class="tool-icon"><i class="fas fa-link"></i></span><span class="tool-name">URL Shortener</span></button>
+        </div>
+
+        <h2 class="category-title">Random & Fun</h2>
+        <div class="tools-grid">
+            <button class="tool-btn random-generator" onclick="openTool('random-generator')"><span class="tool-icon"><i class="fas fa-random"></i></span><span class="tool-name">Random Number</span></button>
+            <button class="tool-btn dice-roller" onclick="openTool('dice-roller')"><span class="tool-icon"><i class="fas fa-dice"></i></span><span class="tool-name">Dice Roller</span></button>
+            <button class="tool-btn coin-flip" onclick="openTool('coin-flip')"><span class="tool-icon"><i class="fas fa-coins"></i></span><span class="tool-name">Coin Flip</span></button>
+        </div>
+    </div>
+
+    <script>
+        function openTool(toolName) {
+            console.log(`Opening ${toolName}...`);
+
+            // Map of available tools to their pages
+            const availableTools = {
+                'document': 'tools/document.html',
+                'spreadsheet': 'tools/spreadsheet.html',
+                'presentation': 'tools/presentation.html',
+                'notes': 'tools/notes.html',
+                'onenote': 'tools/onenote.html',
+                'todo': 'tools/todo.html',
+                'calendar': 'tools/calendar.html',
+                'whiteboard': 'tools/whiteboard.html',
+                'forms': 'tools/forms.html'
+            };
+
+            if (availableTools[toolName]) {
+                window.location.href = availableTools[toolName];
+            } else {
+                alert(`${toolName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} - Coming soon!`);
+            }
+        }
+
+        function filterTools() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const toolButtons = document.querySelectorAll('.tool-btn');
+            const categoryTitles = document.querySelectorAll('.category-title');
+            const toolsGrids = document.querySelectorAll('.tools-grid');
+
+            // If search is empty, show everything
+            if (!searchTerm) {
+                toolButtons.forEach(btn => btn.style.display = 'flex');
+                categoryTitles.forEach(title => title.style.display = 'block');
+                toolsGrids.forEach(grid => grid.style.display = 'grid');
+                return;
+            }
+
+            // Track which categories have visible tools
+            const visibleCategories = new Set();
+
+            // Filter tool buttons
+            toolButtons.forEach(btn => {
+                const toolName = btn.querySelector('.tool-name').textContent.toLowerCase();
+                if (toolName.includes(searchTerm)) {
+                    btn.style.display = 'flex';
+                    // Find which category this tool belongs to
+                    const grid = btn.closest('.tools-grid');
+                    visibleCategories.add(grid);
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+
+            // Show/hide categories based on whether they have visible tools
+            toolsGrids.forEach((grid, index) => {
+                if (visibleCategories.has(grid)) {
+                    grid.style.display = 'grid';
+                    categoryTitles[index].style.display = 'block';
+                } else {
+                    grid.style.display = 'none';
+                    categoryTitles[index].style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

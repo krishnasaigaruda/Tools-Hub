@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes - Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #eab308;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.3s;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* Notes Sidebar */
+        .notes-sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #eab308;
+        }
+
+        .new-note-btn {
+            background: #eab308;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .new-note-btn:hover {
+            background: #ca8a04;
+        }
+
+        .notes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .note-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .note-item:hover {
+            background: #fef9c3;
+            border-color: #eab308;
+        }
+
+        .note-item.active {
+            background: #fef08a;
+            border-color: #eab308;
+        }
+
+        .note-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-item-preview {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .note-item-date {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .note-item-delete {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .note-item:hover .note-item-delete {
+            display: flex;
+        }
+
+        .note-color-dot {
+            position: absolute;
+            top: 12px;
+            right: 40px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 2px;
+            padding: 0 10px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: none;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #444;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+        }
+
+        .toolbar-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .toolbar-btn.active {
+            background: #fef08a;
+            color: #ca8a04;
+        }
+
+        .color-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.active {
+            border-color: #333;
+        }
+
+        .color-yellow { background: #fef08a; }
+        .color-green { background: #bbf7d0; }
+        .color-blue { background: #bfdbfe; }
+        .color-pink { background: #fbcfe8; }
+        .color-purple { background: #ddd6fe; }
+        .color-white { background: #ffffff; border: 1px solid #e0e0e0; }
+
+        /* Note Title */
+        .note-title-input {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            font-weight: 600;
+            padding: 20px 30px 10px;
+            width: 100%;
+            outline: none;
+            color: #333;
+        }
+
+        .note-title-input::placeholder {
+            color: #aaa;
+        }
+
+        /* Note Editor */
+        .note-editor-container {
+            flex: 1;
+            padding: 0 30px 30px;
+            overflow-y: auto;
+        }
+
+        .note-editor {
+            min-height: 400px;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .note-editor:empty:before {
+            content: 'Start writing your note...';
+            color: #aaa;
+            pointer-events: none;
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: #f8f9fa;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .notes-sidebar {
+                width: 200px;
+            }
+            .note-title-input {
+                font-size: 20px;
+                padding: 15px 20px 10px;
+            }
+            .note-editor-container {
+                padding: 0 20px 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .notes-sidebar {
+                position: absolute;
+                left: 0;
+                top: 56px;
+                height: calc(100vh - 56px);
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .notes-sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .notes-sidebar, .toolbar, .status-bar {
+                display: none !important;
+            }
+            .main-container {
+                height: auto;
+            }
+            .editor-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            <h1><i class="fas fa-sticky-note"></i> Notes</h1>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="printNote()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button class="header-btn" onclick="saveAsPDF()">
+                <i class="fas fa-file-pdf"></i> Save as PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Notes Sidebar -->
+        <div class="notes-sidebar">
+            <div class="sidebar-header">
+                <input type="text" class="search-box" id="searchBox" placeholder="Search notes..." oninput="searchNotes()">
+                <button class="new-note-btn" onclick="createNewNote()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div class="notes-list" id="notesList"></div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="editor-area" id="editorArea">
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-sticky-note"></i>
+                <p>Select a note or create a new one</p>
+            </div>
+
+            <div id="noteEditor" style="display: none; flex-direction: column; flex: 1;">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-bold" onclick="formatText('bold')" title="Bold">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="toolbar-btn" id="btn-italic" onclick="formatText('italic')" title="Italic">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="toolbar-btn" id="btn-underline" onclick="formatText('underline')" title="Underline">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                        <button class="toolbar-btn" id="btn-strike" onclick="formatText('strikeThrough')" title="Strikethrough">
+                            <i class="fas fa-strikethrough"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" onclick="formatText('insertUnorderedList')" title="Bullet List">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="formatText('insertOrderedList')" title="Numbered List">
+                            <i class="fas fa-list-ol"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="insertCheckbox()" title="Checkbox">
+                            <i class="fas fa-check-square"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" onclick="document.getElementById('imageInput').click()" title="Insert Image">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="insertImage(event)">
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button class="color-btn color-yellow active" onclick="setNoteColor('yellow')" title="Yellow"></button>
+                        <button class="color-btn color-green" onclick="setNoteColor('green')" title="Green"></button>
+                        <button class="color-btn color-blue" onclick="setNoteColor('blue')" title="Blue"></button>
+                        <button class="color-btn color-pink" onclick="setNoteColor('pink')" title="Pink"></button>
+                        <button class="color-btn color-purple" onclick="setNoteColor('purple')" title="Purple"></button>
+                        <button class="color-btn color-white" onclick="setNoteColor('white')" title="White"></button>
+                    </div>
+                </div>
+
+                <input type="text" class="note-title-input" id="noteTitleInput" placeholder="Note title..." oninput="updateNoteTitle()">
+
+                <div class="note-editor-container">
+                    <div class="note-editor" id="noteContent" contenteditable="true" oninput="updateNoteContent()"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div id="noteStats">
+            <span id="wordCount">Words: 0</span>
+            <span style="margin-left: 15px;" id="charCount">Characters: 0</span>
+        </div>
+        <span id="saveStatus">Ready</span>
+    </div>
+
+    <script>
+        // Notes data
+        let notes = [];
+        let currentNoteId = null;
+
+        // Color map
+        const colors = {
+            yellow: '#fef08a',
+            green: '#bbf7d0',
+            blue: '#bfdbfe',
+            pink: '#fbcfe8',
+            purple: '#ddd6fe',
+            white: '#ffffff'
+        };
+
+        // Initialize
+        function init() {
+            loadNotes();
+            renderNotesList();
+            if (notes.length > 0) {
+                selectNote(notes[0].id);
+            }
+        }
+
+        // Create new note
+        function createNewNote() {
+            const note = {
+                id: Date.now(),
+                title: 'Untitled Note',
+                content: '',
+                color: 'yellow',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            notes.unshift(note);
+            saveNotes();
+            renderNotesList();
+            selectNote(note.id);
+        }
+
+        // Select note
+        function selectNote(id) {
+            currentNoteId = id;
+            const note = notes.find(n => n.id === id);
+
+            if (note) {
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('noteEditor').style.display = 'flex';
+
+                document.getElementById('noteTitleInput').value = note.title;
+                document.getElementById('noteContent').innerHTML = note.content;
+
+                // Set color
+                setNoteColor(note.color, false);
+
+                // Update active state in list
+                document.querySelectorAll('.note-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.id == id);
+                });
+
+                updateCounts();
+            }
+        }
+
+        // Update note title
+        function updateNoteTitle() {
+            if (!currentNoteId) return;
+            const note = notes.find(n => n.id === currentNoteId);
+            if (note) {
+                note.title = document.getElementById('noteTitleInput').value || 'Untitled Note';
+                note.updatedAt = new Date().toISOString();
+                saveNotes();
+                renderNotesList();
+            }
+        }
+
+        // Update note content
+        function updateNoteContent() {
+            if (!currentNoteId) return;
+            const note = notes.find(n => n.id === currentNoteId);
+            if (note) {
+                note.content = document.getElementById('noteContent').innerHTML;
+                note.updatedAt = new Date().toISOString();
+                saveNotes();
+                renderNotesList();
+                updateCounts();
+            }
+        }
+
+        // Delete note
+        function deleteNote(id, event) {
+            event.stopPropagation();
+            if (confirm('Delete this note?')) {
+                notes = notes.filter(n => n.id !== id);
+                saveNotes();
+                renderNotesList();
+
+                if (currentNoteId === id) {
+                    currentNoteId = null;
+                    document.getElementById('emptyState').style.display = 'flex';
+                    document.getElementById('noteEditor').style.display = 'none';
+
+                    if (notes.length > 0) {
+                        selectNote(notes[0].id);
+                    }
+                }
+            }
+        }
+
+        // Render notes list
+        function renderNotesList(filteredNotes = null) {
+            const list = document.getElementById('notesList');
+            const notesToRender = filteredNotes || notes;
+
+            if (notesToRender.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No notes yet</p>';
+                return;
+            }
+
+            list.innerHTML = notesToRender.map(note => {
+                const preview = note.content.replace(/<[^>]*>/g, '').substring(0, 50);
+                const date = new Date(note.updatedAt).toLocaleDateString();
+                return `
+                    <div class="note-item ${note.id === currentNoteId ? 'active' : ''}" data-id="${note.id}" onclick="selectNote(${note.id})">
+                        <div class="note-item-title">${note.title || 'Untitled Note'}</div>
+                        <div class="note-item-preview">${preview || 'No content'}</div>
+                        <div class="note-item-date">${date}</div>
+                        <div class="note-color-dot" style="background: ${colors[note.color]}"></div>
+                        <button class="note-item-delete" onclick="deleteNote(${note.id}, event)">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Search notes
+        function searchNotes() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            if (!query) {
+                renderNotesList();
+                return;
+            }
+
+            const filtered = notes.filter(note =>
+                note.title.toLowerCase().includes(query) ||
+                note.content.toLowerCase().includes(query)
+            );
+            renderNotesList(filtered);
+        }
+
+        // Format text
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('noteContent').focus();
+            updateToolbarState();
+            updateNoteContent();
+        }
+
+        // Update toolbar state
+        function updateToolbarState() {
+            document.getElementById('btn-bold').classList.toggle('active', document.queryCommandState('bold'));
+            document.getElementById('btn-italic').classList.toggle('active', document.queryCommandState('italic'));
+            document.getElementById('btn-underline').classList.toggle('active', document.queryCommandState('underline'));
+            document.getElementById('btn-strike').classList.toggle('active', document.queryCommandState('strikeThrough'));
+        }
+
+        // Insert checkbox
+        function insertCheckbox() {
+            const checkbox = '<div style="margin: 5px 0;"><input type="checkbox" style="margin-right: 8px; transform: scale(1.2);"><span>Task item</span></div>';
+            document.execCommand('insertHTML', false, checkbox);
+            updateNoteContent();
+        }
+
+        // Insert image
+        function insertImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px;">`;
+                    document.execCommand('insertHTML', false, img);
+                    updateNoteContent();
+                };
+                reader.readAsDataURL(file);
+            }
+            event.target.value = '';
+        }
+
+        // Set note color
+        function setNoteColor(color, save = true) {
+            if (!currentNoteId && save) return;
+
+            const note = notes.find(n => n.id === currentNoteId);
+            if (note && save) {
+                note.color = color;
+                saveNotes();
+                renderNotesList();
+            }
+
+            // Update UI
+            document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.color-${color}`)?.classList.add('active');
+
+            document.querySelector('.note-editor-container').style.background = colors[color];
+        }
+
+        // Update word and character count
+        function updateCounts() {
+            const text = document.getElementById('noteContent').innerText || '';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+
+            document.getElementById('wordCount').textContent = `Words: ${words}`;
+            document.getElementById('charCount').textContent = `Characters: ${chars}`;
+        }
+
+        // Print note
+        function printNote() {
+            if (!currentNoteId) {
+                alert('Please select a note first');
+                return;
+            }
+            updateNoteContent();
+            window.print();
+        }
+
+        // Save as PDF
+        async function saveAsPDF() {
+            if (!currentNoteId) {
+                alert('Please select a note first');
+                return;
+            }
+
+            const note = notes.find(n => n.id === currentNoteId);
+            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            // Always ask for note name with current title as suggestion
+            const name = prompt('Enter note name:', note.title);
+            if (!name) {
+                document.getElementById('saveStatus').textContent = 'Save cancelled';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+                return;
+            }
+
+            const content = document.createElement('div');
+            content.style.cssText = `padding: 40px; background: ${colors[note.color]}; font-family: 'Segoe UI', sans-serif; position: fixed; left: 0; top: 0; z-index: 9999;`;
+            content.innerHTML = `
+                <h1 style="margin-bottom: 20px; color: #333;">${note.title}</h1>
+                <div style="font-size: 16px; line-height: 1.8; color: #333;">${note.content}</div>
+            `;
+
+            document.body.appendChild(content);
+
+            // Wait for rendering
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const opt = {
+                margin: 10,
+                filename: name + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(content).save();
+                document.body.removeChild(content);
+                document.getElementById('saveStatus').textContent = 'Downloaded ' + name + '.pdf';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                if (content && content.parentNode) {
+                    document.body.removeChild(content);
+                }
+                document.getElementById('saveStatus').textContent = 'PDF generation failed';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            }
+        }
+
+        // Save notes to localStorage
+        function saveNotes() {
+            localStorage.setItem('notesData', JSON.stringify(notes));
+            document.getElementById('saveStatus').textContent = 'Saved';
+            setTimeout(() => {
+                document.getElementById('saveStatus').textContent = 'Ready';
+            }, 1000);
+        }
+
+        // Load notes from localStorage
+        function loadNotes() {
+            const saved = localStorage.getItem('notesData');
+            if (saved) {
+                notes = JSON.parse(saved);
+            }
+        }
+
+        // Go back
+        function goBack() {
+            window.location.href = '../Tools.html';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        saveAsPDF();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        createNewNote();
+                        break;
+                    case 'b':
+                        if (currentNoteId) {
+                            e.preventDefault();
+                            formatText('bold');
+                        }
+                        break;
+                    case 'i':
+                        if (currentNoteId) {
+                            e.preventDefault();
+                            formatText('italic');
+                        }
+                        break;
+                    case 'u':
+                        if (currentNoteId) {
+                            e.preventDefault();
+                            formatText('underline');
+                        }
+                        break;
+                }
+            }
+        });
+
+        // Selection change listener
+        document.addEventListener('selectionchange', () => {
+            if (document.activeElement.id === 'noteContent') {
+                updateToolbarState();
+            }
+        });
+
+        // Initialize on load
+        init();
+    </script>
+
+</body>
+</html>
