@@ -1839,6 +1839,14 @@
             if (!file) return;
 
             const fileType = file.type.split('/')[0];
+
+            // Block video imports
+            if (fileType === 'video') {
+                alert('Video import is not supported. Please import images or audio files only.');
+                event.target.value = '';
+                return;
+            }
+
             const reader = new FileReader();
 
             reader.onload = function(e) {

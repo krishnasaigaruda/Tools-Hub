@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image & Video Editor - Projects</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* Header */
+        .header {
+            background: #262e4c;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .search-filter-bar {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-box:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #7c3aed;
+        }
+
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-color: rgba(124, 58, 237, 0.5);
+        }
+
+        .project-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .project-thumbnail.image {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .project-thumbnail.video {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .project-thumbnail i {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .project-type-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .project-info {
+            padding: 15px;
+        }
+
+        .project-name {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .project-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(220, 38, 38, 0.6);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h2 {
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+
+        /* Bottom Panel */
+        .bottom-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .create-btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .create-btn i {
+            font-size: 1.3rem;
+        }
+
+        .create-btn.photo {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+        }
+
+        .create-btn.photo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+
+        .create-btn.video {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: #fff;
+        }
+
+        .create-btn.video:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+        }
+
+        /* Custom Dialog */
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-overlay.show {
+            display: flex;
+        }
+
+        .dialog-box {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dialog-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .dialog-icon {
+            font-size: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-icon.photo {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .dialog-icon.video {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .dialog-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .dialog-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .dialog-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 25px;
+        }
+
+        .dialog-input:focus {
+            border-color: rgba(124, 58, 237, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dialog-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .dialog-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dialog-btn.cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .dialog-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dialog-btn.create {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: #fff;
+        }
+
+        .dialog-btn.create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 8px 15px;
+            }
+
+            .header-left {
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 1rem;
+            }
+
+            .back-btn {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+
+            .projects-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .bottom-panel {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .create-btn {
+                width: 100%;
+            }
+
+            .dialog-box {
+                padding: 20px;
+            }
+
+            .dialog-actions {
+                flex-direction: column;
+            }
+
+            .dialog-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                Back to Tools
+            </button>
+            <h1>
+                <i class="fas fa-photo-video"></i>
+                Image & Video Editor
+            </h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="search-filter-bar">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search projects..." oninput="filterProjects()">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+            <button class="filter-btn" data-filter="image" onclick="setFilter('image')">Photos</button>
+            <button class="filter-btn" data-filter="video" onclick="setFilter('video')">Videos</button>
+        </div>
+
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be loaded here -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-folder-open"></i>
+            <h2>No Projects Yet</h2>
+            <p>Create your first photo or video edit to get started!</p>
+        </div>
+    </div>
+
+    <div class="bottom-panel">
+        <button class="create-btn photo" onclick="showDialog('image')">
+            <i class="fas fa-image"></i>
+            New Photo Edit
+        </button>
+        <button class="create-btn video" onclick="showDialog('video')">
+            <i class="fas fa-video"></i>
+            New Video Edit
+        </button>
+    </div>
+
+    <!-- Custom Dialog -->
+    <div class="dialog-overlay" id="dialogOverlay" onclick="closeDialogOnOverlay(event)">
+        <div class="dialog-box">
+            <div class="dialog-header">
+                <div class="dialog-icon" id="dialogIcon">
+                    <i class="fas fa-image" id="dialogIconElement"></i>
+                </div>
+                <div>
+                    <div class="dialog-title" id="dialogTitle">Create New Photo Edit</div>
+                    <div class="dialog-subtitle">Enter a name for your project</div>
+                </div>
+            </div>
+            <input type="text" class="dialog-input" id="projectNameInput" placeholder="Project name..." autofocus>
+            <div class="dialog-actions">
+                <button class="dialog-btn cancel" onclick="closeDialog()">Cancel</button>
+                <button class="dialog-btn create" onclick="confirmCreateProject()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let projects = [];
+        let currentProjectType = 'image'; // Track current type for dialog
+
+        // Load projects from localStorage
+        function loadProjects() {
+            const savedProjects = localStorage.getItem('editorProjects');
+            if (savedProjects) {
+                projects = JSON.parse(savedProjects);
+            } else {
+                // Start with empty projects array
+                projects = [];
+            }
+            renderProjects();
+        }
+
+        // Show custom dialog
+        function showDialog(type) {
+            currentProjectType = type;
+            const dialogOverlay = document.getElementById('dialogOverlay');
+            const dialogTitle = document.getElementById('dialogTitle');
+            const dialogIcon = document.getElementById('dialogIcon');
+            const dialogIconElement = document.getElementById('dialogIconElement');
+            const dialogSubtitle = document.querySelector('.dialog-subtitle');
+            const projectNameInput = document.getElementById('projectNameInput');
+            const createBtn = document.querySelector('.dialog-btn.create');
+
+            // Update dialog based on type
+            if (type === 'image') {
+                dialogTitle.textContent = 'Create New Photo Edit';
+                dialogIcon.className = 'dialog-icon photo';
+                dialogIconElement.className = 'fas fa-image';
+            } else {
+                dialogTitle.textContent = 'Create New Video Edit';
+                dialogIcon.className = 'dialog-icon video';
+                dialogIconElement.className = 'fas fa-video';
+            }
+
+            // Reset dialog for create mode
+            dialogSubtitle.textContent = 'Enter a name for your project';
+            createBtn.textContent = 'Create';
+            projectNameInput.value = '';
+            dialogOverlay.dataset.mode = 'create';
+            delete dialogOverlay.dataset.projectId;
+
+            // Show dialog
+            dialogOverlay.classList.add('show');
+
+            // Focus input after animation
+            setTimeout(() => {
+                projectNameInput.focus();
+            }, 100);
+        }
+
+        // Close dialog
+        function closeDialog() {
+            const dialogOverlay = document.getElementById('dialogOverlay');
+            dialogOverlay.classList.remove('show');
+        }
+
+        // Close dialog when clicking overlay
+        function closeDialogOnOverlay(event) {
+            if (event.target.id === 'dialogOverlay') {
+                closeDialog();
+            }
+        }
+
+        // Confirm and create/rename project
+        function confirmCreateProject() {
+            const dialogOverlay = document.getElementById('dialogOverlay');
+            const projectNameInput = document.getElementById('projectNameInput');
+            const projectName = projectNameInput.value.trim();
+
+            if (!projectName) {
+                projectNameInput.focus();
+                return;
+            }
+
+            const mode = dialogOverlay.dataset.mode;
+
+            if (mode === 'rename') {
+                // Rename existing project
+                const projectId = parseInt(dialogOverlay.dataset.projectId);
+                const project = projects.find(p => p.id === projectId);
+                if (project && project.name !== projectName) {
+                    project.name = projectName;
+                    saveProjects();
+                    renderProjects();
+                }
+                closeDialog();
+            } else {
+                // Create new project
+                const newProject = {
+                    id: Date.now(),
+                    name: projectName,
+                    type: currentProjectType,
+                    date: new Date().toISOString(),
+                    thumbnail: null
+                };
+
+                projects.unshift(newProject);
+                saveProjects();
+                renderProjects();
+                closeDialog();
+
+                // Open the editor for this project
+                openProject(newProject.id);
+            }
+        }
+
+        // Handle Enter key in input
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectNameInput = document.getElementById('projectNameInput');
+            projectNameInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    confirmCreateProject();
+                }
+            });
+
+            // Handle Escape key to close dialog
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeDialog();
+                }
+            });
+        });
+
+        // Save projects to localStorage
+        function saveProjects() {
+            localStorage.setItem('editorProjects', JSON.stringify(projects));
+        }
+
+        // Render projects to the grid
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+
+            // Filter projects
+            let filteredProjects = projects.filter(project => {
+                const matchesFilter = currentFilter === 'all' || project.type === currentFilter;
+                const matchesSearch = project.name.toLowerCase().includes(searchTerm);
+                return matchesFilter && matchesSearch;
+            });
+
+            // Sort by date (newest first)
+            filteredProjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filteredProjects.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            grid.innerHTML = filteredProjects.map(project => {
+                const date = new Date(project.date);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                return `
+                    <div class="project-card" onclick="openProject(${project.id})">
+                        <div class="project-thumbnail ${project.type}">
+                            <i class="fas fa-${project.type === 'image' ? 'image' : 'video'}"></i>
+                            <span class="project-type-badge">${project.type === 'image' ? 'Photo' : 'Video'}</span>
+                        </div>
+                        <div class="project-info">
+                            <div class="project-name">${project.name}</div>
+                            <div class="project-meta">
+                                <div class="project-date">
+                                    <i class="fas fa-clock"></i>
+                                    ${formattedDate}
+                                </div>
+                            </div>
+                            <div class="project-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); renameProject(${project.id})">
+                                    <i class="fas fa-edit"></i> Rename
+                                </button>
+                                <button class="action-btn delete" onclick="event.stopPropagation(); deleteProject(${project.id})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Set filter
+        function setFilter(filter) {
+            currentFilter = filter;
+
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('active');
+                }
+            });
+
+            renderProjects();
+        }
+
+        // Filter projects by search
+        function filterProjects() {
+            renderProjects();
+        }
+
+        // Open project
+        function openProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            // Store current project in session
+            sessionStorage.setItem('currentProject', JSON.stringify(project));
+
+            // Navigate to the appropriate editor
+            if (project.type === 'image') {
+                alert(`Opening photo editor for: ${project.name}\n\n(Photo editor interface will be implemented here)`);
+            } else {
+                alert(`Opening video editor for: ${project.name}\n\n(Video editor interface will be implemented here)`);
+            }
+        }
+
+        // Rename project
+        function renameProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            showRenameDialog(projectId, project.name, project.type);
+        }
+
+        // Show rename dialog
+        function showRenameDialog(projectId, currentName, type) {
+            currentProjectType = type;
+            const dialogOverlay = document.getElementById('dialogOverlay');
+            const dialogTitle = document.getElementById('dialogTitle');
+            const dialogIcon = document.getElementById('dialogIcon');
+            const dialogIconElement = document.getElementById('dialogIconElement');
+            const dialogSubtitle = document.querySelector('.dialog-subtitle');
+            const projectNameInput = document.getElementById('projectNameInput');
+            const createBtn = document.querySelector('.dialog-btn.create');
+
+            // Update dialog for rename
+            dialogTitle.textContent = 'Rename Project';
+            dialogSubtitle.textContent = 'Enter a new name for your project';
+            dialogIcon.className = type === 'image' ? 'dialog-icon photo' : 'dialog-icon video';
+            dialogIconElement.className = type === 'image' ? 'fas fa-image' : 'fas fa-video';
+            createBtn.textContent = 'Rename';
+
+            // Set current name and show dialog
+            projectNameInput.value = currentName;
+            dialogOverlay.classList.add('show');
+            dialogOverlay.dataset.mode = 'rename';
+            dialogOverlay.dataset.projectId = projectId;
+
+            // Focus input and select text
+            setTimeout(() => {
+                projectNameInput.focus();
+                projectNameInput.select();
+            }, 100);
+        }
+
+        // Delete project
+        function deleteProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            if (!confirm(`Are you sure you want to delete "${project.name}"?`)) return;
+
+            projects = projects.filter(p => p.id !== projectId);
+            saveProjects();
+            renderProjects();
+        }
+
+        // Go back to tools page
+        function goBack() {
+            window.location.href = '../Tools.html';
+        }
+
+        // Initialize
+        loadProjects();
+    </script>
+</body>
+</html>
