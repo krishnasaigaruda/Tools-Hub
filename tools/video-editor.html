@@ -326,7 +326,7 @@
             display: flex;
             align-items: center;        
             justify-content: left;        
-            left: 300px;                  
+            left: 330px;                  
             background: #000;
             position: relative;
             overflow: hidden;
@@ -464,13 +464,26 @@
 
         .timeline-tracks-container {
             flex: 1;
-            overflow: auto;
+            overflow-x: auto;
+            overflow-y: hidden;
             position: relative;
+            scroll-behavior: smooth;
+        }
+
+        .drop-indicator {
+            position: absolute;
+            width: 3px;
+            top: 0;
+            bottom: 0;
+            background: #00f2fe;
+            box-shadow: 0 0 10px #00f2fe;
+            z-index: 1000;
+            pointer-events: none;
         }
 
         .timeline-tracks {
             position: relative;
-            min-width: 2000px;
+            min-width: 100%;
         }
 
         .timeline-track {
@@ -499,21 +512,109 @@
             z-index: 10;
         }
 
+        .timeline-clip-container {
+            position: absolute;
+            height: 38px;
+        }
+
+        .timeline-clip-container:active {
+            cursor: grabbing !important;
+        }
+
         .timeline-clip {
             position: absolute;
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             border-radius: 4px;
             padding: 5px 8px;
-            cursor: pointer;
             user-select: none;
             min-width: 100px;
             height: 38px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            transition: all 0.2s;
             border: 2px solid transparent;
-            overflow: hidden;
+            overflow: visible;
+            transition: none;
+            cursor: grab;
+        }
+
+        .timeline-clip:active:not(:has(.clip-resize-handle:hover)) {
+            cursor: grabbing;
+        }
+
+        .timeline-clip.resizing {
+            transition: none;
+        }
+
+        .trimmed-section {
+            position: absolute;
+            top: 0;
+            height: 38px;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(79, 172, 254, 0.2),
+                rgba(79, 172, 254, 0.2) 10px,
+                rgba(79, 172, 254, 0.3) 10px,
+                rgba(79, 172, 254, 0.3) 20px
+            );
+            border: 1px dashed rgba(79, 172, 254, 0.5);
+            border-radius: 4px;
+            opacity: 0.6;
+            pointer-events: none !important;
+        }
+
+        .trimmed-section.left {
+            left: 0;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .trimmed-section.right {
+            right: 0;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .clip-resize-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            cursor: ew-resize !important;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.6);
+            opacity: 1;
+            transition: background 0.2s;
+            pointer-events: all;
+        }
+
+        .clip-resize-handle:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .clip-resize-handle.left {
+            left: 0;
+            border-left: 3px solid #fff;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .clip-resize-handle.right {
+            right: 0;
+            border-right: 3px solid #fff;
+            border-radius: 0 4px 4px 0;
+        }
+
+        @keyframes trim-pulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        .trimmed-section.animating {
+            animation: trim-pulse 0.5s ease-in-out;
         }
 
         .timeline-clip.image-clip {
@@ -536,12 +637,14 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            pointer-events: none;
         }
 
         .timeline-clip-duration {
             font-size: 9px;
             opacity: 0.8;
             margin-top: 2px;
+            pointer-events: none;
         }
 
         .transition-marker {
@@ -574,7 +677,13 @@
             width: 2px;
             background: #ff0000;
             z-index: 100;
-            pointer-events: none;
+            pointer-events: all;
+            cursor: ew-resize;
+        }
+
+        .playhead:hover {
+            width: 3px;
+            background: #ff3333;
         }
 
         .playhead::before {
@@ -756,9 +865,18 @@
                     </div>
 
                     <div id="clipProperties" style="display: none;">
+                        <!-- Visual Editing (hidden for audio clips) -->
+                        <div id="visualControls">
                         <!-- Adjustments -->
                         <div class="properties-panel">
                             <div class="properties-title">Adjustments</div>
+                            <div class="property-group">
+                                <label class="property-label">Exposure</label>
+                                <div class="slider-container">
+                                    <input type="range" class="slider" min="0" max="200" value="100" oninput="updateClipProperty('exposure', this.value)">
+                                    <span class="slider-value" id="exposureValue">100%</span>
+                                </div>
+                            </div>
                             <div class="property-group">
                                 <label class="property-label">Brightness</label>
                                 <div class="slider-container">
@@ -785,6 +903,27 @@
                                 <div class="slider-container">
                                     <input type="range" class="slider" min="0" max="20" value="0" oninput="updateClipProperty('blur', this.value)">
                                     <span class="slider-value" id="blurValue">0px</span>
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Sharpen</label>
+                                <div class="slider-container">
+                                    <input type="range" class="slider" min="0" max="200" value="0" oninput="updateClipProperty('sharpen', this.value)">
+                                    <span class="slider-value" id="sharpenValue">0%</span>
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Vignette</label>
+                                <div class="slider-container">
+                                    <input type="range" class="slider" min="0" max="100" value="0" oninput="updateClipProperty('vignette', this.value)">
+                                    <span class="slider-value" id="vignetteValue">0%</span>
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Rotate</label>
+                                <div class="slider-container">
+                                    <input type="range" class="slider" min="0" max="360" value="0" oninput="updateClipProperty('rotate', this.value)">
+                                    <span class="slider-value" id="rotateValue">0°</span>
                                 </div>
                             </div>
                         </div>
@@ -819,8 +958,31 @@
                                 </button>
                             </div>
                         </div>
+                        </div>
+                        <!-- End Visual Controls -->
 
-                        <!-- Video Controls (only for video clips) -->
+                        <!-- Audio Controls (for audio clips and videos in audio track) -->
+                        <div id="audioControls" style="display: none;">
+                            <div class="properties-panel">
+                                <div class="properties-title">Audio Controls</div>
+                                <div class="property-group">
+                                    <label class="property-label">Volume</label>
+                                    <div class="slider-container">
+                                        <input type="range" class="slider" min="0" max="200" value="100" oninput="updateAudioProperty('volume', this.value)">
+                                        <span class="slider-value" id="audioVolumeValue">100%</span>
+                                    </div>
+                                </div>
+                                <div class="property-group">
+                                    <label class="property-label">Speed</label>
+                                    <div class="slider-container">
+                                        <input type="range" class="slider" min="25" max="400" value="100" oninput="updateAudioProperty('speed', this.value)">
+                                        <span class="slider-value" id="audioSpeedValue">1x</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Controls (only for video clips in video track) -->
                         <div class="properties-panel" id="videoControls" style="display: none;">
                             <div class="properties-title">Video Controls</div>
                             <div class="property-group">
@@ -833,7 +995,7 @@
                             <div class="property-group">
                                 <label class="property-label">Volume</label>
                                 <div class="slider-container">
-                                    <input type="range" class="slider" min="0" max="100" value="100" oninput="updateClipProperty('volume', this.value)">
+                                    <input type="range" class="slider" min="0" max="200" value="100" oninput="updateClipProperty('volume', this.value)">
                                     <span class="slider-value" id="volumeValue">100%</span>
                                 </div>
                             </div>
@@ -858,7 +1020,13 @@
 
                     <div id="textProperties" style="display: none;">
                         <div class="properties-panel">
-                            <div class="properties-title">Text Settings</div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                <div class="properties-title" id="textTitle" style="margin-bottom: 0;">Text 1</div>
+                                <button onclick="deleteTextOverlay()" style="background: rgba(239, 68, 68, 0.3); border: 1px solid rgba(239, 68, 68, 0.6); color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 12px; transition: all 0.3s;">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
                             <div class="property-group">
                                 <label class="property-label">Font Size</label>
                                 <div class="slider-container">
@@ -906,17 +1074,20 @@
                     <button class="timeline-btn" id="detachBtn" onclick="detachAudio()" disabled>
                         <i class="fas fa-unlink"></i> Detach Audio
                     </button>
+                    <button class="timeline-btn" id="goToStartBtn" onclick="goToFrameStart()" disabled>
+                        <i class="fas fa-step-backward"></i> Go to Beginning
+                    </button>
+                    <button class="timeline-btn" id="goToEndBtn" onclick="goToFrameEnd()" disabled>
+                        <i class="fas fa-step-forward"></i> Go to End
+                    </button>
                 </div>
                 <div class="timeline-tracks-container">
                     <div class="timeline-tracks" id="timelineTracks">
                         <div class="playhead" id="playhead" style="left: 100px;"></div>
-                        <div class="timeline-track" data-track="video1" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+                        <div class="timeline-track" data-track="video1" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
                             <div class="timeline-track-label">Video 1</div>
                         </div>
-                        <div class="timeline-track" data-track="video2" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
-                            <div class="timeline-track-label">Video 2</div>
-                        </div>
-                        <div class="timeline-track" data-track="audio" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+                        <div class="timeline-track" data-track="audio" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
                             <div class="timeline-track-label">Audio</div>
                         </div>
                     </div>
@@ -1004,7 +1175,7 @@
         let projectData = {};
         let textOverlays = [];
         let selectedTextOverlay = null;
-        let pixelsPerSecond = 50;
+        let pixelsPerSecond = 0.5; // Very compact timeline - 10x shorter frames
         const TRACK_START = 100;
         let lastActiveClipId = null;
 
@@ -1025,7 +1196,59 @@
 
             loadProjectData();
             renderFrame();
+
+            // Make playhead draggable
+            initPlayheadDragging();
         };
+
+        // Initialize playhead dragging functionality
+        function initPlayheadDragging() {
+            const playhead = document.getElementById('playhead');
+            const timelineContainer = document.querySelector('.timeline-tracks-container');
+            let isDraggingPlayhead = false;
+
+            playhead.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                isDraggingPlayhead = true;
+
+                // Pause playback while dragging
+                if (isPlaying) {
+                    togglePlay();
+                }
+
+                document.body.style.cursor = 'ew-resize';
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDraggingPlayhead) return;
+
+                // Calculate new time based on mouse position
+                const rect = timelineContainer.getBoundingClientRect();
+                const scrollLeft = timelineContainer.scrollLeft;
+                const x = e.clientX - rect.left + scrollLeft;
+                const newTime = Math.max(0, Math.min((x - TRACK_START) / pixelsPerSecond, totalDuration));
+
+                // Update current time
+                currentTime = newTime;
+
+                // Update playhead position
+                updatePlayheadPosition();
+
+                // Update UI
+                updatePlaybackUI();
+
+                // Render frame at new position (scrubbing)
+                renderFrame();
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (isDraggingPlayhead) {
+                    isDraggingPlayhead = false;
+                    document.body.style.cursor = 'default';
+                }
+            });
+        }
 
         // Switch sidebar tabs
         function switchTab(tab, clickedElement) {
@@ -1150,50 +1373,364 @@
         function handleDragStart(e) {
             e.dataTransfer.effectAllowed = 'copy';
             e.dataTransfer.setData('itemId', e.target.dataset.itemId);
+            e.dataTransfer.setData('dragType', 'newMedia');
         }
 
         function handleDragOver(e) {
             e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
+            e.stopPropagation();
+
+            // Check if we're dragging a clip or new media
+            const isClipMove = window.draggedClipId !== undefined && window.draggedClipId !== null;
+            e.dataTransfer.dropEffect = isClipMove ? 'move' : 'copy';
+
+            // Show drop indicator line
+            const track = e.currentTarget;
+            const rect = track.getBoundingClientRect();
+            const scrollLeft = track.parentElement.scrollLeft;
+            const x = e.clientX - rect.left + scrollLeft;
+
+            // Remove old indicator if exists
+            const oldIndicator = track.querySelector('.drop-indicator');
+            if (oldIndicator) {
+                oldIndicator.remove();
+            }
+
+            // Create new indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'drop-indicator';
+            indicator.style.left = x + 'px';
+            track.appendChild(indicator);
+        }
+
+        function handleDragLeave(e) {
+            // Remove drop indicator when leaving track
+            const track = e.currentTarget;
+            const indicator = track.querySelector('.drop-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
         }
 
         function handleDrop(e) {
             e.preventDefault();
-            const itemId = parseFloat(e.dataTransfer.getData('itemId'));
-            const item = mediaLibraryItems.find(i => i.id === itemId);
+            e.stopPropagation();
             const track = e.currentTarget;
 
-            if (item) {
-                addClipToTimeline(item, track);
+            // Remove drop indicator
+            const indicator = track.querySelector('.drop-indicator');
+            if (indicator) {
+                indicator.remove();
             }
+
+            // Check if we're moving an existing clip
+            if (window.draggedClipId !== undefined && window.draggedClipId !== null) {
+                // Moving existing clip to new track or repositioning
+                const clipId = window.draggedClipId;
+                const clip = timelineClips.find(c => c.id === clipId);
+
+                if (clip) {
+                    // Save original position in case we need to revert
+                    const originalTrack = clip.track;
+                    const originalStartTime = clip.startTime;
+
+                    // Calculate drop position - place exactly where dropped
+                    const rect = track.getBoundingClientRect();
+                    const scrollLeft = track.parentElement.scrollLeft;
+                    const x = e.clientX - rect.left + scrollLeft;
+                    const dropTime = Math.max(0, (x - TRACK_START) / pixelsPerSecond);
+
+                    // Prevent images from being placed in audio track
+                    if (clip.type === 'image' && track.dataset.track === 'audio') {
+                        console.log('Cannot place image in audio track');
+                        // Restore clip to original position
+                        clip.startTime = originalStartTime;
+                        clip.position = TRACK_START + (originalStartTime * pixelsPerSecond);
+                        clip.track = originalTrack;
+
+                        const originalTrackElement = document.querySelector(`.timeline-track[data-track="${originalTrack}"]`);
+                        if (originalTrackElement) {
+                            renderTimelineClip(clip, originalTrackElement);
+                        }
+                        window.draggedClipId = null;
+                        return;
+                    }
+
+                    // Prevent audio files from being placed in video track
+                    if (clip.type === 'audio' && track.dataset.track === 'video1') {
+                        console.log('Cannot place audio in video track');
+                        // Restore clip to original position
+                        clip.startTime = originalStartTime;
+                        clip.position = TRACK_START + (originalStartTime * pixelsPerSecond);
+                        clip.track = originalTrack;
+
+                        const originalTrackElement = document.querySelector(`.timeline-track[data-track="${originalTrack}"]`);
+                        if (originalTrackElement) {
+                            renderTimelineClip(clip, originalTrackElement);
+                        }
+                        window.draggedClipId = null;
+                        return;
+                    }
+
+                    // Check for overlap only if placing an image on top of a video
+                    if (clip.type === 'image' && track.dataset.track === 'video1') {
+                        const clipDuration = clip.duration;
+                        const proposedEnd = dropTime + clipDuration;
+
+                        // Check for overlaps with video clips in the same track
+                        const otherClips = timelineClips.filter(c => c.track === track.dataset.track && c.id !== clip.id && c.type === 'video');
+                        let hasOverlap = false;
+
+                        for (const otherClip of otherClips) {
+                            const otherEnd = otherClip.startTime + otherClip.duration;
+
+                            // Check if clips would overlap
+                            if (dropTime < otherEnd && proposedEnd > otherClip.startTime) {
+                                hasOverlap = true;
+                                break;
+                            }
+                        }
+
+                        // Only allow drop if there's no overlap with videos
+                        if (hasOverlap) {
+                            console.log('Cannot place image here - would overlap with a video');
+                            // Restore clip to original position
+                            clip.startTime = originalStartTime;
+                            clip.position = TRACK_START + (originalStartTime * pixelsPerSecond);
+                            clip.track = originalTrack;
+
+                            const originalTrackElement = document.querySelector(`.timeline-track[data-track="${originalTrack}"]`);
+                            if (originalTrackElement) {
+                                renderTimelineClip(clip, originalTrackElement);
+                            }
+                            window.draggedClipId = null;
+                            return;
+                        }
+                    }
+
+                    // Prevent overlapping within the audio track
+                    if (track.dataset.track === 'audio') {
+                        const clipDuration = clip.duration;
+                        const proposedEnd = dropTime + clipDuration;
+
+                        // Check for overlaps with other clips in the audio track
+                        const otherClips = timelineClips.filter(c => c.track === 'audio' && c.id !== clip.id);
+                        let hasOverlap = false;
+
+                        for (const otherClip of otherClips) {
+                            const otherEnd = otherClip.startTime + otherClip.duration;
+
+                            // Check if clips would overlap
+                            if (dropTime < otherEnd && proposedEnd > otherClip.startTime) {
+                                hasOverlap = true;
+                                break;
+                            }
+                        }
+
+                        // Only allow drop if there's no overlap in audio track
+                        if (hasOverlap) {
+                            console.log('Cannot place clip here - would overlap with another audio clip');
+                            // Restore clip to original position
+                            clip.startTime = originalStartTime;
+                            clip.position = TRACK_START + (originalStartTime * pixelsPerSecond);
+                            clip.track = originalTrack;
+
+                            const originalTrackElement = document.querySelector(`.timeline-track[data-track="${originalTrack}"]`);
+                            if (originalTrackElement) {
+                                renderTimelineClip(clip, originalTrackElement);
+                            }
+                            window.draggedClipId = null;
+                            return;
+                        }
+                    }
+
+                    // Remove old container
+                    const oldContainer = document.querySelector(`.timeline-clip-container[data-clip-id="${clipId}"]`);
+                    if (oldContainer) {
+                        oldContainer.remove();
+                    }
+
+                    // Remove all transition markers associated with this clip
+                    document.querySelectorAll(`.transition-marker[data-clip1="${clipId}"], .transition-marker[data-clip2="${clipId}"]`).forEach(marker => {
+                        marker.remove();
+                    });
+
+                    // Clear transition data
+                    clip.transition = { type: 'none', duration: 0 };
+
+                    // Update clip data - place exactly at drop position
+                    const oldTrack = clip.track;
+                    const oldTime = clip.startTime;
+                    clip.track = track.dataset.track;
+                    clip.startTime = dropTime;
+                    clip.position = TRACK_START + (dropTime * pixelsPerSecond);
+
+                    // Re-render clip in the track
+                    renderTimelineClip(clip, track);
+                    updateTotalDuration();
+
+                    // Auto-create transitions for adjacent clips
+                    createAutoTransitions();
+
+                    const sameTrack = oldTrack === track.dataset.track;
+                    console.log(sameTrack ?
+                        `Repositioned clip within ${oldTrack} from ${oldTime.toFixed(2)}s to ${dropTime.toFixed(2)}s` :
+                        `Moved clip from ${oldTrack} to ${track.dataset.track} at time ${dropTime.toFixed(2)}s`
+                    );
+                }
+
+                // Clear the global variable
+                window.draggedClipId = null;
+            } else {
+                // Adding new media item
+                const itemId = parseFloat(e.dataTransfer.getData('itemId'));
+                const item = mediaLibraryItems.find(i => i.id === itemId);
+
+                if (item) {
+                    addClipToTimeline(item, track);
+                }
+            }
+        }
+
+        // Find a non-overlapping position for a clip
+        function findNonOverlappingPosition(clip, trackName, preferredTime) {
+            const trackClips = timelineClips.filter(c => c.track === trackName && c.id !== clip.id);
+
+            if (trackClips.length === 0) {
+                return Math.max(0, preferredTime);
+            }
+
+            // Sort clips by start time
+            trackClips.sort((a, b) => a.startTime - b.startTime);
+
+            const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+            const clipFullDuration = originalItem ? originalItem.duration : clip.duration;
+
+            // Build list of all available gaps
+            const gaps = [];
+
+            // Gap before first clip
+            const firstClip = trackClips[0];
+            if (firstClip.startTime > 0) {
+                gaps.push({
+                    start: 0,
+                    end: firstClip.startTime,
+                    size: firstClip.startTime
+                });
+            }
+
+            // Gaps between clips
+            for (let i = 0; i < trackClips.length - 1; i++) {
+                const currentClip = trackClips[i];
+                const nextClip = trackClips[i + 1];
+
+                const currentOriginalItem = mediaLibraryItems.find(item => item.id === currentClip.itemId);
+                const currentFullDuration = currentOriginalItem ? currentOriginalItem.duration : currentClip.duration;
+                const currentEnd = currentClip.startTime + currentFullDuration;
+
+                const gapSize = nextClip.startTime - currentEnd;
+                if (gapSize > 0) {
+                    gaps.push({
+                        start: currentEnd,
+                        end: nextClip.startTime,
+                        size: gapSize
+                    });
+                }
+            }
+
+            // Gap after last clip (infinite)
+            const lastClip = trackClips[trackClips.length - 1];
+            const lastOriginalItem = mediaLibraryItems.find(i => i.id === lastClip.itemId);
+            const lastFullDuration = lastOriginalItem ? lastOriginalItem.duration : lastClip.duration;
+            const lastEnd = lastClip.startTime + lastFullDuration;
+            gaps.push({
+                start: lastEnd,
+                end: Infinity,
+                size: Infinity
+            });
+
+            // Find the best gap for the clip
+            const requiredSpace = clipFullDuration;
+            let bestPosition = preferredTime;
+            let bestDistance = Infinity;
+
+            for (const gap of gaps) {
+                // Check if clip fits in this gap
+                if (gap.size >= requiredSpace || gap.size === Infinity) {
+                    // Try to place at preferred position within this gap
+                    let position = Math.max(gap.start, Math.min(preferredTime, gap.end - requiredSpace));
+
+                    // Calculate distance from preferred position
+                    const distance = Math.abs(position - preferredTime);
+
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestPosition = position;
+                    }
+                }
+            }
+
+            console.log('Found non-overlapping position:', bestPosition, 'for clip duration:', clipFullDuration);
+            return bestPosition;
         }
 
         // Add clip to timeline
         function addClipToTimeline(item, track) {
-            const trackClips = timelineClips.filter(c => c.track === track.dataset.track);
-            let startPosition = TRACK_START;
-
-            if (trackClips.length > 0) {
-                const lastClip = trackClips[trackClips.length - 1];
-                startPosition = lastClip.position + (lastClip.duration * pixelsPerSecond);
+            // Prevent images from being added to audio track
+            if (item.type === 'image' && track.dataset.track === 'audio') {
+                console.log('Cannot add image to audio track');
+                return;
             }
 
-            const clip = {
+            // Prevent audio files from being added to video track
+            if (item.type === 'audio' && track.dataset.track === 'video1') {
+                console.log('Cannot add audio to video track');
+                return;
+            }
+
+            const trackClips = timelineClips.filter(c => c.track === track.dataset.track);
+
+            // Create temporary clip to find position
+            const tempClip = {
                 id: Date.now() + Math.random(),
+                itemId: item.id,
+                duration: item.duration
+            };
+
+            // Find non-overlapping position (start at end of last clip or beginning)
+            let preferredTime = 0;
+            if (trackClips.length > 0) {
+                // Sort by start time and get the last clip's end
+                const sortedClips = [...trackClips].sort((a, b) => a.startTime - b.startTime);
+                const lastClip = sortedClips[sortedClips.length - 1];
+                const lastOriginalItem = mediaLibraryItems.find(i => i.id === lastClip.itemId);
+                const lastOriginalDuration = lastOriginalItem ? lastOriginalItem.duration : lastClip.duration;
+                preferredTime = lastClip.startTime + lastOriginalDuration;
+            }
+
+            const startTime = findNonOverlappingPosition(tempClip, track.dataset.track, preferredTime);
+
+            const clip = {
+                id: tempClip.id,
                 itemId: item.id,
                 name: item.name,
                 type: item.type,
                 url: item.url,
                 element: item.element,
                 duration: item.duration,
-                startTime: (startPosition - TRACK_START) / pixelsPerSecond,
-                position: startPosition,
+                startTime: startTime,
+                position: TRACK_START + (startTime * pixelsPerSecond),
                 track: track.dataset.track,
+                trimStart: 0, // How much is trimmed from the start of the original media
                 effects: {
+                    exposure: 100,
                     brightness: 100,
                     contrast: 100,
                     saturation: 100,
                     blur: 0,
+                    sharpen: 0,
+                    vignette: 0,
+                    rotate: 0,
                     filter: 'none'
                 },
                 volume: 100,
@@ -1204,29 +1741,301 @@
             renderTimelineClip(clip, track);
             updateTotalDuration();
 
-            // Add transition marker if there's a previous clip
-            if (trackClips.length > 0) {
-                addTransitionMarker(trackClips[trackClips.length - 1], clip);
-            }
+            // Auto-create transitions for adjacent clips
+            createAutoTransitions();
         }
 
         // Render timeline clip
         function renderTimelineClip(clip, track) {
+            // Get original media duration
+            const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+            const originalDuration = originalItem ? originalItem.duration : clip.duration;
+            const trimStart = clip.trimStart || 0;
+            const trimEnd = originalDuration - (trimStart + clip.duration);
+
+            // Create container for clip and trimmed sections
+            const container = document.createElement('div');
+            container.className = 'timeline-clip-container';
+            container.dataset.clipId = clip.id;
+            container.style.left = clip.position + 'px';
+
+            // Calculate total width including trimmed sections and gap
+            const totalWidth = (originalDuration * pixelsPerSecond) + 10; // 10px gap after each clip
+            container.style.width = totalWidth + 'px';
+
+            // Create left trimmed section if any
+            if (trimStart > 0) {
+                const leftTrimmed = document.createElement('div');
+                leftTrimmed.className = 'trimmed-section left';
+                leftTrimmed.style.width = (trimStart * pixelsPerSecond) + 'px';
+                leftTrimmed.style.left = '0px';
+                container.appendChild(leftTrimmed);
+            }
+
+            // Create the actual visible clip
             const clipElement = document.createElement('div');
             clipElement.className = 'timeline-clip' + (clip.type === 'image' ? ' image-clip' : '');
-            clipElement.dataset.clipId = clip.id;
-            clipElement.style.left = clip.position + 'px';
+            clipElement.style.left = (trimStart * pixelsPerSecond) + 'px';
             clipElement.style.width = (clip.duration * pixelsPerSecond) + 'px';
             clipElement.innerHTML = `
+                <div class="clip-resize-handle left"></div>
                 <div class="timeline-clip-name">${clip.name}</div>
                 <div class="timeline-clip-duration">${formatTime(clip.duration)}</div>
+                <div class="clip-resize-handle right"></div>
             `;
 
+            // Make the entire container draggable
+            container.draggable = true;
+
+            container.ondragstart = function(e) {
+                // Check if we're clicking on a resize handle
+                if (e.target.classList.contains('clip-resize-handle')) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Pause playback when editing timeline
+                if (isPlaying) {
+                    togglePlay();
+                }
+
+                // Set data transfer
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', 'clip'); // Required for some browsers
+
+                // Store clip ID globally as backup
+                window.draggedClipId = clip.id;
+
+                // Visual feedback
+                container.style.opacity = '0.5';
+
+                console.log('Started dragging clip:', clip.id, clip.name);
+            };
+
+            container.ondragend = function(e) {
+                container.style.opacity = '1';
+                window.draggedClipId = null;
+                console.log('Finished dragging clip');
+            };
+
+            // Click handler for selection
             clipElement.onclick = function(e) {
+                // Don't select if clicking on resize handles
+                if (e.target.classList.contains('clip-resize-handle')) {
+                    return;
+                }
+                e.stopPropagation();
                 selectClip(clip.id);
             };
 
-            track.appendChild(clipElement);
+            container.appendChild(clipElement);
+
+            // Create right trimmed section if any
+            if (trimEnd > 0) {
+                const rightTrimmed = document.createElement('div');
+                rightTrimmed.className = 'trimmed-section right';
+                rightTrimmed.style.width = (trimEnd * pixelsPerSecond) + 'px';
+                rightTrimmed.style.left = ((trimStart + clip.duration) * pixelsPerSecond) + 'px';
+                container.appendChild(rightTrimmed);
+            }
+
+            // Add resize functionality
+            const leftHandle = clipElement.querySelector('.clip-resize-handle.left');
+            const rightHandle = clipElement.querySelector('.clip-resize-handle.right');
+
+            let isResizing = false;
+            let resizeDirection = null;
+            let startX = 0;
+            let originalClipDuration = 0;
+            let originalStartTime = 0;
+            let originalTrimStart = 0;
+
+            function startResize(e, direction) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                // Pause playback when editing timeline
+                if (isPlaying) {
+                    togglePlay();
+                }
+
+                isResizing = true;
+                resizeDirection = direction;
+                startX = e.clientX;
+                originalClipDuration = clip.duration;
+                originalStartTime = clip.startTime;
+                originalTrimStart = clip.trimStart || 0;
+
+                // Disable dragging on container while resizing
+                container.draggable = false;
+                clipElement.classList.add('resizing');
+                document.body.style.cursor = 'ew-resize';
+            }
+
+            leftHandle.onmousedown = (e) => startResize(e, 'left');
+            rightHandle.onmousedown = (e) => startResize(e, 'right');
+
+            function updateTrimmedSections() {
+                // Remove old trimmed sections
+                container.querySelectorAll('.trimmed-section').forEach(el => el.remove());
+
+                const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+                const originalDuration = originalItem ? originalItem.duration : clip.duration;
+                const trimStart = clip.trimStart || 0;
+                const trimEnd = originalDuration - (trimStart + clip.duration);
+
+                // Add left trimmed section
+                if (trimStart > 0) {
+                    const leftTrimmed = document.createElement('div');
+                    leftTrimmed.className = 'trimmed-section left animating';
+                    leftTrimmed.style.width = (trimStart * pixelsPerSecond) + 'px';
+                    leftTrimmed.style.left = '0px';
+                    container.insertBefore(leftTrimmed, clipElement);
+
+                    // Remove animation class after animation completes
+                    setTimeout(() => leftTrimmed.classList.remove('animating'), 500);
+                }
+
+                // Add right trimmed section
+                if (trimEnd > 0) {
+                    const rightTrimmed = document.createElement('div');
+                    rightTrimmed.className = 'trimmed-section right animating';
+                    rightTrimmed.style.width = (trimEnd * pixelsPerSecond) + 'px';
+                    rightTrimmed.style.left = ((trimStart + clip.duration) * pixelsPerSecond) + 'px';
+                    container.appendChild(rightTrimmed);
+
+                    // Remove animation class after animation completes
+                    setTimeout(() => rightTrimmed.classList.remove('animating'), 500);
+                }
+            }
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+
+                const deltaX = e.clientX - startX;
+                const deltaSeconds = deltaX / pixelsPerSecond;
+
+                if (resizeDirection === 'right') {
+                    // Resize from the right (trim end)
+                    let newDuration = originalClipDuration + deltaSeconds;
+
+                    // Get original item duration to limit trimming
+                    const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+                    const maxDuration = originalItem ? originalItem.duration : originalClipDuration;
+                    const currentTrimStart = clip.trimStart || 0;
+
+                    // For images, allow any duration >= 1 second (no max limit)
+                    // For videos/audio, clamp to available content
+                    if (clip.type === 'image') {
+                        newDuration = Math.max(1, newDuration);
+                    } else {
+                        newDuration = Math.max(1, Math.min(newDuration, maxDuration - currentTrimStart));
+                    }
+
+                    clip.duration = newDuration;
+                    clipElement.style.width = (newDuration * pixelsPerSecond) + 'px';
+                    clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(newDuration);
+
+                    // Only show trimmed sections for videos/audio, not images
+                    if (clip.type !== 'image') {
+                        const trimEnd = maxDuration - (currentTrimStart + newDuration);
+                        const rightTrimmed = container.querySelector('.trimmed-section.right');
+                        if (trimEnd > 0) {
+                            if (!rightTrimmed) {
+                                const newRightTrimmed = document.createElement('div');
+                                newRightTrimmed.className = 'trimmed-section right';
+                                newRightTrimmed.style.left = ((currentTrimStart + newDuration) * pixelsPerSecond) + 'px';
+                                container.appendChild(newRightTrimmed);
+                            }
+                            const rt = container.querySelector('.trimmed-section.right');
+                            rt.style.width = (trimEnd * pixelsPerSecond) + 'px';
+                            rt.style.left = ((currentTrimStart + newDuration) * pixelsPerSecond) + 'px';
+                        } else if (rightTrimmed) {
+                            rightTrimmed.remove();
+                        }
+                    }
+
+                } else if (resizeDirection === 'left') {
+                    // Resize from the left (trim start) - keep container position fixed
+                    let newTrimStart = originalTrimStart + deltaSeconds;
+                    let newDuration = originalClipDuration - deltaSeconds;
+
+                    // Get original item duration to limit trimming
+                    const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+                    const maxDuration = originalItem ? originalItem.duration : originalClipDuration;
+
+                    // For images, adjust start time instead of trimStart (since they're static)
+                    if (clip.type === 'image') {
+                        // Just change duration, no trimming needed for images
+                        newDuration = Math.max(1, newDuration);
+                        newTrimStart = 0; // Images don't trim, they just change duration
+
+                        // Move the clip's start time to simulate left resize
+                        const timeDelta = deltaSeconds;
+                        clip.startTime = originalStartTime + timeDelta;
+                        clip.position = TRACK_START + (clip.startTime * pixelsPerSecond);
+                        container.style.left = clip.position + 'px';
+                    } else {
+                        // For videos/audio, use normal trimming
+                        newTrimStart = Math.max(0, Math.min(newTrimStart, maxDuration - 1));
+                        newDuration = Math.max(1, Math.min(newDuration, maxDuration - newTrimStart));
+                    }
+
+                    clip.duration = newDuration;
+                    clip.trimStart = newTrimStart;
+
+                    clipElement.style.left = (newTrimStart * pixelsPerSecond) + 'px';
+                    clipElement.style.width = (newDuration * pixelsPerSecond) + 'px';
+                    clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(newDuration);
+
+                    // Only show trimmed sections for videos/audio, not images
+                    if (clip.type !== 'image') {
+                        const leftTrimmed = container.querySelector('.trimmed-section.left');
+                        if (newTrimStart > 0) {
+                            if (!leftTrimmed) {
+                                const newLeftTrimmed = document.createElement('div');
+                                newLeftTrimmed.className = 'trimmed-section left';
+                                newLeftTrimmed.style.left = '0px';
+                                container.insertBefore(newLeftTrimmed, clipElement);
+                            }
+                            const lt = container.querySelector('.trimmed-section.left');
+                            lt.style.width = (newTrimStart * pixelsPerSecond) + 'px';
+                        } else if (leftTrimmed) {
+                            leftTrimmed.remove();
+                        }
+                    }
+                }
+
+                updateTotalDuration();
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    resizeDirection = null;
+                    clipElement.classList.remove('resizing');
+                    container.draggable = true; // Re-enable dragging
+                    document.body.style.cursor = 'default';
+
+                    // Add animation to trimmed sections
+                    updateTrimmedSections();
+
+                    // Auto-create transitions for adjacent clips after resizing
+                    createAutoTransitions();
+
+                    // Update transition markers positions
+                    document.querySelectorAll('.transition-marker').forEach(marker => {
+                        const clip2 = timelineClips.find(c => c.id == marker.dataset.clip2);
+                        if (clip2) {
+                            marker.style.left = (clip2.position - 15) + 'px';
+                        }
+                    });
+
+                    renderFrame();
+                }
+            });
+
+            track.appendChild(container);
         }
 
         // Add transition marker
@@ -1237,12 +2046,20 @@
             marker.dataset.clip2 = clip2.id;
             marker.innerHTML = '<i class="fas fa-random"></i>';
             marker.style.left = (clip2.position - 15) + 'px';
-            marker.title = 'Click to change transition';
+            marker.title = 'Left-click: change transition | Right-click: delete transition';
 
+            // Left click - change transition
             marker.onclick = function(e) {
                 e.stopPropagation();
                 selectedTransition = { clip1, clip2, marker, type: 'none', duration: 0 };
                 document.getElementById('transitionModal').classList.add('show');
+            };
+
+            // Right click - delete transition
+            marker.oncontextmenu = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteTransition(marker, clip2);
             };
 
             const track = document.querySelector(`[data-track="${clip2.track}"]`);
@@ -1254,12 +2071,68 @@
             }
         }
 
+        // Delete transition
+        function deleteTransition(marker, clip) {
+            if (marker) {
+                marker.remove();
+            }
+            if (clip) {
+                clip.transition = { type: 'none', duration: 0 };
+            }
+        }
+
+        // Auto-create transitions between adjacent clips
+        function createAutoTransitions() {
+            // Get all tracks
+            const tracks = ['video1', 'audio'];
+
+            tracks.forEach(trackName => {
+                // Get clips in this track, sorted by start time
+                const trackClips = timelineClips
+                    .filter(c => c.track === trackName)
+                    .sort((a, b) => a.startTime - b.startTime);
+
+                // Check each pair of adjacent clips
+                for (let i = 0; i < trackClips.length - 1; i++) {
+                    const clip1 = trackClips[i];
+                    const clip2 = trackClips[i + 1];
+
+                    // Get full durations
+                    const originalItem1 = mediaLibraryItems.find(item => item.id === clip1.itemId);
+                    const clip1Duration = originalItem1 ? originalItem1.duration : clip1.duration;
+                    const clip1End = clip1.startTime + clip1Duration;
+
+                    // Check if clips are touching (no gap)
+                    const gap = Math.abs(clip2.startTime - clip1End);
+                    const isTouching = gap < 0.1; // Allow small rounding errors
+
+                    if (isTouching) {
+                        // Check if transition marker already exists
+                        const existingMarker = document.querySelector(
+                            `.transition-marker[data-clip1="${clip1.id}"][data-clip2="${clip2.id}"]`
+                        );
+
+                        if (!existingMarker) {
+                            // Create transition marker
+                            addTransitionMarker(clip1, clip2);
+
+                            // Set default fade transition
+                            if (!clip2.transition || clip2.transition.type === 'none') {
+                                clip2.transition = { type: 'fade', duration: 0.5 };
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // Select clip
         function selectClip(clipId) {
             document.querySelectorAll('.timeline-clip').forEach(el => el.classList.remove('selected'));
 
-            const clipElement = document.querySelector(`[data-clip-id="${clipId}"]`);
-            if (clipElement) {
+            const container = document.querySelector(`.timeline-clip-container[data-clip-id="${clipId}"]`);
+            if (container) {
+                const clipElement = container.querySelector('.timeline-clip');
                 clipElement.classList.add('selected');
                 selectedClip = timelineClips.find(c => c.id === clipId);
 
@@ -1267,6 +2140,8 @@
                 document.getElementById('splitBtn').disabled = false;
                 document.getElementById('deleteBtn').disabled = false;
                 document.getElementById('detachBtn').disabled = selectedClip.type !== 'video';
+                document.getElementById('goToStartBtn').disabled = false;
+                document.getElementById('goToEndBtn').disabled = false;
 
                 // Show properties
                 showClipProperties();
@@ -1283,35 +2158,100 @@
             document.getElementById('noSelectionMsg').style.display = 'none';
             document.getElementById('clipProperties').style.display = 'block';
 
-            // Update sliders
-            const effects = selectedClip.effects;
-            document.querySelector('[oninput*="brightness"]').value = effects.brightness;
-            document.getElementById('brightnessValue').textContent = effects.brightness + '%';
-
-            document.querySelector('[oninput*="contrast"]').value = effects.contrast;
-            document.getElementById('contrastValue').textContent = effects.contrast + '%';
-
-            document.querySelector('[oninput*="saturation"]').value = effects.saturation;
-            document.getElementById('saturationValue').textContent = effects.saturation + '%';
-
-            document.querySelector('[oninput*="blur"]').value = effects.blur;
-            document.getElementById('blurValue').textContent = effects.blur + 'px';
-
-            // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[onclick*="${effects.filter}"]`)?.classList.add('active');
-
-            // Show/hide video controls
+            const visualControls = document.getElementById('visualControls');
+            const audioControls = document.getElementById('audioControls');
             const videoControls = document.getElementById('videoControls');
-            if (selectedClip.type === 'video') {
-                videoControls.style.display = 'block';
-                document.querySelector('[oninput*="speed"]').value = selectedClip.speed;
-                document.getElementById('speedValue').textContent = (selectedClip.speed / 100).toFixed(2) + 'x';
 
-                document.querySelector('[oninput*="volume"]').value = selectedClip.volume;
-                document.getElementById('volumeValue').textContent = selectedClip.volume + '%';
-            } else {
+            // Determine if this is an audio-only clip (audio file OR video in audio track)
+            const isAudioOnly = selectedClip.type === 'audio' || (selectedClip.type === 'video' && selectedClip.track === 'audio');
+
+            if (isAudioOnly) {
+                // Hide visual editing controls, show audio controls
+                visualControls.style.display = 'none';
                 videoControls.style.display = 'none';
+                audioControls.style.display = 'block';
+
+                // Update audio controls
+                const audioVolumeSlider = audioControls.querySelector('[oninput*="volume"]');
+                const audioSpeedSlider = audioControls.querySelector('[oninput*="speed"]');
+
+                audioVolumeSlider.value = selectedClip.volume;
+                document.getElementById('audioVolumeValue').textContent = selectedClip.volume + '%';
+
+                audioSpeedSlider.value = selectedClip.speed;
+                document.getElementById('audioSpeedValue').textContent = (selectedClip.speed / 100).toFixed(2) + 'x';
+            } else {
+                // Show visual controls, hide audio controls
+                visualControls.style.display = 'block';
+                audioControls.style.display = 'none';
+
+                // Update sliders
+                const effects = selectedClip.effects;
+                document.querySelector('#visualControls [oninput*="exposure"]').value = effects.exposure;
+                document.getElementById('exposureValue').textContent = effects.exposure + '%';
+
+                document.querySelector('#visualControls [oninput*="brightness"]').value = effects.brightness;
+                document.getElementById('brightnessValue').textContent = effects.brightness + '%';
+
+                document.querySelector('#visualControls [oninput*="contrast"]').value = effects.contrast;
+                document.getElementById('contrastValue').textContent = effects.contrast + '%';
+
+                document.querySelector('#visualControls [oninput*="saturation"]').value = effects.saturation;
+                document.getElementById('saturationValue').textContent = effects.saturation + '%';
+
+                document.querySelector('#visualControls [oninput*="blur"]').value = effects.blur;
+                document.getElementById('blurValue').textContent = effects.blur + 'px';
+
+                document.querySelector('#visualControls [oninput*="sharpen"]').value = effects.sharpen;
+                document.getElementById('sharpenValue').textContent = effects.sharpen + '%';
+
+                document.querySelector('#visualControls [oninput*="vignette"]').value = effects.vignette;
+                document.getElementById('vignetteValue').textContent = effects.vignette + '%';
+
+                document.querySelector('#visualControls [oninput*="rotate"]').value = effects.rotate;
+                document.getElementById('rotateValue').textContent = effects.rotate + '°';
+
+                // Update filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[onclick*="${effects.filter}"]`)?.classList.add('active');
+
+                // Show/hide video controls (only for videos in video track)
+                if (selectedClip.type === 'video') {
+                    videoControls.style.display = 'block';
+                    const videoSpeedSlider = videoControls.querySelector('[oninput*="speed"]');
+                    const videoVolumeSlider = videoControls.querySelector('[oninput*="volume"]');
+
+                    videoSpeedSlider.value = selectedClip.speed;
+                    document.getElementById('speedValue').textContent = (selectedClip.speed / 100).toFixed(2) + 'x';
+
+                    videoVolumeSlider.value = selectedClip.volume;
+                    document.getElementById('volumeValue').textContent = selectedClip.volume + '%';
+                } else {
+                    videoControls.style.display = 'none';
+                }
+            }
+        }
+
+        // Update audio property (for audio controls)
+        function updateAudioProperty(property, value) {
+            if (!selectedClip) return;
+
+            value = parseFloat(value);
+
+            if (property === 'volume') {
+                selectedClip.volume = value;
+                document.getElementById('audioVolumeValue').textContent = value + '%';
+                // Update volume immediately without rewinding
+                if (selectedClip.element && (selectedClip.type === 'audio' || selectedClip.type === 'video')) {
+                    selectedClip.element.volume = Math.min(value / 100, 1.0);
+                }
+            } else if (property === 'speed') {
+                selectedClip.speed = value;
+                document.getElementById('audioSpeedValue').textContent = (value / 100).toFixed(2) + 'x';
+                // Update playback rate immediately
+                if (selectedClip.element && (selectedClip.type === 'audio' || selectedClip.type === 'video')) {
+                    selectedClip.element.playbackRate = value / 100;
+                }
             }
         }
 
@@ -1321,7 +2261,10 @@
 
             value = parseFloat(value);
 
-            if (property === 'brightness') {
+            if (property === 'exposure') {
+                selectedClip.effects.exposure = value;
+                document.getElementById('exposureValue').textContent = value + '%';
+            } else if (property === 'brightness') {
                 selectedClip.effects.brightness = value;
                 document.getElementById('brightnessValue').textContent = value + '%';
             } else if (property === 'contrast') {
@@ -1333,6 +2276,15 @@
             } else if (property === 'blur') {
                 selectedClip.effects.blur = value;
                 document.getElementById('blurValue').textContent = value + 'px';
+            } else if (property === 'sharpen') {
+                selectedClip.effects.sharpen = value;
+                document.getElementById('sharpenValue').textContent = value + '%';
+            } else if (property === 'vignette') {
+                selectedClip.effects.vignette = value;
+                document.getElementById('vignetteValue').textContent = value + '%';
+            } else if (property === 'rotate') {
+                selectedClip.effects.rotate = value;
+                document.getElementById('rotateValue').textContent = value + '°';
             } else if (property === 'speed') {
                 selectedClip.speed = value;
                 document.getElementById('speedValue').textContent = (value / 100).toFixed(2) + 'x';
@@ -1382,29 +2334,25 @@
 
             // Reset all effect properties to defaults
             selectedClip.effects = {
+                exposure: 100,
                 brightness: 100,
                 contrast: 100,
                 saturation: 100,
                 blur: 0,
+                sharpen: 0,
+                vignette: 0,
+                rotate: 0,
                 filter: 'none'
             };
 
-            // Reset video-specific properties
-            if (selectedClip.type === 'video') {
-                selectedClip.speed = 100;
-                selectedClip.volume = 100;
+            // Reset speed and volume for all clips
+            selectedClip.speed = 100;
+            selectedClip.volume = 100;
 
-                // Reset duration based on original speed
-                const originalItem = mediaLibraryItems.find(i => i.id === selectedClip.itemId);
-                if (originalItem) {
-                    selectedClip.duration = originalItem.duration;
-                    const clipElement = document.querySelector(`[data-clip-id="${selectedClip.id}"]`);
-                    if (clipElement) {
-                        clipElement.style.width = (selectedClip.duration * pixelsPerSecond) + 'px';
-                        clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(selectedClip.duration);
-                    }
-                    updateTotalDuration();
-                }
+            // Update the audio/video element immediately
+            if (selectedClip.element && (selectedClip.type === 'audio' || selectedClip.type === 'video')) {
+                selectedClip.element.volume = 1.0;
+                selectedClip.element.playbackRate = 1.0;
             }
 
             // Update UI to reflect reset values
@@ -1434,18 +2382,34 @@
 
             // Update first clip
             selectedClip.duration = clip1Duration;
-            const clipElement = document.querySelector(`[data-clip-id="${selectedClip.id}"]`);
+            const container = document.querySelector(`.timeline-clip-container[data-clip-id="${selectedClip.id}"]`);
+            const clipElement = container.querySelector('.timeline-clip');
             clipElement.style.width = (clip1Duration * pixelsPerSecond) + 'px';
             clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(clip1Duration);
 
-            // Create second clip
+            // Update trimmed sections for first clip
+            container.querySelectorAll('.trimmed-section.right').forEach(el => el.remove());
             const originalItem = mediaLibraryItems.find(i => i.id === selectedClip.itemId);
+            const originalDuration = originalItem ? originalItem.duration : selectedClip.duration;
+            const trimStart = selectedClip.trimStart || 0;
+            const trimEnd = originalDuration - (trimStart + clip1Duration);
+
+            if (trimEnd > 0) {
+                const rightTrimmed = document.createElement('div');
+                rightTrimmed.className = 'trimmed-section right';
+                rightTrimmed.style.width = (trimEnd * pixelsPerSecond) + 'px';
+                rightTrimmed.style.left = ((trimStart + clip1Duration) * pixelsPerSecond) + 'px';
+                container.appendChild(rightTrimmed);
+            }
+
+            // Create second clip
             const newClip = {
                 ...selectedClip,
                 id: Date.now() + Math.random(),
                 duration: clip2Duration,
                 startTime: currentTime,
                 position: selectedClip.position + (clip1Duration * pixelsPerSecond),
+                trimStart: (selectedClip.trimStart || 0) + clip1Duration, // Adjust trim for second part
                 effects: { ...selectedClip.effects }
             };
 
@@ -1465,9 +2429,9 @@
                 selectedClip.element.currentTime = 0;
             }
 
-            const clipElement = document.querySelector(`[data-clip-id="${selectedClip.id}"]`);
-            if (clipElement) {
-                clipElement.remove();
+            const container = document.querySelector(`.timeline-clip-container[data-clip-id="${selectedClip.id}"]`);
+            if (container) {
+                container.remove();
             }
 
             // Remove associated transition markers
@@ -1479,6 +2443,8 @@
             document.getElementById('splitBtn').disabled = true;
             document.getElementById('deleteBtn').disabled = true;
             document.getElementById('detachBtn').disabled = true;
+            document.getElementById('goToStartBtn').disabled = true;
+            document.getElementById('goToEndBtn').disabled = true;
             document.getElementById('noSelectionMsg').style.display = 'block';
             document.getElementById('clipProperties').style.display = 'none';
 
@@ -1504,6 +2470,74 @@
             alert('Audio detached to audio track');
         }
 
+        // Go to beginning of selected frame
+        function goToFrameStart() {
+            if (!selectedClip) return;
+
+            // Pause playback if playing
+            if (isPlaying) {
+                togglePlay();
+            }
+
+            // Move playhead to the start of the active portion (blue section)
+            const trimStart = selectedClip.trimStart || 0;
+            currentTime = selectedClip.startTime + trimStart;
+
+            // Update UI and render
+            updatePlaybackUI();
+            renderFrame();
+
+            // Scroll the playhead into view
+            const playhead = document.getElementById('playhead');
+            const container = document.querySelector('.timeline-tracks-container');
+
+            // Update playhead position first
+            const playheadPixelPosition = TRACK_START + (currentTime * pixelsPerSecond);
+            playhead.style.left = playheadPixelPosition + 'px';
+
+            // Scroll to show the playhead with some margin
+            const containerWidth = container.clientWidth;
+            const margin = 100; // Add margin so playhead isn't right at edge
+            const scrollTarget = playheadPixelPosition - margin;
+            container.scrollLeft = Math.max(0, scrollTarget);
+
+            console.log('Go to Start - Playhead at:', currentTime.toFixed(2), 's, Position:', playheadPixelPosition, 'px, Scrolled to:', container.scrollLeft);
+        }
+
+        // Go to end of selected frame
+        function goToFrameEnd() {
+            if (!selectedClip) return;
+
+            // Pause playback if playing
+            if (isPlaying) {
+                togglePlay();
+            }
+
+            // Move playhead to the end of the active portion (blue section)
+            const trimStart = selectedClip.trimStart || 0;
+            currentTime = selectedClip.startTime + trimStart + selectedClip.duration;
+
+            // Update UI and render
+            updatePlaybackUI();
+            renderFrame();
+
+            // Scroll the playhead into view
+            const playhead = document.getElementById('playhead');
+            const container = document.querySelector('.timeline-tracks-container');
+
+            // Update playhead position first
+            const playheadPixelPosition = TRACK_START + (currentTime * pixelsPerSecond);
+            playhead.style.left = playheadPixelPosition + 'px';
+
+            // Scroll to show the playhead with some margin
+            const containerWidth = container.clientWidth;
+            const margin = 100; // Add margin so playhead isn't right at edge
+            const scrollTarget = playheadPixelPosition - margin;
+            container.scrollLeft = Math.max(0, scrollTarget);
+
+            console.log('Go to End - Playhead at:', currentTime.toFixed(2), 's, Position:', playheadPixelPosition, 'px, Scrolled to:', container.scrollLeft);
+        }
+
         function zoomTimeline(direction) {
             if (direction === 'in') {
                 pixelsPerSecond *= 1.5;
@@ -1513,11 +2547,34 @@
 
             // Re-render all clips
             timelineClips.forEach(clip => {
-                const clipElement = document.querySelector(`[data-clip-id="${clip.id}"]`);
-                if (clipElement) {
+                const container = document.querySelector(`.timeline-clip-container[data-clip-id="${clip.id}"]`);
+                if (container) {
+                    const clipElement = container.querySelector('.timeline-clip');
                     clip.position = TRACK_START + (clip.startTime * pixelsPerSecond);
-                    clipElement.style.left = clip.position + 'px';
+                    container.style.left = clip.position + 'px';
+
+                    // Update container and clip widths
+                    const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+                    const originalDuration = originalItem ? originalItem.duration : clip.duration;
+                    const totalWidth = (originalDuration * pixelsPerSecond) + 10;
+                    container.style.width = totalWidth + 'px';
+
+                    const trimStart = clip.trimStart || 0;
+                    clipElement.style.left = (trimStart * pixelsPerSecond) + 'px';
                     clipElement.style.width = (clip.duration * pixelsPerSecond) + 'px';
+
+                    // Update trimmed sections
+                    const leftTrimmed = container.querySelector('.trimmed-section.left');
+                    if (leftTrimmed) {
+                        leftTrimmed.style.width = (trimStart * pixelsPerSecond) + 'px';
+                    }
+
+                    const trimEnd = originalDuration - (trimStart + clip.duration);
+                    const rightTrimmed = container.querySelector('.trimmed-section.right');
+                    if (rightTrimmed) {
+                        rightTrimmed.style.width = (trimEnd * pixelsPerSecond) + 'px';
+                        rightTrimmed.style.left = ((trimStart + clip.duration) * pixelsPerSecond) + 'px';
+                    }
                 }
             });
 
@@ -1620,6 +2677,14 @@
 
         function selectTextOverlay(overlay) {
             selectedTextOverlay = overlay;
+
+            // Find the index of this overlay to determine its number
+            const overlayIndex = textOverlays.findIndex(t => t.id === overlay.id);
+            const textNumber = overlayIndex + 1;
+
+            // Update the title to show which text is selected
+            document.getElementById('textTitle').textContent = 'Text ' + textNumber;
+
             document.getElementById('textProperties').style.display = 'block';
             document.getElementById('textSizeValue').textContent = overlay.size + 'px';
             document.querySelector('#textTab input[type="range"]').value = overlay.size;
@@ -1639,6 +2704,22 @@
             }
         }
 
+        function deleteTextOverlay() {
+            if (!selectedTextOverlay) return;
+
+            // Remove element from DOM
+            if (selectedTextOverlay.element) {
+                selectedTextOverlay.element.remove();
+            }
+
+            // Remove from textOverlays array
+            textOverlays = textOverlays.filter(t => t.id !== selectedTextOverlay.id);
+
+            // Clear selection and hide properties
+            selectedTextOverlay = null;
+            document.getElementById('textProperties').style.display = 'none';
+        }
+
         // Playback
         function togglePlay() {
             const playBtn = document.getElementById('playBtn');
@@ -1649,6 +2730,17 @@
                 playBtn.innerHTML = '<i class="fas fa-play"></i>';
                 stopPlayback();
             } else {
+                // Don't allow playing if there's no content
+                if (timelineClips.length === 0) {
+                    console.log('No content to play');
+                    return;
+                }
+
+                // If at the end, restart from beginning
+                if (currentTime >= totalDuration) {
+                    currentTime = 0;
+                }
+
                 // Currently paused, so play
                 isPlaying = true;
                 playBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -1687,10 +2779,52 @@
 
                 currentTime += delta;
 
+                // Skip over trimmed sections
+                let skipped = false;
+                do {
+                    skipped = false;
+                    for (const clip of timelineClips) {
+                        const trimStart = clip.trimStart || 0;
+                        const clipActualStartTime = clip.startTime + trimStart;
+                        const clipActualEndTime = clipActualStartTime + clip.duration;
+
+                        // Check if we're in a trimmed section (between clip.startTime and clipActualStartTime)
+                        if (trimStart > 0 && currentTime >= clip.startTime && currentTime < clipActualStartTime) {
+                            // Skip to the actual start of the clip
+                            currentTime = clipActualStartTime;
+                            skipped = true;
+                            break;
+                        }
+
+                        // Check if we're in the gap after the clip ends (trimmed end section)
+                        const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
+                        if (originalItem) {
+                            const originalDuration = originalItem.duration;
+                            const clipEndInTimeline = clip.startTime + originalDuration;
+
+                            if (currentTime >= clipActualEndTime && currentTime < clipEndInTimeline) {
+                                // Skip to the end of the clip's original duration
+                                currentTime = clipEndInTimeline;
+                                skipped = true;
+                                break;
+                            }
+                        }
+                    }
+                } while (skipped); // Keep skipping until we're in a valid region
+
                 if (currentTime >= totalDuration) {
-                    currentTime = 0;
+                    currentTime = totalDuration;
                     stopPlayback();
-                    renderFrame(); // Render the first frame after stopping
+
+                    // Show black screen at the end
+                    const canvas = document.getElementById('previewCanvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Update play button to show play icon
+                    document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
+                    updatePlaybackUI();
                     return;
                 }
 
@@ -1731,7 +2865,22 @@
 
         function updatePlayheadPosition() {
             const playhead = document.getElementById('playhead');
-            playhead.style.left = (TRACK_START + currentTime * pixelsPerSecond) + 'px';
+            const playheadPosition = TRACK_START + currentTime * pixelsPerSecond;
+            playhead.style.left = playheadPosition + 'px';
+
+            // Auto-scroll timeline to keep playhead in view
+            if (isPlaying) {
+                const timelineContainer = document.querySelector('.timeline-tracks-container');
+                const containerWidth = timelineContainer.clientWidth;
+                const scrollLeft = timelineContainer.scrollLeft;
+                const playheadRelativePos = playheadPosition - scrollLeft;
+
+                // Keep playhead in the center-right area of the visible timeline
+                if (playheadRelativePos > containerWidth - 200 || playheadRelativePos < 100) {
+                    // Scroll to keep playhead at 1/3 from the left
+                    timelineContainer.scrollLeft = playheadPosition - containerWidth / 3;
+                }
+            }
         }
 
         function seekTo(event) {
@@ -1759,16 +2908,22 @@
 
         // Render frame
         function renderFrame() {
-            // Find active clips at current time
+            // Find active clips at current time (considering trimStart offset)
             const activeClips = timelineClips
-                .filter(clip => currentTime >= clip.startTime && currentTime < clip.startTime + clip.duration)
+                .filter(clip => {
+                    const trimStart = clip.trimStart || 0;
+                    const clipActualStartTime = clip.startTime + trimStart;
+                    const clipActualEndTime = clipActualStartTime + clip.duration;
+                    return currentTime >= clipActualStartTime && currentTime <= clipActualEndTime;
+                })
                 .sort((a, b) => {
                     const trackOrder = { 'video1': 0, 'video2': 1, 'audio': 2 };
                     return trackOrder[a.track] - trackOrder[b.track];
                 });
 
             // Check if active video/image clip has changed - update canvas size if needed
-            const currentActiveClip = activeClips.find(c => c.type === 'video' || c.type === 'image');
+            // Only consider clips in video track for visual display
+            const currentActiveClip = activeClips.find(c => (c.type === 'video' || c.type === 'image') && c.track === 'video1');
             const currentActiveClipId = currentActiveClip ? currentActiveClip.id : null;
 
             if (currentActiveClipId !== lastActiveClipId && currentActiveClip && currentActiveClip.element) {
@@ -1789,18 +2944,46 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             activeClips.forEach(clip => {
+                // Skip audio clips and videos in audio track (audio-only)
                 if (clip.type === 'audio') return;
+                if (clip.type === 'video' && clip.track === 'audio') return;
 
-                const clipTime = Math.max(0, Math.min(currentTime - clip.startTime, clip.duration));
+                const trimStart = clip.trimStart || 0;
+                const clipActualStartTime = clip.startTime + trimStart;
+                const clipTime = Math.max(0, Math.min(currentTime - clipActualStartTime, clip.duration));
                 const element = clip.element;
 
                 if (!element) return;
 
                 ctx.save();
 
+                // Apply rotation if needed
+                if (clip.effects.rotate !== 0) {
+                    ctx.translate(canvas.width / 2, canvas.height / 2);
+                    ctx.rotate((clip.effects.rotate * Math.PI) / 180);
+                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                }
+
                 // Apply filters
                 let filters = [];
 
+                // Apply filter presets first
+                if (clip.effects.filter === 'grayscale') {
+                    filters.push('grayscale(100%)');
+                } else if (clip.effects.filter === 'sepia') {
+                    filters.push('sepia(100%)');
+                } else if (clip.effects.filter === 'invert') {
+                    filters.push('invert(100%)');
+                } else if (clip.effects.filter === 'vintage') {
+                    filters.push('sepia(50%)');
+                } else if (clip.effects.filter === 'cool') {
+                    filters.push('hue-rotate(180deg)');
+                }
+
+                // Then apply manual adjustments (these take precedence)
+                if (clip.effects.exposure !== 100) {
+                    filters.push(`brightness(${clip.effects.exposure}%)`);
+                }
                 if (clip.effects.brightness !== 100) {
                     filters.push(`brightness(${clip.effects.brightness}%)`);
                 }
@@ -1813,18 +2996,10 @@
                 if (clip.effects.blur > 0) {
                     filters.push(`blur(${clip.effects.blur}px)`);
                 }
-
-                // Apply filter presets
-                if (clip.effects.filter === 'grayscale') {
-                    filters.push('grayscale(100%)');
-                } else if (clip.effects.filter === 'sepia') {
-                    filters.push('sepia(100%)');
-                } else if (clip.effects.filter === 'invert') {
-                    filters.push('invert(100%)');
-                } else if (clip.effects.filter === 'vintage') {
-                    filters.push('sepia(50%) contrast(120%) brightness(90%)');
-                } else if (clip.effects.filter === 'cool') {
-                    filters.push('hue-rotate(180deg) saturate(150%)');
+                if (clip.effects.sharpen > 0) {
+                    // Sharpen by increasing contrast - higher values = more sharpening
+                    const sharpenAmount = 100 + clip.effects.sharpen;
+                    filters.push(`contrast(${sharpenAmount}%)`);
                 }
 
                 ctx.filter = filters.join(' ') || 'none';
@@ -1845,9 +3020,10 @@
                         element.volume = clip.volume / 100;
                         element.playbackRate = clip.speed / 100;
 
-                        // Calculate target time (clamped to video duration)
+                        // Calculate target time (trimStart is already accounted for in clipTime calculation)
+                        const trimStartOffset = clip.trimStart || 0;
                         const speedAdjustedTime = clipTime * (clip.speed / 100);
-                        const targetTime = Math.max(0, Math.min(speedAdjustedTime, element.duration || speedAdjustedTime));
+                        const targetTime = Math.max(0, Math.min(trimStartOffset + speedAdjustedTime, element.duration || trimStartOffset + speedAdjustedTime));
 
                         if (isPlaying) {
                             // Sync video time if needed (with larger tolerance to avoid constant seeking)
@@ -1891,14 +3067,33 @@
                     }
                 }
 
+                // Apply vignette effect (draw after the image)
+                if (clip.effects.vignette > 0) {
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const radius = Math.sqrt(centerX * centerX + centerY * centerY);
+
+                    const gradient = ctx.createRadialGradient(centerX, centerY, radius * 0.3, centerX, centerY, radius);
+                    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                    gradient.addColorStop(1, `rgba(0, 0, 0, ${clip.effects.vignette / 100})`);
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
                 ctx.restore();
             });
 
-            // Handle audio clips
+            // Handle audio clips and videos in audio track (audio-only playback)
             activeClips.forEach(clip => {
-                if (clip.type === 'audio' && clip.element) {
-                    const clipTime = Math.max(0, Math.min(currentTime - clip.startTime, clip.duration));
-                    const targetTime = Math.max(0, Math.min(clipTime, clip.element.duration || clipTime));
+                // Play audio for: audio clips, OR videos in the audio track
+                const isAudioOnly = clip.type === 'audio' || (clip.type === 'video' && clip.track === 'audio');
+
+                if (isAudioOnly && clip.element) {
+                    const trimStart = clip.trimStart || 0;
+                    const clipActualStartTime = clip.startTime + trimStart;
+                    const clipTime = Math.max(0, Math.min(currentTime - clipActualStartTime, clip.duration));
+                    const targetTime = Math.max(0, Math.min(trimStart + clipTime, clip.element.duration || trimStart + clipTime));
                     clip.element.volume = clip.volume / 100;
 
                     if (isPlaying) {
@@ -1946,8 +3141,21 @@
             if (timelineClips.length === 0) {
                 totalDuration = 0;
             } else {
-                totalDuration = Math.max(...timelineClips.map(c => c.startTime + c.duration), 0);
+                // Calculate based on the end of each clip including its original duration
+                totalDuration = Math.max(...timelineClips.map(c => {
+                    const originalItem = mediaLibraryItems.find(i => i.id === c.itemId);
+                    const originalDuration = originalItem ? originalItem.duration : c.duration;
+                    return c.startTime + originalDuration;
+                }), 0);
             }
+
+            // Update timeline width dynamically - ensure enough space for content plus padding
+            const timelineTracks = document.getElementById('timelineTracks');
+            const contentWidth = totalDuration * pixelsPerSecond + TRACK_START + 200;
+            const viewportWidth = window.innerWidth - 250; // Subtract sidebar width
+            const minWidth = Math.max(contentWidth, viewportWidth);
+            timelineTracks.style.minWidth = minWidth + 'px';
+
             updatePlaybackUI();
         }
 
