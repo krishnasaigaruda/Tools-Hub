@@ -475,6 +475,25 @@
             scroll-behavior: smooth;
         }
 
+        /* Custom scrollbar styling for native scroll */
+        .timeline-tracks-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .timeline-tracks-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .timeline-tracks-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .timeline-tracks-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+
         .drop-indicator {
             position: absolute;
             width: 3px;
@@ -1099,7 +1118,7 @@
                         <i class="fas fa-step-forward"></i> Go to End
                     </button>
                 </div>
-                <div class="timeline-tracks-container">
+                <div class="timeline-tracks-container" id="timelineTracksContainer">
                     <div class="timeline-tracks" id="timelineTracks">
                         <div class="playhead" id="playhead" style="left: 100px;"></div>
                         <div class="timeline-track" data-track="video1" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
@@ -1200,6 +1219,44 @@
         const TRACK_START = 100;
         let lastActiveClipId = null;
 
+        // Cache playhead container for performance
+        let cachedPlayheadContainer = null;
+
+        function getCachedPlayheadContainer() {
+            if (!cachedPlayheadContainer) {
+                cachedPlayheadContainer = document.querySelector('.timeline-tracks-container');
+            }
+            return cachedPlayheadContainer;
+        }
+
+        // Global mousemove handler for playhead dragging only
+        let playheadUpdateScheduled = false;
+        let lastPlayheadMouseEvent = null;
+
+        document.addEventListener('mousemove', function(e) {
+            // Playhead dragging - batch updates with RAF
+            if (typeof isDraggingPlayhead !== 'undefined' && isDraggingPlayhead) {
+                lastPlayheadMouseEvent = e;
+                if (!playheadUpdateScheduled) {
+                    playheadUpdateScheduled = true;
+                    requestAnimationFrame(function() {
+                        if (isDraggingPlayhead && lastPlayheadMouseEvent) {
+                            const container = getCachedPlayheadContainer();
+                            const rect = container.getBoundingClientRect();
+                            const scrollLeft = container.scrollLeft;
+                            const x = lastPlayheadMouseEvent.clientX - rect.left + scrollLeft;
+                            const newTime = Math.max(0, Math.min((x - TRACK_START) / pixelsPerSecond, totalDuration));
+                            currentTime = newTime;
+                            updatePlayheadPosition();
+                            updatePlaybackUI();
+                            renderFrame();
+                        }
+                        playheadUpdateScheduled = false;
+                    });
+                }
+            }
+        }, false);
+
         // Initialize
         window.onload = function() {
             const savedProject = sessionStorage.getItem('currentProject');
@@ -1241,27 +1298,7 @@
                 document.body.style.cursor = 'ew-resize';
             });
 
-            document.addEventListener('mousemove', function(e) {
-                if (!isDraggingPlayhead) return;
-
-                // Calculate new time based on mouse position
-                const rect = timelineContainer.getBoundingClientRect();
-                const scrollLeft = timelineContainer.scrollLeft;
-                const x = e.clientX - rect.left + scrollLeft;
-                const newTime = Math.max(0, Math.min((x - TRACK_START) / pixelsPerSecond, totalDuration));
-
-                // Update current time
-                currentTime = newTime;
-
-                // Update playhead position
-                updatePlayheadPosition();
-
-                // Update UI
-                updatePlaybackUI();
-
-                // Render frame at new position (scrubbing)
-                renderFrame();
-            });
+            // Playhead mousemove now handled by global consolidated handler above
 
             document.addEventListener('mouseup', function(e) {
                 if (isDraggingPlayhead) {
@@ -1922,100 +1959,20 @@
                 if (!isResizing) return;
 
                 const deltaX = e.clientX - startX;
+                const scale = pixelsPerSecond;
                 const deltaSeconds = deltaX / scale;
 
                 if (resizeDirection === 'right') {
-                    // Resize from the right (trim end)
-                    let newDuration = originalClipDuration + deltaSeconds;
-
-                    // Get original item duration to limit trimming
-                    const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
-                    const maxDuration = originalItem ? originalItem.duration : originalClipDuration;
-                    const currentTrimStart = clip.trimStart || 0;
-
-                    // For images, allow any duration >= 1 second (no max limit)
-                    // For videos/audio, clamp to available content
-                    if (clip.type === 'image') {
-                        newDuration = Math.max(1, newDuration);
-                    } else {
-                        newDuration = Math.max(1, Math.min(newDuration, maxDuration - currentTrimStart));
-                    }
-
-                    clip.duration = newDuration;
-                    clipElement.style.width = (newDuration * scale) + 'px';
-                    clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(newDuration);
-
-                    // Only show trimmed sections for videos/audio, not images
-                    if (clip.type !== 'image') {
-                        const trimEnd = maxDuration - (currentTrimStart + newDuration);
-                        const rightTrimmed = container.querySelector('.trimmed-section.right');
-                        if (trimEnd > 0) {
-                            if (!rightTrimmed) {
-                                const newRightTrimmed = document.createElement('div');
-                                newRightTrimmed.className = 'trimmed-section right';
-                                newRightTrimmed.style.left = ((currentTrimStart + newDuration) * scale) + 'px';
-                                container.appendChild(newRightTrimmed);
-                            }
-                            const rt = container.querySelector('.trimmed-section.right');
-                            rt.style.width = (trimEnd * scale) + 'px';
-                            rt.style.left = ((currentTrimStart + newDuration) * scale) + 'px';
-                        } else if (rightTrimmed) {
-                            rightTrimmed.remove();
-                        }
-                    }
-
+                    const newDuration = Math.max(0.1, originalDuration + deltaSeconds);
+                    selectedClip.duration = newDuration;
                 } else if (resizeDirection === 'left') {
-                    // Resize from the left (trim start) - keep container position fixed
-                    let newTrimStart = originalTrimStart + deltaSeconds;
-                    let newDuration = originalClipDuration - deltaSeconds;
-
-                    // Get original item duration to limit trimming
-                    const originalItem = mediaLibraryItems.find(i => i.id === clip.itemId);
-                    const maxDuration = originalItem ? originalItem.duration : originalClipDuration;
-
-                    // For images, adjust start time instead of trimStart (since they're static)
-                    if (clip.type === 'image') {
-                        // Just change duration, no trimming needed for images
-                        newDuration = Math.max(1, newDuration);
-                        newTrimStart = 0; // Images don't trim, they just change duration
-
-                        // Move the clip's start time to simulate left resize
-                        const timeDelta = deltaSeconds;
-                        clip.startTime = originalStartTime + timeDelta;
-                        clip.position = TRACK_START + (clip.startTime * scale);
-                        container.style.left = clip.position + 'px';
-                    } else {
-                        // For videos/audio, use normal trimming
-                        newTrimStart = Math.max(0, Math.min(newTrimStart, maxDuration - 1));
-                        newDuration = Math.max(1, Math.min(newDuration, maxDuration - newTrimStart));
-                    }
-
-                    clip.duration = newDuration;
-                    clip.trimStart = newTrimStart;
-
-                    clipElement.style.left = (newTrimStart * scale) + 'px';
-                    clipElement.style.width = (newDuration * scale) + 'px';
-                    clipElement.querySelector('.timeline-clip-duration').textContent = formatTime(newDuration);
-
-                    // Only show trimmed sections for videos/audio, not images
-                    if (clip.type !== 'image') {
-                        const leftTrimmed = container.querySelector('.trimmed-section.left');
-                        if (newTrimStart > 0) {
-                            if (!leftTrimmed) {
-                                const newLeftTrimmed = document.createElement('div');
-                                newLeftTrimmed.className = 'trimmed-section left';
-                                newLeftTrimmed.style.left = '0px';
-                                container.insertBefore(newLeftTrimmed, clipElement);
-                            }
-                            const lt = container.querySelector('.trimmed-section.left');
-                            lt.style.width = (newTrimStart * scale) + 'px';
-                        } else if (leftTrimmed) {
-                            leftTrimmed.remove();
-                        }
-                    }
+                    const newTrimStart = Math.max(0, originalTrimStart + deltaSeconds);
+                    selectedClip.trimStart = newTrimStart;
+                    selectedClip.duration = Math.max(0.1, originalDuration - (newTrimStart - originalTrimStart));
                 }
 
                 updateTotalDuration();
+                renderFrame();
             });
 
             document.addEventListener('mouseup', function() {
