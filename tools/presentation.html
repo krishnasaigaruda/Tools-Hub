@@ -929,7 +929,7 @@
             purple: { background: 'linear-gradient(135deg, #8e2de2, #4a00e0)', color: '#ffffff' }
         };
 
-        // Initialize
+        // Initialize (SIMPLE)
         function init() {
             loadAllPresentations();
             loadPresentation();
@@ -938,7 +938,19 @@
                 addSlide();
             } else {
                 renderSlidesList();
-                selectSlide(0);
+                // Display current slide
+                const slide = slides[currentSlideIndex];
+                if (slide) {
+                    const canvas = document.getElementById('slideCanvas');
+                    const content = document.getElementById('slideContent');
+                    const theme = themes[slide.theme] || themes.white;
+
+                    canvas.style.background = theme.background;
+                    content.style.color = theme.color;
+                    content.innerHTML = slide.content || '';
+
+                    updateSlideInfo();
+                }
             }
         }
 
@@ -1163,16 +1175,8 @@
             }
         }
 
-        // Render slides list
+        // Render slides list (SIMPLE)
         function renderSlidesList() {
-            // Save current slide content before rendering
-            if (slides[currentSlideIndex]) {
-                const currentContent = document.getElementById('slideContent');
-                if (currentContent) {
-                    slides[currentSlideIndex].content = currentContent.innerHTML;
-                }
-            }
-
             const list = document.getElementById('slidesList');
             list.innerHTML = '';
 
@@ -1206,24 +1210,29 @@
             updateSlideInfo();
         }
 
-        // Select slide
+        // Select slide (SIMPLE)
         function selectSlide(index) {
-            // Save current slide content first
+            // Save current slide before switching
             if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
+                const slideContent = document.getElementById('slideContent');
+                if (slideContent) {
+                    slides[currentSlideIndex].content = slideContent.innerHTML;
+                }
             }
 
             currentSlideIndex = index;
             const slide = slides[index];
 
-            // Update canvas
+            if (!slide) return;
+
+            // Display the slide
             const canvas = document.getElementById('slideCanvas');
             const content = document.getElementById('slideContent');
             const theme = themes[slide.theme] || themes.white;
 
             canvas.style.background = theme.background;
             content.style.color = theme.color;
-            content.innerHTML = slide.content;
+            content.innerHTML = slide.content || '';
 
             // Update theme buttons
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
@@ -1525,51 +1534,43 @@
             }
         }
 
-        // Auto-save to localStorage (simple pattern like document.html)
+        // Auto-save to localStorage (SIMPLE like document.html)
         function autoSave() {
             try {
-                // Save current slide content first
-                if (slides[currentSlideIndex]) {
-                    const slideContent = document.getElementById('slideContent');
-                    if (slideContent) {
-                        slides[currentSlideIndex].content = slideContent.innerHTML;
-                    }
+                // Save current slide content to array
+                const slideContent = document.getElementById('slideContent');
+                if (slideContent && slides[currentSlideIndex]) {
+                    slides[currentSlideIndex].content = slideContent.innerHTML;
                 }
 
-                // Save to localStorage
-                const dataToSave = JSON.stringify(slides);
-                localStorage.setItem('presentationData', dataToSave);
+                // Save everything to localStorage
+                localStorage.setItem('presentationData', JSON.stringify(slides));
                 localStorage.setItem('currentSlideIndex', currentSlideIndex.toString());
-                console.log('Saved', slides.length, 'slides to localStorage');
             } catch (e) {
-                console.error('Failed to save:', e);
+                console.error('Save failed:', e);
             }
         }
 
-        // Load saved content
+        // Load saved content (SIMPLE like document.html)
         function loadPresentation() {
-            try {
-                const saved = localStorage.getItem('presentationData');
-                if (saved && saved !== 'undefined' && saved !== 'null') {
+            const saved = localStorage.getItem('presentationData');
+            if (saved) {
+                try {
                     slides = JSON.parse(saved);
-                    const savedIndex = localStorage.getItem('currentSlideIndex');
-                    if (savedIndex) {
-                        currentSlideIndex = parseInt(savedIndex);
-                    }
-                    console.log('Loaded', slides.length, 'slides from localStorage');
-
-                    // Ensure we have valid slides
                     if (!Array.isArray(slides) || slides.length === 0) {
-                        console.log('No valid slides found, will create new');
                         slides = [];
                     }
-                } else {
-                    console.log('No saved data found');
+                } catch (e) {
                     slides = [];
                 }
-            } catch (e) {
-                console.error('Failed to load presentation:', e);
-                slides = [];
+            }
+
+            const savedIndex = localStorage.getItem('currentSlideIndex');
+            if (savedIndex) {
+                currentSlideIndex = parseInt(savedIndex) || 0;
+                if (currentSlideIndex >= slides.length) {
+                    currentSlideIndex = 0;
+                }
             }
         }
 
@@ -1579,21 +1580,13 @@
             window.location.href = '../Tools.html';
         }
 
-        // Content change listener with debounce
-        let saveTimeout;
+        // Content change listener (SIMPLE)
         document.getElementById('slideContent').addEventListener('input', () => {
-            // Save current slide content to slides array immediately
+            hasUnsavedChanges = true;
+            // Update slide content in array
             if (slides[currentSlideIndex]) {
                 slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
             }
-            hasUnsavedChanges = true;
-
-            // Debounce the full save to avoid too many operations
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                autoSave();
-                renderSlidesList();
-            }, 500);
         });
 
         // Selection change listener
@@ -1603,8 +1596,11 @@
             }
         });
 
-        // Auto-save every 2 seconds
-        setInterval(autoSave, 2000);
+        // Auto-save every 3 seconds and update preview
+        setInterval(() => {
+            autoSave();
+            renderSlidesList();
+        }, 3000);
 
         // Save when page visibility changes or before unload
         document.addEventListener('visibilitychange', () => {
