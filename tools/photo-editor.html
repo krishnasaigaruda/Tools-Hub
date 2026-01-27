@@ -822,6 +822,28 @@
             const panelTitle = document.getElementById('panelTitle');
             const panelContent = document.getElementById('panelContent');
 
+            // Hide crop overlay when switching to any tool
+            const cropOverlay = document.getElementById('cropOverlay');
+            if (cropOverlay && tool !== 'crop') {
+                cropOverlay.classList.remove('active');
+            }
+
+            // Clean up text preview if switching away from text tool
+            if (currentTool === 'text' && tool !== 'text' && textPreview.active) {
+                // Restore original image without unsaved text
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(originalImage, 0, 0);
+                textPreview.active = false;
+                textPreview.text = '';
+                textPreview.x = 0;
+                textPreview.y = 0;
+                canvas.onmousedown = null;
+                canvas.onmousemove = null;
+                canvas.onmouseup = null;
+                canvas.onmouseleave = null;
+                canvas.style.cursor = 'default';
+            }
+
             panel.classList.add('active');
 
             switch(tool) {
@@ -886,6 +908,28 @@
             document.querySelectorAll('.tool-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
+
+            // Hide crop overlay when closing panel
+            const cropOverlay = document.getElementById('cropOverlay');
+            if (cropOverlay) {
+                cropOverlay.classList.remove('active');
+            }
+
+            // Clean up text preview if closing text tool
+            if (currentTool === 'text' && textPreview.active) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(originalImage, 0, 0);
+                textPreview.active = false;
+                textPreview.text = '';
+                textPreview.x = 0;
+                textPreview.y = 0;
+                canvas.onmousedown = null;
+                canvas.onmousemove = null;
+                canvas.onmouseup = null;
+                canvas.onmouseleave = null;
+                canvas.style.cursor = 'default';
+            }
+
             currentTool = null;
         }
 
@@ -1568,6 +1612,7 @@
             textPreview.text = '';
             textPreview.x = 0;
             textPreview.y = 0;
+
             canvas.style.cursor = 'default';
 
             // Remove mouse handlers
@@ -2122,7 +2167,7 @@
         }
 
         function goBack() {
-            window.location.href = 'image-and-video-editor.html';
+            window.location.href = 'image-editor.html';
         }
 
         // Update slider display values

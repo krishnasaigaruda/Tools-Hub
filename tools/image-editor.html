@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image & Video Editor - Projects</title>
+    <title>Image Editor - Projects</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
@@ -151,9 +151,6 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        .project-thumbnail.video {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
 
         .project-thumbnail i {
             font-size: 4rem;
@@ -294,15 +291,6 @@
             box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
         }
 
-        .create-btn.video {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: #fff;
-        }
-
-        .create-btn.video:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
-        }
 
         /* Custom Dialog */
         .dialog-overlay {
@@ -366,9 +354,6 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        .dialog-icon.video {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
 
         .dialog-title {
             color: #fff;
@@ -493,8 +478,8 @@
                 Back to Tools
             </button>
             <h1>
-                <i class="fas fa-photo-video"></i>
-                Image & Video Editor
+                <i class="fas fa-image"></i>
+                Image Editor
             </h1>
         </div>
     </div>
@@ -502,9 +487,6 @@
     <div class="container">
         <div class="search-filter-bar">
             <input type="text" class="search-box" id="searchBox" placeholder="Search projects..." oninput="filterProjects()">
-            <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
-            <button class="filter-btn" data-filter="image" onclick="setFilter('image')">Photos</button>
-            <button class="filter-btn" data-filter="video" onclick="setFilter('video')">Videos</button>
         </div>
 
         <div class="projects-grid" id="projectsGrid">
@@ -514,7 +496,7 @@
         <div class="empty-state" id="emptyState" style="display: none;">
             <i class="fas fa-folder-open"></i>
             <h2>No Projects Yet</h2>
-            <p>Create your first photo or video edit to get started!</p>
+            <p>Create your first photo edit to get started!</p>
         </div>
     </div>
 
@@ -522,10 +504,6 @@
         <button class="create-btn photo" onclick="showDialog('image')">
             <i class="fas fa-image"></i>
             New Photo Edit
-        </button>
-        <button class="create-btn video" onclick="showDialog('video')">
-            <i class="fas fa-video"></i>
-            New Video Edit
         </button>
     </div>
 
@@ -568,7 +546,7 @@
 
         // Show custom dialog
         function showDialog(type) {
-            currentProjectType = type;
+            currentProjectType = 'image';
             const dialogOverlay = document.getElementById('dialogOverlay');
             const dialogTitle = document.getElementById('dialogTitle');
             const dialogIcon = document.getElementById('dialogIcon');
@@ -577,16 +555,10 @@
             const projectNameInput = document.getElementById('projectNameInput');
             const createBtn = document.querySelector('.dialog-btn.create');
 
-            // Update dialog based on type
-            if (type === 'image') {
-                dialogTitle.textContent = 'Create New Photo Edit';
-                dialogIcon.className = 'dialog-icon photo';
-                dialogIconElement.className = 'fas fa-image';
-            } else {
-                dialogTitle.textContent = 'Create New Video Edit';
-                dialogIcon.className = 'dialog-icon video';
-                dialogIconElement.className = 'fas fa-video';
-            }
+            // Update dialog for image type
+            dialogTitle.textContent = 'Create New Photo Edit';
+            dialogIcon.className = 'dialog-icon photo';
+            dialogIconElement.className = 'fas fa-image';
 
             // Reset dialog for create mode
             dialogSubtitle.textContent = 'Enter a name for your project';
@@ -645,7 +617,7 @@
                 const newProject = {
                     id: Date.now(),
                     name: projectName,
-                    type: currentProjectType,
+                    type: 'image',
                     date: new Date().toISOString(),
                     thumbnail: null
                 };
@@ -688,11 +660,10 @@
             const emptyState = document.getElementById('emptyState');
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
 
-            // Filter projects
+            // Filter projects (only show image projects)
             let filteredProjects = projects.filter(project => {
-                const matchesFilter = currentFilter === 'all' || project.type === currentFilter;
                 const matchesSearch = project.name.toLowerCase().includes(searchTerm);
-                return matchesFilter && matchesSearch;
+                return project.type === 'image' && matchesSearch;
             });
 
             // Sort by date (newest first)
@@ -717,9 +688,9 @@
 
                 return `
                     <div class="project-card" onclick="openProject(${project.id})">
-                        <div class="project-thumbnail ${project.type}">
-                            <i class="fas fa-${project.type === 'image' ? 'image' : 'video'}"></i>
-                            <span class="project-type-badge">${project.type === 'image' ? 'Photo' : 'Video'}</span>
+                        <div class="project-thumbnail image">
+                            <i class="fas fa-image"></i>
+                            <span class="project-type-badge">Photo</span>
                         </div>
                         <div class="project-info">
                             <div class="project-name">${project.name}</div>
@@ -743,20 +714,6 @@
             }).join('');
         }
 
-        // Set filter
-        function setFilter(filter) {
-            currentFilter = filter;
-
-            // Update active button
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.filter === filter) {
-                    btn.classList.add('active');
-                }
-            });
-
-            renderProjects();
-        }
 
         // Filter projects by search
         function filterProjects() {
@@ -771,12 +728,8 @@
             // Store current project in session
             sessionStorage.setItem('currentProject', JSON.stringify(project));
 
-            // Navigate to the appropriate editor
-            if (project.type === 'image') {
-                window.location.href = 'photo-editor.html';
-            } else {
-                window.location.href = 'video-editor.html';
-            }
+            // Navigate to the image editor
+            window.location.href = 'photo-editor.html';
         }
 
         // Rename project
@@ -789,7 +742,7 @@
 
         // Show rename dialog
         function showRenameDialog(projectId, currentName, type) {
-            currentProjectType = type;
+            currentProjectType = 'image';
             const dialogOverlay = document.getElementById('dialogOverlay');
             const dialogTitle = document.getElementById('dialogTitle');
             const dialogIcon = document.getElementById('dialogIcon');
@@ -801,8 +754,8 @@
             // Update dialog for rename
             dialogTitle.textContent = 'Rename Project';
             dialogSubtitle.textContent = 'Enter a new name for your project';
-            dialogIcon.className = type === 'image' ? 'dialog-icon photo' : 'dialog-icon video';
-            dialogIconElement.className = type === 'image' ? 'fas fa-image' : 'fas fa-video';
+            dialogIcon.className = 'dialog-icon photo';
+            dialogIconElement.className = 'fas fa-image';
             createBtn.textContent = 'Rename';
 
             // Set current name and show dialog

@@ -295,12 +295,37 @@
         .slide-thumbnail-content {
             width: 100%;
             height: 100%;
-            padding: 8px;
-            font-size: 6px;
+            padding: 4px;
+            font-size: 7px;
+            line-height: 1.2;
             overflow: hidden;
             pointer-events: none;
-            transform: scale(1);
-            transform-origin: top left;
+            word-wrap: break-word;
+        }
+
+        .slide-thumbnail-content * {
+            margin: 1px 0;
+            padding: 0;
+        }
+
+        .slide-thumbnail-content h1 {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .slide-thumbnail-content h2 {
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .slide-thumbnail-content img {
+            max-width: 100%;
+            max-height: 30px;
+            object-fit: contain;
+        }
+
+        .slide-thumbnail-content ul, .slide-thumbnail-content ol {
+            margin-left: 8px;
         }
 
         .slide-number {
@@ -673,13 +698,28 @@
                 height: auto;
             }
             .slide-canvas {
-                box-shadow: none;
-                margin: 0;
-                border-radius: 0;
-                width: 100%;
-                height: auto;
-                min-height: 100vh;
+                display: none;
             }
+            #printContainer {
+                display: block !important;
+            }
+            .print-slide {
+                width: 100%;
+                min-height: 100vh;
+                padding: 40px;
+                box-sizing: border-box;
+                page-break-after: always;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .print-slide:last-child {
+                page-break-after: auto;
+            }
+        }
+
+        #printContainer {
+            display: none;
         }
 
     </style>
@@ -866,6 +906,9 @@
         </div>
     </div>
 
+    <!-- Print Container (hidden, only shows when printing) -->
+    <div id="printContainer"></div>
+
     <script>
         // Slide data
         let slides = [];
@@ -890,6 +933,7 @@
         function init() {
             loadAllPresentations();
             loadPresentation();
+
             if (slides.length === 0) {
                 addSlide();
             } else {
@@ -1121,6 +1165,14 @@
 
         // Render slides list
         function renderSlidesList() {
+            // Save current slide content before rendering
+            if (slides[currentSlideIndex]) {
+                const currentContent = document.getElementById('slideContent');
+                if (currentContent) {
+                    slides[currentSlideIndex].content = currentContent.innerHTML;
+                }
+            }
+
             const list = document.getElementById('slidesList');
             list.innerHTML = '';
 
@@ -1132,15 +1184,22 @@
                 const theme = themes[slide.theme] || themes.white;
                 thumb.style.background = theme.background;
 
+                // Create a mini preview div that renders the actual HTML
+                const previewContent = document.createElement('div');
+                previewContent.className = 'slide-thumbnail-content';
+                previewContent.style.color = theme.color;
+                previewContent.innerHTML = slide.content;
+
                 thumb.innerHTML = `
-                    <div class="slide-thumbnail-content" style="color: ${theme.color}">
-                        ${slide.content.substring(0, 200)}
-                    </div>
                     <span class="slide-number">${index + 1}</span>
                     <button class="slide-delete" onclick="deleteSlide(${index}, event)">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
+
+                // Insert the preview content first
+                thumb.insertBefore(previewContent, thumb.firstChild);
+
                 list.appendChild(thumb);
             });
 
@@ -1366,8 +1425,30 @@
                 alert('No slides to print');
                 return;
             }
+
             // Save current slide content before printing
-            slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
+            if (slides[currentSlideIndex]) {
+                const slideContent = document.getElementById('slideContent');
+                if (slideContent) {
+                    slides[currentSlideIndex].content = slideContent.innerHTML;
+                }
+            }
+
+            // Populate print container with all slides
+            const printContainer = document.getElementById('printContainer');
+            printContainer.innerHTML = '';
+
+            slides.forEach((slide, index) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = 'print-slide';
+                const theme = themes[slide.theme] || themes.white;
+                slideDiv.style.background = theme.background;
+                slideDiv.style.color = theme.color;
+                slideDiv.innerHTML = slide.content;
+                printContainer.appendChild(slideDiv);
+            });
+
+            // Trigger print
             window.print();
         }
 
@@ -1444,20 +1525,51 @@
             }
         }
 
-        // Auto-save
+        // Auto-save to localStorage (simple pattern like document.html)
         function autoSave() {
-            // Save current slide content
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
+            try {
+                // Save current slide content first
+                if (slides[currentSlideIndex]) {
+                    const slideContent = document.getElementById('slideContent');
+                    if (slideContent) {
+                        slides[currentSlideIndex].content = slideContent.innerHTML;
+                    }
+                }
+
+                // Save to localStorage
+                const dataToSave = JSON.stringify(slides);
+                localStorage.setItem('presentationData', dataToSave);
+                localStorage.setItem('currentSlideIndex', currentSlideIndex.toString());
+                console.log('Saved', slides.length, 'slides to localStorage');
+            } catch (e) {
+                console.error('Failed to save:', e);
             }
-            localStorage.setItem('presentationData', JSON.stringify(slides));
         }
 
-        // Load presentation
+        // Load saved content
         function loadPresentation() {
-            const saved = localStorage.getItem('presentationData');
-            if (saved) {
-                slides = JSON.parse(saved);
+            try {
+                const saved = localStorage.getItem('presentationData');
+                if (saved && saved !== 'undefined' && saved !== 'null') {
+                    slides = JSON.parse(saved);
+                    const savedIndex = localStorage.getItem('currentSlideIndex');
+                    if (savedIndex) {
+                        currentSlideIndex = parseInt(savedIndex);
+                    }
+                    console.log('Loaded', slides.length, 'slides from localStorage');
+
+                    // Ensure we have valid slides
+                    if (!Array.isArray(slides) || slides.length === 0) {
+                        console.log('No valid slides found, will create new');
+                        slides = [];
+                    }
+                } else {
+                    console.log('No saved data found');
+                    slides = [];
+                }
+            } catch (e) {
+                console.error('Failed to load presentation:', e);
+                slides = [];
             }
         }
 
@@ -1467,11 +1579,21 @@
             window.location.href = '../Tools.html';
         }
 
-        // Content change listener
+        // Content change listener with debounce
+        let saveTimeout;
         document.getElementById('slideContent').addEventListener('input', () => {
+            // Save current slide content to slides array immediately
+            if (slides[currentSlideIndex]) {
+                slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
+            }
             hasUnsavedChanges = true;
-            autoSave();
-            renderSlidesList();
+
+            // Debounce the full save to avoid too many operations
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                autoSave();
+                renderSlidesList();
+            }, 500);
         });
 
         // Selection change listener
@@ -1479,6 +1601,20 @@
             if (document.activeElement.id === 'slideContent') {
                 updateToolbarState();
             }
+        });
+
+        // Auto-save every 2 seconds
+        setInterval(autoSave, 2000);
+
+        // Save when page visibility changes or before unload
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                autoSave();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            autoSave();
         });
 
         // Initialize on load
