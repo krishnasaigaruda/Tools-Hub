@@ -1397,6 +1397,50 @@
                         break;
                 }
             }
+
+            // Handle Enter key to move to next row
+            if (e.key === 'Enter' && currentCell && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                // Save current cell
+                updateCell(currentCell);
+
+                // Parse current cell reference (e.g., "A1" -> col A, row 1)
+                const col = currentCell.charAt(0);
+                const row = parseInt(currentCell.substring(1));
+
+                // Move to next row (same column)
+                const nextRow = row + 1;
+                if (nextRow <= ROWS) {
+                    const nextCell = col + nextRow;
+                    const nextCellElement = document.getElementById(nextCell);
+                    if (nextCellElement) {
+                        nextCellElement.focus();
+                        selectCell(nextCell);
+                    }
+                }
+            }
+
+            // Handle Tab key to move to next column
+            if (e.key === 'Tab' && currentCell) {
+                e.preventDefault();
+                // Save current cell
+                updateCell(currentCell);
+
+                // Parse current cell reference
+                const colCode = currentCell.charCodeAt(0);
+                const row = parseInt(currentCell.substring(1));
+
+                // Move to next column (same row)
+                const nextColCode = e.shiftKey ? colCode - 1 : colCode + 1;
+                if (nextColCode >= 65 && nextColCode < 65 + COLS) {
+                    const nextCell = String.fromCharCode(nextColCode) + row;
+                    const nextCellElement = document.getElementById(nextCell);
+                    if (nextCellElement) {
+                        nextCellElement.focus();
+                        selectCell(nextCell);
+                    }
+                }
+            }
         });
 
         // Initialize on load

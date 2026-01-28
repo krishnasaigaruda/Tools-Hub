@@ -432,6 +432,23 @@
             pointer-events: none;
         }
 
+        /* List styling inside editor */
+        .editor ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            padding-left: 20px;
+        }
+
+        .editor ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+            padding-left: 20px;
+        }
+
+        .editor li {
+            margin: 5px 0;
+        }
+
         .page-number {
             position: absolute;
             bottom: 0.5in;
@@ -637,10 +654,10 @@
 
         <!-- Lists -->
         <div class="toolbar-group">
-            <button class="toolbar-btn" id="btn-insertUnorderedList" onclick="formatDoc('insertUnorderedList')" title="Bullet List">
+            <button class="toolbar-btn" id="btn-insertUnorderedList" onclick="insertBulletList()" title="Bullet List">
                 <i class="fas fa-list-ul"></i>
             </button>
-            <button class="toolbar-btn" id="btn-insertOrderedList" onclick="formatDoc('insertOrderedList')" title="Numbered List">
+            <button class="toolbar-btn" id="btn-insertOrderedList" onclick="insertNumberedList()" title="Numbered List">
                 <i class="fas fa-list-ol"></i>
             </button>
         </div>
@@ -1087,6 +1104,16 @@
                 </div>
             `).join('');
 
+            // Add event listeners to track current page
+            pages.forEach(page => {
+                const editor = document.getElementById(`editor-${page.id}`);
+                if (editor) {
+                    editor.addEventListener('focus', () => {
+                        currentPageId = page.id;
+                    });
+                }
+            });
+
             updateCounts();
         }
 
@@ -1133,15 +1160,26 @@
             }
         }
 
-        // Format document
+        // Format document - EXACTLY like notes tool
         function formatDoc(command, value = null) {
             document.execCommand(command, false, value);
-            const currentEditor = document.getElementById(`editor-${currentPageId}`);
-            if (currentEditor) {
-                currentEditor.focus();
-                updatePageContent(currentPageId);
-            }
+            document.getElementById(`editor-${currentPageId}`).focus();
             updateToolbarState();
+            updatePageContent(currentPageId);
+        }
+
+        // Insert bullet list - use standard command like notes
+        function insertBulletList() {
+            document.execCommand('insertUnorderedList', false, null);
+            document.getElementById(`editor-${currentPageId}`).focus();
+            updatePageContent(currentPageId);
+        }
+
+        // Insert numbered list - use standard command like notes
+        function insertNumberedList() {
+            document.execCommand('insertOrderedList', false, null);
+            document.getElementById(`editor-${currentPageId}`).focus();
+            updatePageContent(currentPageId);
         }
 
         // Update toolbar button states based on current selection
@@ -1190,28 +1228,32 @@
         function changeFont() {
             const font = document.getElementById('fontFamily').value;
             document.execCommand('fontName', false, font);
-            editor.focus();
+            const editor = document.getElementById(`editor-${currentPageId}`);
+            if (editor) editor.focus();
         }
 
         // Change font size
         function changeFontSize() {
             const size = document.getElementById('fontSize').value;
             document.execCommand('fontSize', false, size);
-            editor.focus();
+            const editor = document.getElementById(`editor-${currentPageId}`);
+            if (editor) editor.focus();
         }
 
         // Change text color
         function changeTextColor() {
             const color = document.getElementById('textColor').value;
             document.execCommand('foreColor', false, color);
-            editor.focus();
+            const editor = document.getElementById(`editor-${currentPageId}`);
+            if (editor) editor.focus();
         }
 
         // Change highlight color
         function changeHighlightColor() {
             const color = document.getElementById('highlightColor').value;
             document.execCommand('hiliteColor', false, color);
-            editor.focus();
+            const editor = document.getElementById(`editor-${currentPageId}`);
+            if (editor) editor.focus();
         }
 
         // Insert link
@@ -1220,7 +1262,8 @@
             if (url) {
                 document.execCommand('createLink', false, url);
             }
-            editor.focus();
+            const editor = document.getElementById(`editor-${currentPageId}`);
+            if (editor) editor.focus();
         }
 
         // Insert image from file
@@ -1268,25 +1311,106 @@
         }
 
         // Save document as PDF file
-        function saveDocument() {
+        async function saveDocument() {
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
-            const container = document.getElementById('documentContainer');
+            // Save all current editor contents first
+            pages.forEach(page => {
+                const editor = document.getElementById(`editor-${page.id}`);
+                if (editor) {
+                    page.content = editor.innerHTML;
+                }
+            });
+
+            // Create a clean container for PDF
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.cssText = 'position: fixed; left: 0; top: 0; background: white; z-index: 9999; width: 8.5in;';
+
+            // Add each page's content
+            pages.forEach((page, index) => {
+                const pageDiv = document.createElement('div');
+                pageDiv.style.cssText = `
+                    width: 8.5in;
+                    min-height: 11in;
+                    padding: 1in;
+                    background: white;
+                    box-sizing: border-box;
+                    page-break-after: always;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-size: 12pt;
+                    line-height: 1.6;
+                    color: #000;
+                `;
+
+                // Create content div
+                const contentDiv = document.createElement('div');
+                contentDiv.innerHTML = page.content || '';
+
+                // Style lists properly
+                contentDiv.querySelectorAll('ul, ol').forEach(list => {
+                    list.style.marginLeft = '20px';
+                    list.style.paddingLeft = '20px';
+                });
+
+                // Style images
+                contentDiv.querySelectorAll('img').forEach(img => {
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                });
+
+                pageDiv.appendChild(contentDiv);
+                pdfContainer.appendChild(pageDiv);
+            });
+
+            document.body.appendChild(pdfContainer);
+
+            // Wait for images and content to render
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Ask for filename
+            const filename = prompt('Enter document name:', currentDocumentName || 'document');
+            if (!filename) {
+                document.body.removeChild(pdfContainer);
+                document.getElementById('saveStatus').textContent = 'Cancelled';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+                return;
+            }
+
+            currentDocumentName = filename;
+
             const opt = {
                 margin: 0,
-                filename: 'document.pdf',
+                filename: filename + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    logging: false
+                },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                pagebreak: { mode: 'css' }
             };
 
-            html2pdf().set(opt).from(container).save().then(() => {
+            try {
+                await html2pdf().set(opt).from(pdfContainer).save();
+                document.body.removeChild(pdfContainer);
                 document.getElementById('saveStatus').textContent = 'PDF Downloaded!';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
                 }, 2000);
-            });
+            } catch (error) {
+                console.error('PDF error:', error);
+                if (pdfContainer.parentNode) {
+                    document.body.removeChild(pdfContainer);
+                }
+                document.getElementById('saveStatus').textContent = 'PDF failed';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            }
         }
 
         // Print document

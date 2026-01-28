@@ -713,10 +713,52 @@
             const list = document.getElementById('sectionsList');
             list.innerHTML = notebook.sections.map(section => `
                 <div class="section-item ${section.id === currentSectionId ? 'active' : ''}"
-                     onclick="selectSection(${section.id})">
-                    ${section.name}
+                     onclick="selectSection(${section.id})"
+                     style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${section.name}</span>
+                    <button class="section-delete-btn" onclick="event.stopPropagation(); deleteSection(${section.id})"
+                            style="background: transparent; border: none; color: #999; cursor: pointer; font-size: 12px; padding: 4px; opacity: 0; transition: opacity 0.3s;">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             `).join('');
+
+            // Add hover effect for delete button visibility
+            list.querySelectorAll('.section-item').forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    const btn = item.querySelector('.section-delete-btn');
+                    if (btn) btn.style.opacity = '1';
+                });
+                item.addEventListener('mouseleave', () => {
+                    const btn = item.querySelector('.section-delete-btn');
+                    if (btn) btn.style.opacity = '0';
+                });
+            });
+        }
+
+        // Delete section
+        function deleteSection(id) {
+            const notebook = notebooks.find(n => n.id === currentNotebookId);
+            if (!notebook) return;
+
+            if (notebook.sections.length === 1) {
+                alert('Cannot delete the last section');
+                return;
+            }
+
+            if (!confirm('Delete this section and all its pages?')) return;
+
+            notebook.sections = notebook.sections.filter(s => s.id !== id);
+
+            if (currentSectionId === id) {
+                currentSectionId = notebook.sections[0].id;
+                currentPageId = null;
+            }
+
+            saveData();
+            renderSections();
+            renderPages();
+            showEmptyState();
         }
 
         // Render pages

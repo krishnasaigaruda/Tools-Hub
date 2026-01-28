@@ -4530,37 +4530,38 @@
         }
 
         function floodFill(startX, startY) {
-            // Work on the current layer
-            const currentLayer = layers[currentLayerIndex];
-            const layerCtx = currentLayer.canvas.getContext('2d');
-
-            const imageData = layerCtx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = imageData.data;
-            const width = canvas.width;
-            const height = canvas.height;
+            // Work on the MAIN canvas to fill visible colors (not individual layers)
+            // This way fill works on the composed result and respects drawn content
 
             const sx = Math.floor(startX);
             const sy = Math.floor(startY);
+            const width = canvas.width;
+            const height = canvas.height;
+
             if (sx < 0 || sx >= width || sy < 0 || sy >= height) return;
 
+            // Get the visible canvas data (composed layers)
+            const mainImageData = ctx.getImageData(0, 0, width, height);
+            const mainPixels = mainImageData.data;
+
             const startIdx = (sy * width + sx) * 4;
-            const targetR = pixels[startIdx];
-            const targetG = pixels[startIdx + 1];
-            const targetB = pixels[startIdx + 2];
-            const targetA = pixels[startIdx + 3];
+            const targetR = mainPixels[startIdx];
+            const targetG = mainPixels[startIdx + 1];
+            const targetB = mainPixels[startIdx + 2];
+            const targetA = mainPixels[startIdx + 3];
 
             const fillRgb = hexToRgb(currentColor);
 
-            // Use LOW tolerance (5) to only fill exact color matches
-            // This prevents filling drawn content and only fills background
-            const tolerance = 5;
+            // Use very strict tolerance (2) to avoid filling over anti-aliased edges
+            const tolerance = 2;
 
             // Don't fill if clicking on the same color
             if (colorsMatchWithTolerance(targetR, targetG, targetB, targetA, fillRgb[0], fillRgb[1], fillRgb[2], 255, tolerance)) {
                 return;
             }
 
-            // Use scanline flood fill for better performance
+            // Create a mask for pixels to fill based on main canvas
+            const fillMask = new Uint8Array(width * height);
             const visited = new Uint8Array(width * height);
             const stack = [[sx, sy]];
 
@@ -4568,25 +4569,21 @@
                 let [x, y] = stack.pop();
 
                 // Move left to find start of scanline
-                while (x > 0 && matchesTarget(pixels, (y * width + x - 1) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x - 1]) {
+                while (x > 0 && matchesTarget(mainPixels, (y * width + x - 1) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x - 1]) {
                     x--;
                 }
 
                 let spanAbove = false;
                 let spanBelow = false;
 
-                while (x < width && matchesTarget(pixels, (y * width + x) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x]) {
-                    const idx = (y * width + x) * 4;
-                    pixels[idx] = fillRgb[0];
-                    pixels[idx + 1] = fillRgb[1];
-                    pixels[idx + 2] = fillRgb[2];
-                    pixels[idx + 3] = 255;
+                while (x < width && matchesTarget(mainPixels, (y * width + x) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x]) {
+                    fillMask[y * width + x] = 1;
                     visited[y * width + x] = 1;
 
                     // Check above
                     if (y > 0) {
                         const aboveIdx = ((y - 1) * width + x) * 4;
-                        if (matchesTarget(pixels, aboveIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y - 1) * width + x]) {
+                        if (matchesTarget(mainPixels, aboveIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y - 1) * width + x]) {
                             if (!spanAbove) {
                                 stack.push([x, y - 1]);
                                 spanAbove = true;
@@ -4599,7 +4596,7 @@
                     // Check below
                     if (y < height - 1) {
                         const belowIdx = ((y + 1) * width + x) * 4;
-                        if (matchesTarget(pixels, belowIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y + 1) * width + x]) {
+                        if (matchesTarget(mainPixels, belowIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y + 1) * width + x]) {
                             if (!spanBelow) {
                                 stack.push([x, y + 1]);
                                 spanBelow = true;
@@ -4613,7 +4610,23 @@
                 }
             }
 
-            layerCtx.putImageData(imageData, 0, 0);
+            // Now apply the fill to the current layer using the mask
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+            const layerImageData = layerCtx.getImageData(0, 0, width, height);
+            const layerPixels = layerImageData.data;
+
+            for (let i = 0; i < fillMask.length; i++) {
+                if (fillMask[i]) {
+                    const idx = i * 4;
+                    layerPixels[idx] = fillRgb[0];
+                    layerPixels[idx + 1] = fillRgb[1];
+                    layerPixels[idx + 2] = fillRgb[2];
+                    layerPixels[idx + 3] = 255;
+                }
+            }
+
+            layerCtx.putImageData(layerImageData, 0, 0);
             composeLayers();
             saveHistory();
         }
@@ -4900,11 +4913,13 @@
 
         // IndexedDB
         function openIndexedDB() {
-            const request = indexedDB.open('DrawingPadDB', 1);
+            const request = indexedDB.open('DrawingPadDB', 2);
 
             request.onerror = () => console.error('IndexedDB error');
             request.onsuccess = () => {
                 db = request.result;
+                // Auto-load the last saved project
+                loadProject();
             };
 
             request.onupgradeneeded = (event) => {
@@ -4916,23 +4931,155 @@
         }
 
         function saveProject() {
+            if (!db) {
+                console.error('IndexedDB not ready');
+                document.getElementById('statusText').textContent = 'Save failed - DB not ready';
+                setTimeout(() => {
+                    document.getElementById('statusText').textContent = 'Ready';
+                }, 2000);
+                return;
+            }
+
+            try {
+                const transaction = db.transaction(['drawings'], 'readwrite');
+                const store = transaction.objectStore('drawings');
+
+                // Save all layer data
+                const layerDataArray = layers.map((layer, index) => ({
+                    name: layer.name,
+                    data: layer.canvas.toDataURL(),
+                    visible: layer.visible,
+                    opacity: layer.opacity,
+                    blendMode: layer.blendMode,
+                    alphaLock: layer.alphaLock,
+                    clippingMask: layer.clippingMask
+                }));
+
+                const project = {
+                    id: 'current',
+                    mainCanvas: canvas.toDataURL(),
+                    layers: layerDataArray,
+                    currentLayerIndex: currentLayerIndex,
+                    canvasWidth: canvas.width,
+                    canvasHeight: canvas.height,
+                    timestamp: new Date().toISOString()
+                };
+
+                const request = store.put(project);
+
+                request.onsuccess = () => {
+                    document.getElementById('statusText').textContent = 'Saved!';
+                    setTimeout(() => {
+                        document.getElementById('statusText').textContent = 'Ready';
+                    }, 2000);
+                };
+
+                request.onerror = () => {
+                    document.getElementById('statusText').textContent = 'Save failed!';
+                    setTimeout(() => {
+                        document.getElementById('statusText').textContent = 'Ready';
+                    }, 2000);
+                };
+            } catch (error) {
+                console.error('Save error:', error);
+                document.getElementById('statusText').textContent = 'Save failed!';
+                setTimeout(() => {
+                    document.getElementById('statusText').textContent = 'Ready';
+                }, 2000);
+            }
+        }
+
+        function loadProject() {
             if (!db) return;
 
-            const transaction = db.transaction(['drawings'], 'readwrite');
-            const store = transaction.objectStore('drawings');
+            try {
+                const transaction = db.transaction(['drawings'], 'readonly');
+                const store = transaction.objectStore('drawings');
+                const request = store.get('current');
 
-            const project = {
-                id: 'current',
-                data: canvas.toDataURL(),
-                timestamp: new Date().toISOString()
-            };
+                request.onsuccess = () => {
+                    const project = request.result;
+                    if (project && project.layers && project.layers.length > 0) {
+                        document.getElementById('statusText').textContent = 'Loading...';
 
-            store.put(project);
-            document.getElementById('statusText').textContent = 'Saved!';
-            setTimeout(() => {
-                document.getElementById('statusText').textContent = 'Ready';
-            }, 2000);
+                        // Set canvas size
+                        if (project.canvasWidth && project.canvasHeight) {
+                            canvas.width = project.canvasWidth;
+                            canvas.height = project.canvasHeight;
+                            document.getElementById('canvasSize').textContent = `${canvas.width} × ${canvas.height} px`;
+                        }
+
+                        // Clear existing layers
+                        layers = [];
+
+                        // Load layers
+                        let loadedLayers = 0;
+                        const totalLayers = project.layers.length;
+
+                        project.layers.forEach((layerData, index) => {
+                            const layer = {
+                                id: Date.now() + index,
+                                name: layerData.name || `Layer ${index + 1}`,
+                                canvas: document.createElement('canvas'),
+                                visible: layerData.visible !== false,
+                                opacity: layerData.opacity !== undefined ? layerData.opacity : 1,
+                                blendMode: layerData.blendMode || 'normal',
+                                alphaLock: layerData.alphaLock || false,
+                                clippingMask: layerData.clippingMask || false
+                            };
+                            layer.canvas.width = canvas.width;
+                            layer.canvas.height = canvas.height;
+
+                            const img = new Image();
+                            img.onload = () => {
+                                const layerCtx = layer.canvas.getContext('2d');
+                                layerCtx.drawImage(img, 0, 0);
+                                loadedLayers++;
+
+                                if (loadedLayers === totalLayers) {
+                                    // All layers loaded
+                                    currentLayerIndex = project.currentLayerIndex || 0;
+                                    if (currentLayerIndex >= layers.length) {
+                                        currentLayerIndex = layers.length - 1;
+                                    }
+                                    composeLayers();
+                                    renderLayers();
+                                    saveHistory();
+                                    document.getElementById('statusText').textContent = 'Loaded!';
+                                    setTimeout(() => {
+                                        document.getElementById('statusText').textContent = 'Ready';
+                                    }, 2000);
+                                }
+                            };
+                            img.onerror = () => {
+                                loadedLayers++;
+                                if (loadedLayers === totalLayers) {
+                                    composeLayers();
+                                    renderLayers();
+                                    document.getElementById('statusText').textContent = 'Ready';
+                                }
+                            };
+                            img.src = layerData.data;
+
+                            layers.push(layer);
+                        });
+                    }
+                };
+
+                request.onerror = () => {
+                    console.error('Load error');
+                };
+            } catch (error) {
+                console.error('Load error:', error);
+            }
         }
+
+        // Auto-save periodically
+        setInterval(() => {
+            if (db && layers.length > 0) {
+                saveProject();
+            }
+        }, 30000); // Auto-save every 30 seconds
 
         // Symmetry
         function toggleSymmetry() {
