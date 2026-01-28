@@ -658,47 +658,44 @@
     <div class="main-container">
         <!-- Left Toolbar -->
         <div class="left-toolbar">
-            <button class="tool-btn active" data-tool="brush" onclick="selectTool('brush')" title="Brush">
+            <button class="tool-btn active" data-tool="brush" onclick="selectTool('brush')" title="Brush (B)">
                 <i class="fas fa-paintbrush"></i>
             </button>
-            <button class="tool-btn" data-tool="eraser" onclick="selectTool('eraser')" title="Eraser">
+            <button class="tool-btn" data-tool="eraser" onclick="selectTool('eraser')" title="Eraser (E)">
                 <i class="fas fa-eraser"></i>
             </button>
-            <button class="tool-btn" data-tool="smudge" onclick="selectTool('smudge')" title="Smudge">
+            <button class="tool-btn" data-tool="blend" onclick="selectTool('blend')" title="Blend/Smudge (D)">
                 <i class="fas fa-hand-paper"></i>
             </button>
             <button class="tool-btn" data-tool="blur" onclick="selectTool('blur')" title="Blur">
                 <i class="fas fa-adjust"></i>
             </button>
-            <button class="tool-btn" data-tool="fill" onclick="selectTool('fill')" title="Fill">
+            <button class="tool-btn" data-tool="fill" onclick="selectTool('fill')" title="Fill (F)">
                 <i class="fas fa-fill-drip"></i>
             </button>
-            <button class="tool-btn" data-tool="eyedropper" onclick="selectTool('eyedropper')" title="Eyedropper">
+            <button class="tool-btn" data-tool="eyedropper" onclick="selectTool('eyedropper')" title="Color Picker (I)">
                 <i class="fas fa-eye-dropper"></i>
             </button>
-            <button class="tool-btn" data-tool="selection" onclick="selectTool('selection')" title="Selection">
+            <button class="tool-btn" data-tool="selection" onclick="selectTool('selection')" title="Selection (S)">
                 <i class="fas fa-vector-square"></i>
             </button>
-            <button class="tool-btn" data-tool="move" onclick="selectTool('move')" title="Move">
+            <button class="tool-btn" data-tool="move" onclick="selectTool('move')" title="Move Layer (M)">
                 <i class="fas fa-arrows-alt"></i>
             </button>
-            <button class="tool-btn" data-tool="text" onclick="selectTool('text')" title="Text">
+            <button class="tool-btn" data-tool="text" onclick="selectTool('text')" title="Text - Double Click (T)">
                 <i class="fas fa-font"></i>
             </button>
-            <button class="tool-btn" data-tool="line" onclick="selectTool('line')" title="Line">
+            <button class="tool-btn" data-tool="line" onclick="selectTool('line')" title="Line (L)">
                 <i class="fas fa-minus"></i>
             </button>
-            <button class="tool-btn" data-tool="rectangle" onclick="selectTool('rectangle')" title="Rectangle">
+            <button class="tool-btn" data-tool="rectangle" onclick="selectTool('rectangle')" title="Rectangle (R)">
                 <i class="far fa-square"></i>
             </button>
-            <button class="tool-btn" data-tool="circle" onclick="selectTool('circle')" title="Circle">
+            <button class="tool-btn" data-tool="circle" onclick="selectTool('circle')" title="Circle (C)">
                 <i class="far fa-circle"></i>
             </button>
-            <button class="tool-btn" data-tool="gradient" onclick="selectTool('gradient')" title="Gradient">
+            <button class="tool-btn" data-tool="gradient" onclick="selectTool('gradient')" title="Gradient (G)">
                 <i class="fas fa-fill"></i>
-            </button>
-            <button class="tool-btn" data-tool="clone" onclick="selectTool('clone')" title="Clone Stamp">
-                <i class="fas fa-clone"></i>
             </button>
         </div>
 
@@ -864,7 +861,7 @@
         let brushHardness = 1;
         let brushFlow = 1;
         let currentColor = '#000000';
-        let currentBrush = 'pencil';
+        let currentBrush = 'hb-pencil';
         let brushStabilization = 0;
         let stabilizationPoints = [];
 
@@ -981,12 +978,25 @@
         let gridEnabled = false;
         let gridSize = 50;
 
-        // Clone stamp
-        let cloneSource = { x: 0, y: 0, set: false };
-
         // Gradient
         let gradientStart = null;
         let gradientEnd = null;
+
+        // Shape drawing state
+        let shapeStartX = 0;
+        let shapeStartY = 0;
+        let previewCanvas = null;
+        let previewCtx = null;
+
+        // Selection state
+        let selectionRect = null;
+        let selectionData = null;
+        let isMovingSelection = false;
+        let selectionOffsetX = 0;
+        let selectionOffsetY = 0;
+
+        // Text state
+        let textInputActive = false;
 
         // Color swatches
         const defaultSwatches = [
@@ -2207,10 +2217,86 @@
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
 
+            // Double-click for text tool
+            canvas.addEventListener('dblclick', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                // If text tool is selected OR just double-click anywhere to add text
+                showTextInput(x, y);
+            });
+
             // Touch support
             canvas.addEventListener('touchstart', handleTouch);
             canvas.addEventListener('touchmove', handleTouch);
-            canvas.addEventListener('touchend', stopDrawing);
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopDrawing(null);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                // Delete selection
+                if ((e.key === 'Delete' || e.key === 'Backspace') && selectionRect) {
+                    e.preventDefault();
+                    deleteSelection();
+                }
+
+                // Escape to clear selection or color preview
+                if (e.key === 'Escape') {
+                    if (selectionRect) clearSelection();
+                    hideColorPreview();
+                }
+
+                // Tool shortcuts
+                if (!e.ctrlKey && !e.metaKey) {
+                    switch(e.key.toLowerCase()) {
+                        case 'b': selectTool('brush'); break;
+                        case 'e': selectTool('eraser'); break;
+                        case 'd': selectTool('blend'); break;
+                        case 'g': selectTool('gradient'); break;
+                        case 'i': selectTool('eyedropper'); break;
+                        case 'f': selectTool('fill'); break;
+                        case 'm': selectTool('move'); break;
+                        case 's': selectTool('selection'); break;
+                        case 't': selectTool('text'); break;
+                        case 'l': selectTool('line'); break;
+                        case 'r': selectTool('rectangle'); break;
+                        case 'c': selectTool('circle'); break;
+                    }
+                }
+
+                // Undo/Redo
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        redo();
+                    } else {
+                        undo();
+                    }
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+
+                // Brush size
+                if (e.key === '[') {
+                    brushSize = Math.max(1, brushSize - 5);
+                    document.getElementById('brushSize').value = brushSize;
+                    document.getElementById('sizeValue').textContent = brushSize;
+                }
+                if (e.key === ']') {
+                    brushSize = Math.min(200, brushSize + 5);
+                    document.getElementById('brushSize').value = brushSize;
+                    document.getElementById('sizeValue').textContent = brushSize;
+                }
+            });
         }
 
         function handleTouch(e) {
@@ -2221,21 +2307,26 @@
             const y = touch.clientY - rect.top;
 
             if (e.type === 'touchstart') {
-                isDrawing = true;
-                lastX = x;
-                lastY = y;
-            } else if (e.type === 'touchmove' && isDrawing) {
-                drawLine(lastX, lastY, x, y);
-                lastX = x;
-                lastY = y;
+                // Simulate mousedown
+                const mouseEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                startDrawing(mouseEvent);
+            } else if (e.type === 'touchmove') {
+                // Simulate mousemove
+                const mouseEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                draw(mouseEvent);
             }
         }
 
         function startDrawing(e) {
             isDrawing = true;
             const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left;
-            lastY = e.clientY - rect.top;
+            // Scale coordinates to match canvas resolution
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            lastX = (e.clientX - rect.left) * scaleX;
+            lastY = (e.clientY - rect.top) * scaleY;
+            shapeStartX = lastX;
+            shapeStartY = lastY;
 
             if (currentTool === 'eyedropper') {
                 pickColor(lastX, lastY);
@@ -2243,16 +2334,90 @@
             } else if (currentTool === 'fill') {
                 floodFill(lastX, lastY);
                 isDrawing = false;
+            } else if (currentTool === 'text') {
+                isDrawing = false;
+                showTextInput(lastX, lastY);
+            } else if (currentTool === 'selection') {
+                // Check if clicking inside existing selection to move it
+                if (selectionRect && lastX >= selectionRect.x && lastX <= selectionRect.x + selectionRect.width &&
+                    lastY >= selectionRect.y && lastY <= selectionRect.y + selectionRect.height) {
+                    isMovingSelection = true;
+                    selectionOffsetX = lastX - selectionRect.x;
+                    selectionOffsetY = lastY - selectionRect.y;
+                } else {
+                    // Start new selection
+                    selectionRect = null;
+                    selectionData = null;
+                    isMovingSelection = false;
+                }
+            } else if (currentTool === 'move') {
+                // Move entire layer content
+                isMovingSelection = true;
+                selectionOffsetX = lastX;
+                selectionOffsetY = lastY;
+            } else if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'gradient') {
+                // Initialize preview canvas for shapes
+                if (!previewCanvas) {
+                    previewCanvas = document.createElement('canvas');
+                    previewCanvas.width = canvas.width;
+                    previewCanvas.height = canvas.height;
+                    previewCtx = previewCanvas.getContext('2d');
+                }
             }
         }
 
         function draw(e) {
-            if (!isDrawing) return;
-            if (currentTool !== 'brush' && currentTool !== 'eraser' && currentTool !== 'smudge' && currentTool !== 'blur') return;
+            if (!isDrawing && !isMovingSelection) return;
 
             const rect = canvas.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            let y = e.clientY - rect.top;
+            // Scale coordinates to match canvas resolution
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let x = (e.clientX - rect.left) * scaleX;
+            let y = (e.clientY - rect.top) * scaleY;
+
+            // Handle selection movement
+            if (isMovingSelection && currentTool === 'selection' && selectionRect) {
+                selectionRect.x = x - selectionOffsetX;
+                selectionRect.y = y - selectionOffsetY;
+                composeLayers();
+                drawSelectionPreview();
+                return;
+            }
+
+            // Handle move tool (move entire layer)
+            if (isMovingSelection && currentTool === 'move') {
+                const dx = x - selectionOffsetX;
+                const dy = y - selectionOffsetY;
+                moveLayerContent(dx, dy);
+                selectionOffsetX = x;
+                selectionOffsetY = y;
+                return;
+            }
+
+            if (!isDrawing) return;
+
+            // Handle shape tools with preview
+            if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'gradient') {
+                drawShapePreview(x, y);
+                return;
+            }
+
+            // Handle selection drawing
+            if (currentTool === 'selection') {
+                selectionRect = {
+                    x: Math.min(shapeStartX, x),
+                    y: Math.min(shapeStartY, y),
+                    width: Math.abs(x - shapeStartX),
+                    height: Math.abs(y - shapeStartY)
+                };
+                composeLayers();
+                drawSelectionPreview();
+                return;
+            }
+
+            // Regular brush/eraser tools
+            if (currentTool !== 'brush' && currentTool !== 'eraser' && currentTool !== 'blend' && currentTool !== 'blur') return;
 
             // Apply stabilization
             if (brushStabilization > 0 && (currentTool === 'brush' || currentTool === 'eraser')) {
@@ -2266,8 +2431,8 @@
                 y = avgY;
             }
 
-            if (currentTool === 'smudge') {
-                smudge(x, y);
+            if (currentTool === 'blend') {
+                blend(x, y);
             } else if (currentTool === 'blur') {
                 blur(x, y);
             } else {
@@ -2962,12 +3127,370 @@
         }
 
 
-        function stopDrawing() {
+        function stopDrawing(e) {
+            if (isMovingSelection) {
+                isMovingSelection = false;
+                if (currentTool === 'selection' && selectionData) {
+                    // Paste selection data at new position
+                    const currentLayer = layers[currentLayerIndex];
+                    const layerCtx = currentLayer.canvas.getContext('2d');
+                    layerCtx.putImageData(selectionData, selectionRect.x, selectionRect.y);
+                    composeLayers();
+                }
+                saveHistory();
+                return;
+            }
+
             if (isDrawing) {
+                let endX = lastX;
+                let endY = lastY;
+
+                if (e && e.clientX !== undefined) {
+                    const rect = canvas.getBoundingClientRect();
+                    // Scale coordinates to match canvas resolution
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    endX = (e.clientX - rect.left) * scaleX;
+                    endY = (e.clientY - rect.top) * scaleY;
+                }
+
+                // Finalize shapes
+                if (currentTool === 'line') {
+                    drawFinalLine(shapeStartX, shapeStartY, endX, endY);
+                } else if (currentTool === 'rectangle') {
+                    drawFinalRectangle(shapeStartX, shapeStartY, endX, endY);
+                } else if (currentTool === 'circle') {
+                    drawFinalCircle(shapeStartX, shapeStartY, endX, endY);
+                } else if (currentTool === 'gradient') {
+                    drawFinalGradient(shapeStartX, shapeStartY, endX, endY);
+                } else if (currentTool === 'selection' && selectionRect) {
+                    // Capture selection data
+                    const currentLayer = layers[currentLayerIndex];
+                    const layerCtx = currentLayer.canvas.getContext('2d');
+                    if (selectionRect.width > 0 && selectionRect.height > 0) {
+                        selectionData = layerCtx.getImageData(
+                            selectionRect.x, selectionRect.y,
+                            selectionRect.width, selectionRect.height
+                        );
+                    }
+                    drawSelectionPreview();
+                }
+
                 isDrawing = false;
                 stabilizationPoints = [];
-                saveHistory();
+
+                // Only save history for actual drawing operations
+                if (currentTool !== 'selection') {
+                    saveHistory();
+                }
             }
+        }
+
+        // ============ SHAPE TOOLS ============
+
+        function drawShapePreview(x, y) {
+            // Redraw the canvas with the shape preview
+            composeLayers();
+
+            ctx.save();
+            ctx.strokeStyle = currentColor;
+            ctx.fillStyle = currentColor;
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalAlpha = brushOpacity;
+
+            if (currentTool === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(shapeStartX, shapeStartY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            } else if (currentTool === 'rectangle') {
+                const w = x - shapeStartX;
+                const h = y - shapeStartY;
+                ctx.strokeRect(shapeStartX, shapeStartY, w, h);
+            } else if (currentTool === 'circle') {
+                const radius = Math.sqrt(Math.pow(x - shapeStartX, 2) + Math.pow(y - shapeStartY, 2));
+                ctx.beginPath();
+                ctx.arc(shapeStartX, shapeStartY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (currentTool === 'gradient') {
+                // Show gradient preview
+                const gradient = ctx.createLinearGradient(shapeStartX, shapeStartY, x, y);
+                gradient.addColorStop(0, currentColor);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw direction line
+                ctx.strokeStyle = '#7c3aed';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(shapeStartX, shapeStartY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            ctx.restore();
+        }
+
+        function drawFinalLine(x1, y1, x2, y2) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            layerCtx.save();
+            layerCtx.strokeStyle = currentColor;
+            layerCtx.lineWidth = brushSize;
+            layerCtx.lineCap = 'round';
+            layerCtx.lineJoin = 'round';
+            layerCtx.globalAlpha = brushOpacity;
+
+            layerCtx.beginPath();
+            layerCtx.moveTo(x1, y1);
+            layerCtx.lineTo(x2, y2);
+            layerCtx.stroke();
+
+            layerCtx.restore();
+            composeLayers();
+        }
+
+        function drawFinalRectangle(x1, y1, x2, y2) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            layerCtx.save();
+            layerCtx.strokeStyle = currentColor;
+            layerCtx.lineWidth = brushSize;
+            layerCtx.lineCap = 'round';
+            layerCtx.lineJoin = 'round';
+            layerCtx.globalAlpha = brushOpacity;
+
+            const w = x2 - x1;
+            const h = y2 - y1;
+            layerCtx.strokeRect(x1, y1, w, h);
+
+            layerCtx.restore();
+            composeLayers();
+        }
+
+        function drawFinalCircle(x1, y1, x2, y2) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            layerCtx.save();
+            layerCtx.strokeStyle = currentColor;
+            layerCtx.lineWidth = brushSize;
+            layerCtx.lineCap = 'round';
+            layerCtx.lineJoin = 'round';
+            layerCtx.globalAlpha = brushOpacity;
+
+            const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            layerCtx.beginPath();
+            layerCtx.arc(x1, y1, radius, 0, Math.PI * 2);
+            layerCtx.stroke();
+
+            layerCtx.restore();
+            composeLayers();
+        }
+
+        function drawFinalGradient(x1, y1, x2, y2) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            layerCtx.save();
+            layerCtx.globalAlpha = brushOpacity;
+
+            const gradient = layerCtx.createLinearGradient(x1, y1, x2, y2);
+            gradient.addColorStop(0, currentColor);
+            gradient.addColorStop(1, 'transparent');
+            layerCtx.fillStyle = gradient;
+            layerCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+            layerCtx.restore();
+            composeLayers();
+        }
+
+        // ============ SELECTION TOOL ============
+
+        let selectionAnimationId = null;
+
+        function drawSelectionPreview() {
+            if (!selectionRect) return;
+
+            ctx.save();
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+
+            // Animate marching ants
+            const offset = (Date.now() / 50) % 20;
+            ctx.lineDashOffset = -offset;
+
+            ctx.strokeRect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
+            ctx.setLineDash([]);
+
+            // Draw corner handles
+            ctx.fillStyle = '#7c3aed';
+            const handleSize = 8;
+            const corners = [
+                [selectionRect.x, selectionRect.y],
+                [selectionRect.x + selectionRect.width, selectionRect.y],
+                [selectionRect.x, selectionRect.y + selectionRect.height],
+                [selectionRect.x + selectionRect.width, selectionRect.y + selectionRect.height]
+            ];
+            corners.forEach(([cx, cy]) => {
+                ctx.fillRect(cx - handleSize/2, cy - handleSize/2, handleSize, handleSize);
+            });
+
+            ctx.restore();
+
+            // Cancel previous animation
+            if (selectionAnimationId) {
+                cancelAnimationFrame(selectionAnimationId);
+            }
+
+            // Request animation frame for marching ants (only if selection still exists)
+            if (selectionRect && currentTool === 'selection') {
+                selectionAnimationId = requestAnimationFrame(() => {
+                    if (selectionRect && !isDrawing && currentTool === 'selection') {
+                        composeLayers();
+                        drawSelectionPreview();
+                    }
+                });
+            }
+        }
+
+        function clearSelection() {
+            if (selectionAnimationId) {
+                cancelAnimationFrame(selectionAnimationId);
+                selectionAnimationId = null;
+            }
+            selectionRect = null;
+            selectionData = null;
+            composeLayers();
+        }
+
+        function deleteSelection() {
+            if (!selectionRect) return;
+
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+            layerCtx.clearRect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
+            composeLayers();
+            clearSelection();
+            saveHistory();
+        }
+
+        // ============ MOVE TOOL ============
+
+        function moveLayerContent(dx, dy) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            // Create temp canvas to store content
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(currentLayer.canvas, 0, 0);
+
+            // Clear and redraw offset
+            layerCtx.clearRect(0, 0, canvas.width, canvas.height);
+            layerCtx.drawImage(tempCanvas, dx, dy);
+
+            composeLayers();
+        }
+
+        // ============ TEXT TOOL ============
+
+        function showTextInput(x, y) {
+            // x, y are in canvas coordinates (scaled), need to convert to screen coordinates
+            const canvasRect = canvas.getBoundingClientRect();
+            const scaleX = canvasRect.width / canvas.width;
+            const scaleY = canvasRect.height / canvas.height;
+
+            // Create text input overlay
+            let textOverlay = document.getElementById('textOverlay');
+            if (!textOverlay) {
+                textOverlay = document.createElement('div');
+                textOverlay.id = 'textOverlay';
+                textOverlay.style.cssText = `
+                    position: absolute;
+                    z-index: 1000;
+                    pointer-events: auto;
+                `;
+                document.getElementById('canvasContainer').appendChild(textOverlay);
+            }
+
+            // Convert canvas coordinates to screen coordinates for overlay positioning
+            const containerRect = document.getElementById('canvasContainer').getBoundingClientRect();
+            const screenX = (x * scaleX) + canvasRect.left - containerRect.left;
+            const screenY = (y * scaleY) + canvasRect.top - containerRect.top;
+
+            textOverlay.style.left = screenX + 'px';
+            textOverlay.style.top = screenY + 'px';
+            textOverlay.innerHTML = `
+                <input type="text" id="textInputField" style="
+                    background: rgba(0,0,0,0.9);
+                    border: 2px solid #7c3aed;
+                    color: white;
+                    padding: 8px 12px;
+                    font-size: ${Math.max(14, brushSize)}px;
+                    border-radius: 6px;
+                    outline: none;
+                    min-width: 200px;
+                " placeholder="Enter text...">
+            `;
+
+            const input = document.getElementById('textInputField');
+            input.focus();
+
+            // Store coordinates for later use
+            const textX = x;
+            const textY = y;
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const text = input.value.trim();
+                    if (text) {
+                        drawTextOnCanvas(text, textX, textY);
+                    }
+                    textOverlay.innerHTML = '';
+                } else if (e.key === 'Escape') {
+                    textOverlay.innerHTML = '';
+                }
+            });
+
+            // Don't auto-submit on blur to avoid double submission
+            let submitted = false;
+            input.addEventListener('blur', () => {
+                if (!submitted) {
+                    const text = input.value.trim();
+                    if (text) {
+                        submitted = true;
+                        drawTextOnCanvas(text, textX, textY);
+                    }
+                    textOverlay.innerHTML = '';
+                }
+            });
+        }
+
+        function drawTextOnCanvas(text, x, y) {
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            layerCtx.save();
+            layerCtx.fillStyle = currentColor;
+            layerCtx.font = `${brushSize * 2}px Arial, sans-serif`;
+            layerCtx.globalAlpha = brushOpacity;
+            layerCtx.fillText(text, x, y + brushSize);
+            layerCtx.restore();
+
+            composeLayers();
+            saveHistory();
         }
 
         function selectTool(tool) {
@@ -2976,15 +3499,60 @@
                 btn.classList.toggle('active', btn.dataset.tool === tool);
             });
 
-            // Change cursor
-            if (tool === 'eyedropper') {
-                canvas.style.cursor = 'crosshair';
-            } else if (tool === 'fill') {
-                canvas.style.cursor = 'pointer';
-            } else if (tool === 'move') {
-                canvas.style.cursor = 'move';
-            } else {
-                canvas.style.cursor = 'crosshair';
+            // Clear selection when switching to non-selection tool
+            if (tool !== 'selection' && selectionRect) {
+                clearSelection();
+            }
+
+            // Update status text
+            const statusText = {
+                'brush': 'Draw with brush',
+                'eraser': 'Erase content',
+                'blend': 'Click and drag to blend colors',
+                'blur': 'Click and drag to blur',
+                'fill': 'Click to fill area with color',
+                'eyedropper': 'Click to pick color',
+                'selection': 'Click and drag to select area',
+                'move': 'Click and drag to move layer content',
+                'text': 'Double-click to add text',
+                'line': 'Click and drag to draw line',
+                'rectangle': 'Click and drag to draw rectangle',
+                'circle': 'Click and drag to draw circle',
+                'gradient': 'Click and drag to create gradient'
+            };
+            document.getElementById('statusText').textContent = statusText[tool] || 'Ready';
+
+            // Change cursor based on tool
+            switch(tool) {
+                case 'eyedropper':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'fill':
+                    canvas.style.cursor = 'cell';
+                    break;
+                case 'move':
+                    canvas.style.cursor = 'move';
+                    break;
+                case 'blend':
+                    canvas.style.cursor = 'grab';
+                    break;
+                case 'blur':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'selection':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                case 'text':
+                    canvas.style.cursor = 'text';
+                    break;
+                case 'line':
+                case 'rectangle':
+                case 'circle':
+                case 'gradient':
+                    canvas.style.cursor = 'crosshair';
+                    break;
+                default:
+                    canvas.style.cursor = 'crosshair';
             }
         }
 
@@ -3026,43 +3594,190 @@
         }
 
         function pickColor(x, y) {
-            const pixel = ctx.getImageData(x, y, 1, 1).data;
-            const hex = '#' + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1);
+            const px = Math.floor(x);
+            const py = Math.floor(y);
+            if (px < 0 || px >= canvas.width || py < 0 || py >= canvas.height) return;
+            const pixel = ctx.getImageData(px, py, 1, 1).data;
+            const hex = '#' + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1).toUpperCase();
             currentColor = hex;
             document.getElementById('colorPicker').value = hex;
+
+            // Show color preview popup
+            showColorPreview(hex, x, y);
         }
 
-        function floodFill(x, y) {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const targetColor = getPixelColor(imageData, x, y);
-            const fillColor = hexToRgb(currentColor);
-
-            if (colorsMatch(targetColor, fillColor)) return;
-
-            const stack = [[Math.floor(x), Math.floor(y)]];
-
-            while (stack.length > 0) {
-                const [currentX, currentY] = stack.pop();
-
-                if (currentX < 0 || currentX >= canvas.width || currentY < 0 || currentY >= canvas.height) continue;
-
-                const currentColor = getPixelColor(imageData, currentX, currentY);
-                if (!colorsMatch(currentColor, targetColor)) continue;
-
-                setPixelColor(imageData, currentX, currentY, fillColor);
-
-                stack.push([currentX + 1, currentY]);
-                stack.push([currentX - 1, currentY]);
-                stack.push([currentX, currentY + 1]);
-                stack.push([currentX, currentY - 1]);
+        function showColorPreview(hex, canvasX, canvasY) {
+            let preview = document.getElementById('colorPreview');
+            if (!preview) {
+                preview = document.createElement('div');
+                preview.id = 'colorPreview';
+                preview.style.cssText = `
+                    position: absolute;
+                    z-index: 2000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px;
+                    background: rgba(0, 0, 0, 0.9);
+                    border-radius: 12px;
+                    border: 2px solid #7c3aed;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+                    pointer-events: none;
+                `;
+                document.getElementById('canvasContainer').appendChild(preview);
             }
 
-            ctx.putImageData(imageData, 0, 0);
+            // Convert canvas coords to screen coords
+            const canvasRect = canvas.getBoundingClientRect();
+            const containerRect = document.getElementById('canvasContainer').getBoundingClientRect();
+            const scaleX = canvasRect.width / canvas.width;
+            const scaleY = canvasRect.height / canvas.height;
+            const screenX = (canvasX * scaleX) + canvasRect.left - containerRect.left + 20;
+            const screenY = (canvasY * scaleY) + canvasRect.top - containerRect.top - 40;
+
+            preview.style.left = screenX + 'px';
+            preview.style.top = screenY + 'px';
+            preview.innerHTML = `
+                <div style="
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: ${hex};
+                    border: 3px solid white;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                "></div>
+                <div style="
+                    color: white;
+                    font-family: monospace;
+                    font-size: 14px;
+                    font-weight: bold;
+                    background: rgba(255,255,255,0.1);
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                ">${hex}</div>
+            `;
+            preview.style.display = 'flex';
+
+            // Auto-hide after 2 seconds
+            clearTimeout(preview.hideTimeout);
+            preview.hideTimeout = setTimeout(() => {
+                preview.style.display = 'none';
+            }, 2000);
+        }
+
+        function hideColorPreview() {
+            const preview = document.getElementById('colorPreview');
+            if (preview) {
+                preview.style.display = 'none';
+            }
+        }
+
+        function floodFill(startX, startY) {
+            // Work on the current layer
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+
+            const imageData = layerCtx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const sx = Math.floor(startX);
+            const sy = Math.floor(startY);
+            if (sx < 0 || sx >= width || sy < 0 || sy >= height) return;
+
+            const startIdx = (sy * width + sx) * 4;
+            const targetR = pixels[startIdx];
+            const targetG = pixels[startIdx + 1];
+            const targetB = pixels[startIdx + 2];
+            const targetA = pixels[startIdx + 3];
+
+            const fillRgb = hexToRgb(currentColor);
+
+            // Use LOW tolerance (5) to only fill exact color matches
+            // This prevents filling drawn content and only fills background
+            const tolerance = 5;
+
+            // Don't fill if clicking on the same color
+            if (colorsMatchWithTolerance(targetR, targetG, targetB, targetA, fillRgb[0], fillRgb[1], fillRgb[2], 255, tolerance)) {
+                return;
+            }
+
+            // Use scanline flood fill for better performance
+            const visited = new Uint8Array(width * height);
+            const stack = [[sx, sy]];
+
+            while (stack.length > 0) {
+                let [x, y] = stack.pop();
+
+                // Move left to find start of scanline
+                while (x > 0 && matchesTarget(pixels, (y * width + x - 1) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x - 1]) {
+                    x--;
+                }
+
+                let spanAbove = false;
+                let spanBelow = false;
+
+                while (x < width && matchesTarget(pixels, (y * width + x) * 4, targetR, targetG, targetB, targetA, tolerance) && !visited[y * width + x]) {
+                    const idx = (y * width + x) * 4;
+                    pixels[idx] = fillRgb[0];
+                    pixels[idx + 1] = fillRgb[1];
+                    pixels[idx + 2] = fillRgb[2];
+                    pixels[idx + 3] = 255;
+                    visited[y * width + x] = 1;
+
+                    // Check above
+                    if (y > 0) {
+                        const aboveIdx = ((y - 1) * width + x) * 4;
+                        if (matchesTarget(pixels, aboveIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y - 1) * width + x]) {
+                            if (!spanAbove) {
+                                stack.push([x, y - 1]);
+                                spanAbove = true;
+                            }
+                        } else {
+                            spanAbove = false;
+                        }
+                    }
+
+                    // Check below
+                    if (y < height - 1) {
+                        const belowIdx = ((y + 1) * width + x) * 4;
+                        if (matchesTarget(pixels, belowIdx, targetR, targetG, targetB, targetA, tolerance) && !visited[(y + 1) * width + x]) {
+                            if (!spanBelow) {
+                                stack.push([x, y + 1]);
+                                spanBelow = true;
+                            }
+                        } else {
+                            spanBelow = false;
+                        }
+                    }
+
+                    x++;
+                }
+            }
+
+            layerCtx.putImageData(imageData, 0, 0);
+            composeLayers();
             saveHistory();
         }
 
+        function matchesTarget(pixels, idx, targetR, targetG, targetB, targetA, tolerance) {
+            return Math.abs(pixels[idx] - targetR) <= tolerance &&
+                   Math.abs(pixels[idx + 1] - targetG) <= tolerance &&
+                   Math.abs(pixels[idx + 2] - targetB) <= tolerance &&
+                   Math.abs(pixels[idx + 3] - targetA) <= tolerance;
+        }
+
+        function colorsMatchWithTolerance(r1, g1, b1, a1, r2, g2, b2, a2, tolerance) {
+            return Math.abs(r1 - r2) <= tolerance &&
+                   Math.abs(g1 - g2) <= tolerance &&
+                   Math.abs(b1 - b2) <= tolerance &&
+                   Math.abs(a1 - a2) <= tolerance;
+        }
+
         function getPixelColor(imageData, x, y) {
-            const index = (y * imageData.width + x) * 4;
+            const index = (Math.floor(y) * imageData.width + Math.floor(x)) * 4;
             return [
                 imageData.data[index],
                 imageData.data[index + 1],
@@ -3072,7 +3787,7 @@
         }
 
         function setPixelColor(imageData, x, y, color) {
-            const index = (y * imageData.width + x) * 4;
+            const index = (Math.floor(y) * imageData.width + Math.floor(x)) * 4;
             imageData.data[index] = color[0];
             imageData.data[index + 1] = color[1];
             imageData.data[index + 2] = color[2];
@@ -3080,7 +3795,10 @@
         }
 
         function colorsMatch(a, b) {
-            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+            const tolerance = 10;
+            return Math.abs(a[0] - b[0]) <= tolerance &&
+                   Math.abs(a[1] - b[1]) <= tolerance &&
+                   Math.abs(a[2] - b[2]) <= tolerance;
         }
 
         function hexToRgb(hex) {
@@ -3432,29 +4150,65 @@
             composeLayers();
         }
 
-        // Smudge tool
-        function smudge(x, y) {
+        // Blend tool - blends colors together
+        function blend(x, y) {
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
-            const size = brushSize;
-            const imageData = layerCtx.getImageData(x - size/2, y - size/2, size, size);
+            const size = Math.max(4, brushSize);
 
-            // Blur the pixels slightly
-            const blurred = blurImageData(imageData, 2);
-            layerCtx.putImageData(blurred, x - size/2, y - size/2);
-            composeLayers();
+            // Bounds checking
+            const sx = Math.max(0, Math.floor(x - size/2));
+            const sy = Math.max(0, Math.floor(y - size/2));
+            const sw = Math.min(size, canvas.width - sx);
+            const sh = Math.min(size, canvas.height - sy);
+
+            if (sw <= 0 || sh <= 0) return;
+
+            try {
+                // Get image data from previous position and blend to current
+                const prevX = Math.max(0, Math.floor(lastX - size/2));
+                const prevY = Math.max(0, Math.floor(lastY - size/2));
+
+                const srcData = layerCtx.getImageData(prevX, prevY, sw, sh);
+                const dstData = layerCtx.getImageData(sx, sy, sw, sh);
+
+                // Blend pixels together
+                const strength = 0.5 * brushOpacity;
+                for (let i = 0; i < srcData.data.length; i += 4) {
+                    dstData.data[i] = dstData.data[i] * (1 - strength) + srcData.data[i] * strength;
+                    dstData.data[i + 1] = dstData.data[i + 1] * (1 - strength) + srcData.data[i + 1] * strength;
+                    dstData.data[i + 2] = dstData.data[i + 2] * (1 - strength) + srcData.data[i + 2] * strength;
+                }
+
+                layerCtx.putImageData(dstData, sx, sy);
+                composeLayers();
+            } catch (e) {
+                // Ignore out of bounds errors
+            }
         }
 
         // Blur tool
         function blur(x, y) {
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
-            const size = brushSize;
-            const imageData = layerCtx.getImageData(x - size/2, y - size/2, size, size);
+            const size = Math.max(4, brushSize);
 
-            const blurred = blurImageData(imageData, 3);
-            layerCtx.putImageData(blurred, x - size/2, y - size/2);
-            composeLayers();
+            // Bounds checking
+            const sx = Math.max(0, Math.floor(x - size/2));
+            const sy = Math.max(0, Math.floor(y - size/2));
+            const sw = Math.min(size, canvas.width - sx);
+            const sh = Math.min(size, canvas.height - sy);
+
+            if (sw <= 0 || sh <= 0) return;
+
+            try {
+                const imageData = layerCtx.getImageData(sx, sy, sw, sh);
+                const blurred = blurImageData(imageData, 3);
+                layerCtx.putImageData(blurred, sx, sy);
+                composeLayers();
+            } catch (e) {
+                // Ignore out of bounds errors
+            }
         }
 
         function blurImageData(imageData, radius) {
