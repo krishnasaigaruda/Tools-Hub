@@ -607,9 +607,6 @@
             <h1 style="font-size: 16px; font-weight: 600;">Drawing Pad</h1>
         </div>
         <div class="header-right">
-            <button class="header-btn" onclick="newCanvas()">
-                <i class="fas fa-file"></i> New
-            </button>
             <button class="header-btn" onclick="importImage()">
                 <i class="fas fa-file-import"></i> Import
             </button>
@@ -619,9 +616,6 @@
             <button class="header-btn" onclick="exportImage()">
                 <i class="fas fa-download"></i> Export
             </button>
-            <button class="header-btn" id="timelapseBtn" onclick="toggleTimelapse()">
-                <i class="fas fa-video"></i> Timelapse
-            </button>
             <button class="header-btn" onclick="showActions()">
                 <i class="fas fa-magic"></i> Actions
             </button>
@@ -630,9 +624,6 @@
             </button>
             <button class="header-btn" onclick="redo()">
                 <i class="fas fa-redo"></i>
-            </button>
-            <button class="header-btn" id="symmetryBtn" onclick="toggleSymmetry()" title="Symmetry Mode">
-                <i class="fas fa-arrows-alt-h"></i>
             </button>
             <button class="header-btn" onclick="flipHorizontal()" title="Flip Horizontal">
                 <i class="fas fa-arrows-alt-h"></i> Flip H
@@ -646,18 +637,15 @@
             <button class="header-btn" id="gridBtn" onclick="toggleGrid()" title="Grid Overlay">
                 <i class="fas fa-th"></i> Grid
             </button>
-            <button class="header-btn" onclick="mergeLayers()" title="Merge Layers">
-                <i class="fas fa-compress-alt"></i> Merge
-            </button>
-            <button class="header-btn" id="quickShapeBtn" onclick="toggleQuickShape()" title="QuickShape">
-                <i class="fas fa-shapes"></i> QuickShape
-            </button>
         </div>
     </div>
 
     <div class="main-container">
         <!-- Left Toolbar -->
         <div class="left-toolbar">
+            <button class="tool-btn" data-tool="cursor" onclick="selectTool('cursor')" title="Select Object (V)">
+                <i class="fas fa-mouse-pointer"></i>
+            </button>
             <button class="tool-btn active" data-tool="brush" onclick="selectTool('brush')" title="Brush (B)">
                 <i class="fas fa-paintbrush"></i>
             </button>
@@ -706,8 +694,18 @@
 
         <!-- Right Panels -->
         <div class="right-panels">
+            <!-- Object Properties Panel (for cursor/selection tool) -->
+            <div class="panel" id="objectPropertiesPanel" style="display: none;">
+                <div class="panel-title">Object Properties</div>
+                <div id="objectPropertiesContent">
+                    <div style="color: #777; font-size: 13px; text-align: center; padding: 20px;">
+                        Click on an object to select it
+                    </div>
+                </div>
+            </div>
+
             <!-- Brush Settings -->
-            <div class="panel">
+            <div class="panel" id="brushSettingsPanel">
                 <div class="panel-title">Brush Settings</div>
                 <div class="slider-group">
                     <div class="slider-label">
@@ -747,20 +745,38 @@
             </div>
 
             <!-- Brush Gallery -->
-            <div class="panel">
+            <div class="panel" id="brushGalleryPanel">
                 <div class="panel-title">Brushes</div>
                 <div class="brush-gallery-container" id="brushGallery"></div>
             </div>
 
+            <!-- Shape Settings Panel -->
+            <div class="panel" id="shapeSettingsPanel" style="display: none;">
+                <div class="panel-title">Shape Settings</div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Stroke Width</span>
+                        <span id="strokeWidthValue">2</span>
+                    </div>
+                    <input type="range" class="slider" id="strokeWidth" min="1" max="50" value="2" oninput="updateStrokeWidth(this.value)">
+                </div>
+                <div class="slider-group" style="margin-top: 12px;">
+                    <label style="color: #ccc; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="fillShape" onchange="updateFillShape(this.checked)" style="width: 16px; height: 16px;">
+                        Fill Shape
+                    </label>
+                </div>
+            </div>
+
             <!-- Color Picker -->
-            <div class="panel">
+            <div class="panel" id="colorPanel">
                 <div class="panel-title">Colors</div>
                 <input type="color" class="color-input" id="colorPicker" value="#000000" oninput="updateColor(this.value)">
                 <div class="color-swatches" id="colorSwatches"></div>
             </div>
 
             <!-- Layers -->
-            <div class="panel">
+            <div class="panel" id="layersPanel">
                 <div class="panel-title">Layers</div>
                 <div class="layers-list" id="layersList"></div>
                 <button class="add-layer-btn" onclick="addLayer()">
@@ -791,30 +807,58 @@
 
     <!-- Actions Modal -->
     <div class="modal" id="actionsModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-title">Actions</div>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
-                <button class="modal-btn primary" onclick="adjustBrightness()">
-                    <i class="fas fa-sun"></i> Brightness
-                </button>
-                <button class="modal-btn primary" onclick="adjustContrast()">
-                    <i class="fas fa-adjust"></i> Contrast
-                </button>
-                <button class="modal-btn primary" onclick="adjustHue()">
-                    <i class="fas fa-palette"></i> Hue/Saturation
-                </button>
-                <button class="modal-btn primary" onclick="invertColors()">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-title">Adjustments</div>
+
+            <!-- Brightness -->
+            <div class="slider-group" style="margin-bottom: 16px;">
+                <div class="slider-label">
+                    <span><i class="fas fa-sun"></i> Brightness</span>
+                    <span id="brightnessValue">0</span>
+                </div>
+                <input type="range" class="slider" id="brightnessSlider" min="-100" max="100" value="0" oninput="previewBrightness(this.value)">
+            </div>
+
+            <!-- Contrast -->
+            <div class="slider-group" style="margin-bottom: 16px;">
+                <div class="slider-label">
+                    <span><i class="fas fa-adjust"></i> Contrast</span>
+                    <span id="contrastValue">0</span>
+                </div>
+                <input type="range" class="slider" id="contrastSlider" min="-100" max="100" value="0" oninput="previewContrast(this.value)">
+            </div>
+
+            <!-- Saturation -->
+            <div class="slider-group" style="margin-bottom: 16px;">
+                <div class="slider-label">
+                    <span><i class="fas fa-palette"></i> Saturation</span>
+                    <span id="saturationValue">0</span>
+                </div>
+                <input type="range" class="slider" id="saturationSlider" min="-100" max="100" value="0" oninput="previewSaturation(this.value)">
+            </div>
+
+            <!-- Blur -->
+            <div class="slider-group" style="margin-bottom: 16px;">
+                <div class="slider-label">
+                    <span><i class="fas fa-water"></i> Blur</span>
+                    <span id="blurValue">0</span>
+                </div>
+                <input type="range" class="slider" id="blurSlider" min="0" max="20" value="0" oninput="previewBlur(this.value)">
+            </div>
+
+            <!-- Quick Actions -->
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <button class="modal-btn primary" onclick="invertColors()" style="flex: 1;">
                     <i class="fas fa-exchange-alt"></i> Invert
                 </button>
-                <button class="modal-btn primary" onclick="applyGaussianBlur()">
-                    <i class="fas fa-adjust"></i> Gaussian Blur
-                </button>
-                <button class="modal-btn primary" onclick="sharpenImage()">
+                <button class="modal-btn primary" onclick="sharpenImage()" style="flex: 1;">
                     <i class="fas fa-magic"></i> Sharpen
                 </button>
             </div>
+
             <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="closeModal('actionsModal')">Close</button>
+                <button class="modal-btn cancel" onclick="cancelAdjustments()">Cancel</button>
+                <button class="modal-btn primary" onclick="applyAdjustments()">Apply</button>
             </div>
         </div>
     </div>
@@ -978,6 +1022,11 @@
         let gridEnabled = false;
         let gridSize = 50;
 
+        // Zoom
+        let zoomLevel = 1;
+        let minZoom = 0.1;
+        let maxZoom = 5;
+
         // Gradient
         let gradientStart = null;
         let gradientEnd = null;
@@ -998,6 +1047,20 @@
         // Text state
         let textInputActive = false;
 
+        // Object tracking for cursor tool
+        let drawnObjects = [];
+        let selectedObject = null;
+        let strokeWidth = 2;
+        let fillShape = false;
+
+        // Object dragging/resizing state
+        let resizingHandle = null;
+        let resizeStartX = 0;
+        let resizeStartY = 0;
+        let originalObjectBounds = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
         // Color swatches
         const defaultSwatches = [
             '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF',
@@ -1015,6 +1078,9 @@
             initLayers();
             setupEventListeners();
             openIndexedDB();
+
+            // Set initial panel visibility (brush tool is default)
+            updatePanelVisibility('brush');
         }
 
         function setupCanvas() {
@@ -2214,18 +2280,20 @@
         function setupEventListeners() {
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mousemove', updateCursorForTool);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
 
-            // Double-click for text tool
+            // Double-click for text tool ONLY
             canvas.addEventListener('dblclick', (e) => {
+                if (currentTool !== 'text') return;
+
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
                 const x = (e.clientX - rect.left) * scaleX;
                 const y = (e.clientY - rect.top) * scaleY;
 
-                // If text tool is selected OR just double-click anywhere to add text
                 showTextInput(x, y);
             });
 
@@ -2237,25 +2305,47 @@
                 stopDrawing(null);
             });
 
+            // Zoom with scroll wheel
+            const canvasContainer = document.getElementById('canvasContainer');
+            canvasContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newZoom = Math.max(minZoom, Math.min(maxZoom, zoomLevel + delta));
+
+                if (newZoom !== zoomLevel) {
+                    zoomLevel = newZoom;
+                    applyZoom();
+                }
+            }, { passive: false });
+
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-                // Delete selection
-                if ((e.key === 'Delete' || e.key === 'Backspace') && selectionRect) {
+                // Delete selection or selected object
+                if (e.key === 'Delete' || e.key === 'Backspace') {
                     e.preventDefault();
-                    deleteSelection();
+                    if (selectedObject && currentTool === 'cursor') {
+                        deleteSelectedObject();
+                    } else if (selectionRect) {
+                        deleteSelection();
+                    }
                 }
 
-                // Escape to clear selection or color preview
+                // Escape to clear selection, deselect object, or hide color preview
                 if (e.key === 'Escape') {
-                    if (selectionRect) clearSelection();
+                    if (selectedObject && currentTool === 'cursor') {
+                        deselectObject();
+                    } else if (selectionRect) {
+                        clearSelection();
+                    }
                     hideColorPreview();
                 }
 
                 // Tool shortcuts
                 if (!e.ctrlKey && !e.metaKey) {
                     switch(e.key.toLowerCase()) {
+                        case 'v': selectTool('cursor'); break;
                         case 'b': selectTool('brush'); break;
                         case 'e': selectTool('eraser'); break;
                         case 'd': selectTool('blend'); break;
@@ -2296,6 +2386,20 @@
                     document.getElementById('brushSize').value = brushSize;
                     document.getElementById('sizeValue').textContent = brushSize;
                 }
+
+                // Zoom controls
+                if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+                    e.preventDefault();
+                    zoomIn();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+                    e.preventDefault();
+                    zoomOut();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+                    e.preventDefault();
+                    resetZoom();
+                }
             });
         }
 
@@ -2328,15 +2432,39 @@
             shapeStartX = lastX;
             shapeStartY = lastY;
 
-            if (currentTool === 'eyedropper') {
-                pickColor(lastX, lastY);
+            if (currentTool === 'cursor') {
+                // Object selection tool - check for resize handle or object
+                const handle = selectedObject ? getResizeHandle(lastX, lastY, selectedObject) : null;
+                if (handle) {
+                    // Start resizing
+                    isMovingSelection = true;
+                    resizingHandle = handle;
+                    resizeStartX = lastX;
+                    resizeStartY = lastY;
+                    originalObjectBounds = { ...getObjectBounds(selectedObject) };
+                } else {
+                    const obj = findObjectAt(lastX, lastY);
+                    if (obj) {
+                        selectObject(obj);
+                        // Start dragging
+                        isMovingSelection = true;
+                        dragOffsetX = lastX - getObjectBounds(obj).x;
+                        dragOffsetY = lastY - getObjectBounds(obj).y;
+                        resizingHandle = null;
+                    } else {
+                        deselectObject();
+                    }
+                }
                 isDrawing = false;
+            } else if (currentTool === 'eyedropper') {
+                // Keep isDrawing true so we can drag and pick colors
+                pickColor(lastX, lastY);
             } else if (currentTool === 'fill') {
                 floodFill(lastX, lastY);
                 isDrawing = false;
             } else if (currentTool === 'text') {
+                // Text is handled by double-click only
                 isDrawing = false;
-                showTextInput(lastX, lastY);
             } else if (currentTool === 'selection') {
                 // Check if clicking inside existing selection to move it
                 if (selectionRect && lastX >= selectionRect.x && lastX <= selectionRect.x + selectionRect.width &&
@@ -2367,14 +2495,26 @@
         }
 
         function draw(e) {
-            if (!isDrawing && !isMovingSelection) return;
-
             const rect = canvas.getBoundingClientRect();
             // Scale coordinates to match canvas resolution
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let x = (e.clientX - rect.left) * scaleX;
             let y = (e.clientY - rect.top) * scaleY;
+
+            // Handle eyedropper continuous picking while dragging
+            if (isDrawing && currentTool === 'eyedropper') {
+                pickColor(x, y);
+                return;
+            }
+
+            // Handle cursor tool - dragging/resizing objects
+            if (isMovingSelection && currentTool === 'cursor' && selectedObject) {
+                moveSelectedObject(x, y);
+                return;
+            }
+
+            if (!isDrawing && !isMovingSelection) return;
 
             // Handle selection movement
             if (isMovingSelection && currentTool === 'selection' && selectionRect) {
@@ -2449,14 +2589,21 @@
 
             layerCtx.save();
 
-            // Set brush properties
-            layerCtx.strokeStyle = currentTool === 'eraser' ? '#FFFFFF' : currentColor;
-            layerCtx.fillStyle = currentColor;
-            layerCtx.lineWidth = brushSize;
-            layerCtx.globalAlpha = brushOpacity * brushFlow;
+            // Handle eraser with destination-out composite operation
+            if (currentTool === 'eraser') {
+                layerCtx.globalCompositeOperation = 'destination-out';
+                layerCtx.strokeStyle = 'rgba(0,0,0,1)';
+                layerCtx.fillStyle = 'rgba(0,0,0,1)';
+            } else {
+                layerCtx.strokeStyle = currentColor;
+                layerCtx.fillStyle = currentColor;
+            }
 
-            // Apply hardness by using shadowBlur
-            if (brushHardness < 1) {
+            layerCtx.lineWidth = brushSize;
+            layerCtx.globalAlpha = currentTool === 'eraser' ? 1 : brushOpacity * brushFlow;
+
+            // Apply hardness by using shadowBlur (not for eraser)
+            if (brushHardness < 1 && currentTool !== 'eraser') {
                 layerCtx.shadowBlur = brushSize * (1 - brushHardness);
                 layerCtx.shadowColor = layerCtx.strokeStyle;
             }
@@ -3130,6 +3277,19 @@
         function stopDrawing(e) {
             if (isMovingSelection) {
                 isMovingSelection = false;
+
+                // Handle cursor tool object manipulation finish
+                if (currentTool === 'cursor' && selectedObject) {
+                    resizingHandle = null;
+                    originalObjectBounds = null;
+                    redrawObjects();
+                    if (selectedObject) {
+                        drawSelectionHandles(selectedObject);
+                        updateObjectPropertiesPanel(selectedObject);
+                    }
+                    return;
+                }
+
                 if (currentTool === 'selection' && selectionData) {
                     // Paste selection data at new position
                     const currentLayer = layers[currentLayerIndex];
@@ -3195,7 +3355,7 @@
             ctx.save();
             ctx.strokeStyle = currentColor;
             ctx.fillStyle = currentColor;
-            ctx.lineWidth = brushSize;
+            ctx.lineWidth = strokeWidth;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.globalAlpha = brushOpacity;
@@ -3208,12 +3368,20 @@
             } else if (currentTool === 'rectangle') {
                 const w = x - shapeStartX;
                 const h = y - shapeStartY;
-                ctx.strokeRect(shapeStartX, shapeStartY, w, h);
+                if (fillShape) {
+                    ctx.fillRect(shapeStartX, shapeStartY, w, h);
+                } else {
+                    ctx.strokeRect(shapeStartX, shapeStartY, w, h);
+                }
             } else if (currentTool === 'circle') {
                 const radius = Math.sqrt(Math.pow(x - shapeStartX, 2) + Math.pow(y - shapeStartY, 2));
                 ctx.beginPath();
                 ctx.arc(shapeStartX, shapeStartY, radius, 0, Math.PI * 2);
-                ctx.stroke();
+                if (fillShape) {
+                    ctx.fill();
+                } else {
+                    ctx.stroke();
+                }
             } else if (currentTool === 'gradient') {
                 // Show gradient preview
                 const gradient = ctx.createLinearGradient(shapeStartX, shapeStartY, x, y);
@@ -3240,9 +3408,19 @@
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
 
+            // Create object for later selection
+            const lineObj = {
+                type: 'line',
+                x1: x1, y1: y1, x2: x2, y2: y2,
+                color: currentColor,
+                strokeWidth: strokeWidth,
+                opacity: brushOpacity
+            };
+            addObject(lineObj);
+
             layerCtx.save();
             layerCtx.strokeStyle = currentColor;
-            layerCtx.lineWidth = brushSize;
+            layerCtx.lineWidth = strokeWidth;
             layerCtx.lineCap = 'round';
             layerCtx.lineJoin = 'round';
             layerCtx.globalAlpha = brushOpacity;
@@ -3260,16 +3438,37 @@
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
 
+            const w = x2 - x1;
+            const h = y2 - y1;
+            const x = Math.min(x1, x2);
+            const y = Math.min(y1, y2);
+            const width = Math.abs(w);
+            const height = Math.abs(h);
+
+            // Create object for later selection
+            const rectObj = {
+                type: 'rectangle',
+                x: x, y: y, width: width, height: height,
+                color: currentColor,
+                strokeWidth: strokeWidth,
+                filled: fillShape,
+                opacity: brushOpacity
+            };
+            addObject(rectObj);
+
             layerCtx.save();
             layerCtx.strokeStyle = currentColor;
-            layerCtx.lineWidth = brushSize;
+            layerCtx.fillStyle = currentColor;
+            layerCtx.lineWidth = strokeWidth;
             layerCtx.lineCap = 'round';
             layerCtx.lineJoin = 'round';
             layerCtx.globalAlpha = brushOpacity;
 
-            const w = x2 - x1;
-            const h = y2 - y1;
-            layerCtx.strokeRect(x1, y1, w, h);
+            if (fillShape) {
+                layerCtx.fillRect(x, y, width, height);
+            } else {
+                layerCtx.strokeRect(x, y, width, height);
+            }
 
             layerCtx.restore();
             composeLayers();
@@ -3279,17 +3478,34 @@
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
 
+            const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+
+            // Create object for later selection
+            const circleObj = {
+                type: 'circle',
+                cx: x1, cy: y1, radius: radius,
+                color: currentColor,
+                strokeWidth: strokeWidth,
+                filled: fillShape,
+                opacity: brushOpacity
+            };
+            addObject(circleObj);
+
             layerCtx.save();
             layerCtx.strokeStyle = currentColor;
-            layerCtx.lineWidth = brushSize;
+            layerCtx.fillStyle = currentColor;
+            layerCtx.lineWidth = strokeWidth;
             layerCtx.lineCap = 'round';
             layerCtx.lineJoin = 'round';
             layerCtx.globalAlpha = brushOpacity;
 
-            const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             layerCtx.beginPath();
             layerCtx.arc(x1, y1, radius, 0, Math.PI * 2);
-            layerCtx.stroke();
+            if (fillShape) {
+                layerCtx.fill();
+            } else {
+                layerCtx.stroke();
+            }
 
             layerCtx.restore();
             composeLayers();
@@ -3482,12 +3698,33 @@
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
 
+            const fontSize = brushSize * 2;
             layerCtx.save();
             layerCtx.fillStyle = currentColor;
-            layerCtx.font = `${brushSize * 2}px Arial, sans-serif`;
+            layerCtx.font = `${fontSize}px Arial, sans-serif`;
             layerCtx.globalAlpha = brushOpacity;
+
+            // Measure text for object bounds
+            const metrics = layerCtx.measureText(text);
+            const textWidth = metrics.width;
+            const textHeight = fontSize;
+
             layerCtx.fillText(text, x, y + brushSize);
             layerCtx.restore();
+
+            // Create text object for selection
+            const textObj = {
+                type: 'text',
+                text: text,
+                x: x,
+                y: y + brushSize,
+                width: textWidth,
+                height: textHeight,
+                fontSize: fontSize,
+                color: currentColor,
+                opacity: brushOpacity
+            };
+            addObject(textObj);
 
             composeLayers();
             saveHistory();
@@ -3499,13 +3736,20 @@
                 btn.classList.toggle('active', btn.dataset.tool === tool);
             });
 
-            // Clear selection when switching to non-selection tool
-            if (tool !== 'selection' && selectionRect) {
+            // Clear selection when switching to non-selection/cursor tool
+            if (tool !== 'selection' && tool !== 'cursor' && selectionRect) {
                 clearSelection();
+            }
+
+            // Deselect object when switching away from cursor tool
+            if (tool !== 'cursor' && selectedObject) {
+                selectedObject = null;
+                composeLayers();
             }
 
             // Update status text
             const statusText = {
+                'cursor': 'Click to select objects',
                 'brush': 'Draw with brush',
                 'eraser': 'Erase content',
                 'blend': 'Click and drag to blend colors',
@@ -3522,8 +3766,14 @@
             };
             document.getElementById('statusText').textContent = statusText[tool] || 'Ready';
 
+            // Update panel visibility based on tool
+            updatePanelVisibility(tool);
+
             // Change cursor based on tool
             switch(tool) {
+                case 'cursor':
+                    canvas.style.cursor = 'default';
+                    break;
                 case 'eyedropper':
                     canvas.style.cursor = 'crosshair';
                     break;
@@ -3554,6 +3804,53 @@
                 default:
                     canvas.style.cursor = 'crosshair';
             }
+        }
+
+        function updatePanelVisibility(tool) {
+            const brushSettingsPanel = document.getElementById('brushSettingsPanel');
+            const brushGalleryPanel = document.getElementById('brushGalleryPanel');
+            const shapeSettingsPanel = document.getElementById('shapeSettingsPanel');
+            const objectPropertiesPanel = document.getElementById('objectPropertiesPanel');
+            const colorPanel = document.getElementById('colorPanel');
+
+            // Hide all optional panels first
+            brushSettingsPanel.style.display = 'none';
+            brushGalleryPanel.style.display = 'none';
+            shapeSettingsPanel.style.display = 'none';
+            objectPropertiesPanel.style.display = 'none';
+
+            // Show relevant panels based on tool
+            switch(tool) {
+                case 'cursor':
+                case 'selection':
+                    objectPropertiesPanel.style.display = 'block';
+                    break;
+                case 'brush':
+                case 'eraser':
+                case 'blend':
+                case 'blur':
+                    brushSettingsPanel.style.display = 'block';
+                    brushGalleryPanel.style.display = 'block';
+                    break;
+                case 'line':
+                case 'rectangle':
+                case 'circle':
+                    brushSettingsPanel.style.display = 'block';
+                    shapeSettingsPanel.style.display = 'block';
+                    break;
+                case 'fill':
+                case 'gradient':
+                case 'eyedropper':
+                case 'text':
+                    // Just show color panel (always visible)
+                    break;
+                case 'move':
+                    // Just show layers panel (always visible)
+                    break;
+            }
+
+            // Color panel is always visible except for cursor/selection/move
+            colorPanel.style.display = (tool === 'cursor' || tool === 'move') ? 'none' : 'block';
         }
 
         function selectBrush(brushId) {
@@ -3593,6 +3890,534 @@
             currentColor = color;
         }
 
+        function updateStrokeWidth(value) {
+            strokeWidth = parseInt(value);
+            document.getElementById('strokeWidthValue').textContent = value;
+            // Update selected object if any
+            if (selectedObject) {
+                selectedObject.strokeWidth = strokeWidth;
+                redrawObjects();
+            }
+        }
+
+        function updateFillShape(checked) {
+            fillShape = checked;
+            // Update selected object if any
+            if (selectedObject) {
+                selectedObject.filled = fillShape;
+                redrawObjects();
+            }
+        }
+
+        // Object management functions
+        function addObject(obj) {
+            obj.id = Date.now();
+            obj.layerIndex = currentLayerIndex;
+            drawnObjects.push(obj);
+        }
+
+        function findObjectAt(x, y) {
+            // Search in reverse order (top objects first)
+            for (let i = drawnObjects.length - 1; i >= 0; i--) {
+                const obj = drawnObjects[i];
+                if (obj.layerIndex !== currentLayerIndex) continue;
+
+                if (isPointInObject(x, y, obj)) {
+                    return obj;
+                }
+            }
+            return null;
+        }
+
+        function isPointInObject(x, y, obj) {
+            const tolerance = 10;
+
+            switch(obj.type) {
+                case 'line':
+                    return distanceToLine(x, y, obj.x1, obj.y1, obj.x2, obj.y2) < tolerance;
+                case 'rectangle':
+                    if (obj.filled) {
+                        return x >= obj.x && x <= obj.x + obj.width &&
+                               y >= obj.y && y <= obj.y + obj.height;
+                    } else {
+                        // Check if near edges
+                        return (Math.abs(x - obj.x) < tolerance && y >= obj.y && y <= obj.y + obj.height) ||
+                               (Math.abs(x - (obj.x + obj.width)) < tolerance && y >= obj.y && y <= obj.y + obj.height) ||
+                               (Math.abs(y - obj.y) < tolerance && x >= obj.x && x <= obj.x + obj.width) ||
+                               (Math.abs(y - (obj.y + obj.height)) < tolerance && x >= obj.x && x <= obj.x + obj.width);
+                    }
+                case 'circle':
+                    const dx = x - obj.cx;
+                    const dy = y - obj.cy;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (obj.filled) {
+                        return dist <= obj.radius;
+                    } else {
+                        return Math.abs(dist - obj.radius) < tolerance;
+                    }
+                case 'text':
+                    return x >= obj.x && x <= obj.x + obj.width &&
+                           y >= obj.y - obj.height && y <= obj.y;
+                case 'image':
+                    return x >= obj.x && x <= obj.x + obj.width &&
+                           y >= obj.y && y <= obj.y + obj.height;
+                default:
+                    return false;
+            }
+        }
+
+        function distanceToLine(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            if (lenSq !== 0) param = dot / lenSq;
+
+            let xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param * C; yy = y1 + param * D; }
+
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function getResizeHandle(x, y, obj) {
+            if (!obj) return null;
+            const bounds = getObjectBounds(obj);
+            const handleSize = 12;
+            const handles = {
+                'nw': { x: bounds.x - 5, y: bounds.y - 5 },
+                'ne': { x: bounds.x + bounds.width + 5 - handleSize, y: bounds.y - 5 },
+                'sw': { x: bounds.x - 5, y: bounds.y + bounds.height + 5 - handleSize },
+                'se': { x: bounds.x + bounds.width + 5 - handleSize, y: bounds.y + bounds.height + 5 - handleSize }
+            };
+
+            for (const [name, pos] of Object.entries(handles)) {
+                if (x >= pos.x && x <= pos.x + handleSize &&
+                    y >= pos.y && y <= pos.y + handleSize) {
+                    return name;
+                }
+            }
+            return null;
+        }
+
+        function moveSelectedObject(x, y) {
+            if (!selectedObject) return;
+
+            if (resizingHandle) {
+                // Resizing
+                resizeObject(selectedObject, x, y);
+            } else {
+                // Dragging - move the object
+                const bounds = getObjectBounds(selectedObject);
+                const newX = x - dragOffsetX;
+                const newY = y - dragOffsetY;
+                const dx = newX - bounds.x;
+                const dy = newY - bounds.y;
+
+                // Update object position based on type
+                switch (selectedObject.type) {
+                    case 'line':
+                        selectedObject.x1 += dx;
+                        selectedObject.y1 += dy;
+                        selectedObject.x2 += dx;
+                        selectedObject.y2 += dy;
+                        break;
+                    case 'rectangle':
+                        selectedObject.x = newX;
+                        selectedObject.y = newY;
+                        break;
+                    case 'circle':
+                        selectedObject.cx += dx;
+                        selectedObject.cy += dy;
+                        break;
+                    case 'text':
+                        selectedObject.x = newX;
+                        selectedObject.y = newY + selectedObject.height;
+                        break;
+                    case 'image':
+                        selectedObject.x = newX;
+                        selectedObject.y = newY;
+                        break;
+                }
+            }
+
+            redrawObjects();
+        }
+
+        function resizeObject(obj, x, y) {
+            if (!originalObjectBounds) return;
+
+            const dx = x - resizeStartX;
+            const dy = y - resizeStartY;
+
+            switch (obj.type) {
+                case 'rectangle':
+                    if (resizingHandle === 'se') {
+                        obj.width = Math.max(10, originalObjectBounds.width + dx);
+                        obj.height = Math.max(10, originalObjectBounds.height + dy);
+                    } else if (resizingHandle === 'sw') {
+                        const newWidth = Math.max(10, originalObjectBounds.width - dx);
+                        obj.x = originalObjectBounds.x + originalObjectBounds.width - newWidth;
+                        obj.width = newWidth;
+                        obj.height = Math.max(10, originalObjectBounds.height + dy);
+                    } else if (resizingHandle === 'ne') {
+                        obj.width = Math.max(10, originalObjectBounds.width + dx);
+                        const newHeight = Math.max(10, originalObjectBounds.height - dy);
+                        obj.y = originalObjectBounds.y + originalObjectBounds.height - newHeight;
+                        obj.height = newHeight;
+                    } else if (resizingHandle === 'nw') {
+                        const newWidth = Math.max(10, originalObjectBounds.width - dx);
+                        const newHeight = Math.max(10, originalObjectBounds.height - dy);
+                        obj.x = originalObjectBounds.x + originalObjectBounds.width - newWidth;
+                        obj.y = originalObjectBounds.y + originalObjectBounds.height - newHeight;
+                        obj.width = newWidth;
+                        obj.height = newHeight;
+                    }
+                    break;
+                case 'circle':
+                    // Resize circle by changing radius
+                    const newRadius = Math.max(10, originalObjectBounds.width / 2 + (dx + dy) / 2);
+                    obj.radius = newRadius;
+                    break;
+                case 'line':
+                    // Move endpoints
+                    if (resizingHandle === 'nw' || resizingHandle === 'sw') {
+                        obj.x1 = originalObjectBounds.x + dx;
+                        obj.y1 = originalObjectBounds.y + dy;
+                    } else {
+                        obj.x2 = originalObjectBounds.x + originalObjectBounds.width + dx;
+                        obj.y2 = originalObjectBounds.y + originalObjectBounds.height + dy;
+                    }
+                    break;
+                case 'text':
+                    // Resize text by changing font size
+                    const scaleFactor = Math.max(0.5, 1 + (dx + dy) / 200);
+                    obj.fontSize = Math.max(10, Math.round(originalObjectBounds.height * scaleFactor));
+                    break;
+                case 'image':
+                    // Resize image like rectangle
+                    if (resizingHandle === 'se') {
+                        obj.width = Math.max(20, originalObjectBounds.width + dx);
+                        obj.height = Math.max(20, originalObjectBounds.height + dy);
+                    } else if (resizingHandle === 'sw') {
+                        const newWidth = Math.max(20, originalObjectBounds.width - dx);
+                        obj.x = originalObjectBounds.x + originalObjectBounds.width - newWidth;
+                        obj.width = newWidth;
+                        obj.height = Math.max(20, originalObjectBounds.height + dy);
+                    } else if (resizingHandle === 'ne') {
+                        obj.width = Math.max(20, originalObjectBounds.width + dx);
+                        const newHeight = Math.max(20, originalObjectBounds.height - dy);
+                        obj.y = originalObjectBounds.y + originalObjectBounds.height - newHeight;
+                        obj.height = newHeight;
+                    } else if (resizingHandle === 'nw') {
+                        const newWidth = Math.max(20, originalObjectBounds.width - dx);
+                        const newHeight = Math.max(20, originalObjectBounds.height - dy);
+                        obj.x = originalObjectBounds.x + originalObjectBounds.width - newWidth;
+                        obj.y = originalObjectBounds.y + originalObjectBounds.height - newHeight;
+                        obj.width = newWidth;
+                        obj.height = newHeight;
+                    }
+                    break;
+            }
+        }
+
+        function updateCursorForTool(e) {
+            if (currentTool !== 'cursor') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            if (selectedObject) {
+                const handle = getResizeHandle(x, y, selectedObject);
+                if (handle) {
+                    // Set resize cursor based on handle
+                    const cursors = {
+                        'nw': 'nwse-resize',
+                        'ne': 'nesw-resize',
+                        'sw': 'nesw-resize',
+                        'se': 'nwse-resize'
+                    };
+                    canvas.style.cursor = cursors[handle];
+                    return;
+                }
+
+                // Check if over the object for move cursor
+                if (isPointInObject(x, y, selectedObject)) {
+                    canvas.style.cursor = 'move';
+                    return;
+                }
+            }
+
+            // Default cursor for cursor tool
+            canvas.style.cursor = 'default';
+        }
+
+        function selectObject(obj) {
+            selectedObject = obj;
+            composeLayers();
+            drawSelectionHandles(obj);
+            updateObjectPropertiesPanel(obj);
+        }
+
+        function deselectObject() {
+            selectedObject = null;
+            composeLayers();
+            updateObjectPropertiesPanel(null);
+        }
+
+        function drawSelectionHandles(obj) {
+            if (!obj) return;
+
+            const bounds = getObjectBounds(obj);
+            ctx.save();
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(bounds.x - 5, bounds.y - 5, bounds.width + 10, bounds.height + 10);
+            ctx.setLineDash([]);
+
+            // Draw corner handles
+            const handleSize = 8;
+            ctx.fillStyle = '#7c3aed';
+            const corners = [
+                { x: bounds.x - 5, y: bounds.y - 5 },
+                { x: bounds.x + bounds.width + 5 - handleSize, y: bounds.y - 5 },
+                { x: bounds.x - 5, y: bounds.y + bounds.height + 5 - handleSize },
+                { x: bounds.x + bounds.width + 5 - handleSize, y: bounds.y + bounds.height + 5 - handleSize }
+            ];
+            corners.forEach(c => {
+                ctx.fillRect(c.x, c.y, handleSize, handleSize);
+            });
+            ctx.restore();
+        }
+
+        function getObjectBounds(obj) {
+            switch(obj.type) {
+                case 'line':
+                    return {
+                        x: Math.min(obj.x1, obj.x2),
+                        y: Math.min(obj.y1, obj.y2),
+                        width: Math.abs(obj.x2 - obj.x1),
+                        height: Math.abs(obj.y2 - obj.y1)
+                    };
+                case 'rectangle':
+                    return { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+                case 'circle':
+                    return {
+                        x: obj.cx - obj.radius,
+                        y: obj.cy - obj.radius,
+                        width: obj.radius * 2,
+                        height: obj.radius * 2
+                    };
+                case 'text':
+                    return { x: obj.x, y: obj.y - obj.height, width: obj.width, height: obj.height };
+                case 'image':
+                    return { x: obj.x, y: obj.y, width: obj.width, height: obj.height };
+                default:
+                    return { x: 0, y: 0, width: 0, height: 0 };
+            }
+        }
+
+        function updateObjectPropertiesPanel(obj) {
+            const content = document.getElementById('objectPropertiesContent');
+            if (!obj) {
+                content.innerHTML = `
+                    <div style="color: #777; font-size: 13px; text-align: center; padding: 20px;">
+                        Click on an object to select it
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div style="color: #ccc; font-size: 13px;">`;
+            html += `<div style="margin-bottom: 12px;"><strong>Type:</strong> ${obj.type.charAt(0).toUpperCase() + obj.type.slice(1)}</div>`;
+
+            if (obj.type === 'image') {
+                // Image properties - size info
+                html += `<div style="margin-bottom: 8px;"><strong>Size:</strong> ${Math.round(obj.width)} x ${Math.round(obj.height)}</div>`;
+                html += `<div style="margin-bottom: 8px; color: #777; font-size: 11px;">Original: ${obj.originalWidth} x ${obj.originalHeight}</div>`;
+                html += `
+                    <div class="slider-group" style="margin-top: 12px;">
+                        <div class="slider-label">
+                            <span>Opacity</span>
+                            <span>${Math.round((obj.opacity || 1) * 100)}%</span>
+                        </div>
+                        <input type="range" class="slider" min="10" max="100" value="${(obj.opacity || 1) * 100}" oninput="updateObjectOpacity(this.value)">
+                    </div>
+                `;
+            } else {
+                html += `<div style="margin-bottom: 8px;"><strong>Color:</strong> <input type="color" value="${obj.color || '#000000'}" onchange="updateObjectColor(this.value)" style="vertical-align: middle;"></div>`;
+
+                if (obj.type !== 'text') {
+                    html += `
+                        <div class="slider-group" style="margin-top: 12px;">
+                            <div class="slider-label">
+                                <span>Stroke Width</span>
+                                <span>${obj.strokeWidth || 2}</span>
+                            </div>
+                            <input type="range" class="slider" min="1" max="50" value="${obj.strokeWidth || 2}" oninput="updateObjectStrokeWidth(this.value)">
+                        </div>
+                    `;
+                    if (obj.type === 'rectangle' || obj.type === 'circle') {
+                        html += `
+                            <div style="margin-top: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" ${obj.filled ? 'checked' : ''} onchange="updateObjectFilled(this.checked)" style="width: 16px; height: 16px;">
+                                    Fill Shape
+                                </label>
+                            </div>
+                        `;
+                    }
+                } else {
+                    html += `
+                        <div class="slider-group" style="margin-top: 12px;">
+                            <div class="slider-label">
+                                <span>Font Size</span>
+                                <span>${obj.fontSize || 40}</span>
+                            </div>
+                            <input type="range" class="slider" min="10" max="200" value="${obj.fontSize || 40}" oninput="updateObjectFontSize(this.value)">
+                        </div>
+                    `;
+                }
+            }
+
+            html += `
+                <button onclick="deleteSelectedObject()" style="
+                    width: 100%;
+                    margin-top: 16px;
+                    padding: 8px;
+                    background: #dc2626;
+                    border: none;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 13px;
+                ">Delete Object</button>
+            `;
+            html += `</div>`;
+            content.innerHTML = html;
+        }
+
+        function updateObjectColor(color) {
+            if (selectedObject) {
+                selectedObject.color = color;
+                redrawObjects();
+            }
+        }
+
+        function updateObjectStrokeWidth(value) {
+            if (selectedObject) {
+                selectedObject.strokeWidth = parseInt(value);
+                redrawObjects();
+            }
+        }
+
+        function updateObjectFilled(filled) {
+            if (selectedObject) {
+                selectedObject.filled = filled;
+                redrawObjects();
+            }
+        }
+
+        function updateObjectFontSize(value) {
+            if (selectedObject && selectedObject.type === 'text') {
+                selectedObject.fontSize = parseInt(value);
+                redrawObjects();
+            }
+        }
+
+        function updateObjectOpacity(value) {
+            if (selectedObject) {
+                selectedObject.opacity = parseInt(value) / 100;
+                redrawObjects();
+                updateObjectPropertiesPanel(selectedObject);
+            }
+        }
+
+        function deleteSelectedObject() {
+            if (selectedObject) {
+                const index = drawnObjects.findIndex(o => o.id === selectedObject.id);
+                if (index !== -1) {
+                    drawnObjects.splice(index, 1);
+                }
+                selectedObject = null;
+                redrawObjects();
+                updateObjectPropertiesPanel(null);
+            }
+        }
+
+        function redrawObjects() {
+            // Clear the current layer and redraw all objects on it
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+            layerCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Redraw objects belonging to this layer
+            drawnObjects.filter(o => o.layerIndex === currentLayerIndex).forEach(obj => {
+                drawObject(layerCtx, obj);
+            });
+
+            composeLayers();
+            if (selectedObject) {
+                drawSelectionHandles(selectedObject);
+            }
+            saveHistory();
+        }
+
+        function drawObject(ctx, obj) {
+            ctx.save();
+            ctx.strokeStyle = obj.color;
+            ctx.fillStyle = obj.color;
+            ctx.lineWidth = obj.strokeWidth || 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalAlpha = obj.opacity || 1;
+
+            switch(obj.type) {
+                case 'line':
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x1, obj.y1);
+                    ctx.lineTo(obj.x2, obj.y2);
+                    ctx.stroke();
+                    break;
+                case 'rectangle':
+                    if (obj.filled) {
+                        ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+                    } else {
+                        ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+                    }
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(obj.cx, obj.cy, obj.radius, 0, Math.PI * 2);
+                    if (obj.filled) {
+                        ctx.fill();
+                    } else {
+                        ctx.stroke();
+                    }
+                    break;
+                case 'text':
+                    ctx.font = `${obj.fontSize || 40}px Arial, sans-serif`;
+                    ctx.fillText(obj.text, obj.x, obj.y);
+                    break;
+                case 'image':
+                    if (obj.imageElement) {
+                        ctx.drawImage(obj.imageElement, obj.x, obj.y, obj.width, obj.height);
+                    }
+                    break;
+            }
+            ctx.restore();
+        }
+
         function pickColor(x, y) {
             const px = Math.floor(x);
             const py = Math.floor(y);
@@ -3623,9 +4448,40 @@
                     border-radius: 12px;
                     border: 2px solid #7c3aed;
                     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-                    pointer-events: none;
+                    cursor: move;
+                    user-select: none;
                 `;
                 document.getElementById('canvasContainer').appendChild(preview);
+
+                // Make it draggable
+                let isDragging = false;
+                let dragOffsetX, dragOffsetY;
+
+                preview.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    dragOffsetX = e.clientX - preview.offsetLeft;
+                    dragOffsetY = e.clientY - preview.offsetTop;
+                    clearTimeout(preview.hideTimeout);
+                    e.stopPropagation();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        const containerRect = document.getElementById('canvasContainer').getBoundingClientRect();
+                        preview.style.left = (e.clientX - dragOffsetX) + 'px';
+                        preview.style.top = (e.clientY - dragOffsetY) + 'px';
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        // Restart auto-hide timer
+                        preview.hideTimeout = setTimeout(() => {
+                            preview.style.display = 'none';
+                        }, 3000);
+                    }
+                });
             }
 
             // Convert canvas coords to screen coords
@@ -3659,11 +4515,11 @@
             `;
             preview.style.display = 'flex';
 
-            // Auto-hide after 2 seconds
+            // Auto-hide after 3 seconds (longer so user can drag if needed)
             clearTimeout(preview.hideTimeout);
             preview.hideTimeout = setTimeout(() => {
                 preview.style.display = 'none';
-            }, 2000);
+            }, 3000);
         }
 
         function hideColorPreview() {
@@ -4248,7 +5104,7 @@
             return output;
         }
 
-        // Import image
+        // Import image as a selectable/resizable object
         function importImage() {
             document.getElementById('importInput').click();
         }
@@ -4261,11 +5117,48 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
+                    // Use actual image size (or scale down if too large)
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Scale down if image is larger than canvas
+                    const maxWidth = canvas.width * 0.5;
+                    const maxHeight = canvas.height * 0.5;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        const scale = Math.min(maxWidth / width, maxHeight / height);
+                        width = width * scale;
+                        height = height * scale;
+                    }
+
+                    // Center the image on canvas
+                    const x = (canvas.width - width) / 2;
+                    const y = (canvas.height - height) / 2;
+
+                    // Create image object for selection/resizing
+                    const imageObj = {
+                        type: 'image',
+                        x: x,
+                        y: y,
+                        width: width,
+                        height: height,
+                        originalWidth: img.width,
+                        originalHeight: img.height,
+                        src: e.target.result,
+                        imageElement: img
+                    };
+                    addObject(imageObj);
+
+                    // Draw the image on current layer
                     const currentLayer = layers[currentLayerIndex];
                     const layerCtx = currentLayer.canvas.getContext('2d');
-                    layerCtx.drawImage(img, 0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
+                    layerCtx.drawImage(img, x, y, width, height);
                     composeLayers();
                     saveHistory();
+
+                    // Select the imported image
+                    selectTool('cursor');
+                    selectObject(imageObj);
                 };
                 img.src = e.target.result;
             };
@@ -4376,70 +5269,115 @@
             }
         }
 
-        // Actions menu
+        // Actions menu with sliders
+        let originalLayerData = null;
+
         function showActions() {
+            // Store original layer data for preview/cancel
+            const currentLayer = layers[currentLayerIndex];
+            const layerCtx = currentLayer.canvas.getContext('2d');
+            originalLayerData = layerCtx.getImageData(0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
+
+            // Reset sliders
+            document.getElementById('brightnessSlider').value = 0;
+            document.getElementById('contrastSlider').value = 0;
+            document.getElementById('saturationSlider').value = 0;
+            document.getElementById('blurSlider').value = 0;
+            document.getElementById('brightnessValue').textContent = '0';
+            document.getElementById('contrastValue').textContent = '0';
+            document.getElementById('saturationValue').textContent = '0';
+            document.getElementById('blurValue').textContent = '0';
+
             document.getElementById('actionsModal').classList.add('show');
         }
 
-        function adjustBrightness() {
-            const value = prompt('Enter brightness adjustment (-100 to 100):', '20');
-            if (value === null) return;
+        function previewBrightness(value) {
+            document.getElementById('brightnessValue').textContent = value;
+            applyAllAdjustmentsPreview();
+        }
 
-            const brightness = parseInt(value);
+        function previewContrast(value) {
+            document.getElementById('contrastValue').textContent = value;
+            applyAllAdjustmentsPreview();
+        }
+
+        function previewSaturation(value) {
+            document.getElementById('saturationValue').textContent = value;
+            applyAllAdjustmentsPreview();
+        }
+
+        function previewBlur(value) {
+            document.getElementById('blurValue').textContent = value;
+            applyAllAdjustmentsPreview();
+        }
+
+        function applyAllAdjustmentsPreview() {
+            if (!originalLayerData) return;
+
+            const brightness = parseInt(document.getElementById('brightnessSlider').value);
+            const contrast = parseInt(document.getElementById('contrastSlider').value) / 100 + 1;
+            const saturation = parseInt(document.getElementById('saturationSlider').value) / 100 + 1;
+            const blurRadius = parseInt(document.getElementById('blurSlider').value);
+
             const currentLayer = layers[currentLayerIndex];
             const layerCtx = currentLayer.canvas.getContext('2d');
-            const imageData = layerCtx.getImageData(0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
+
+            // Start with original data
+            let imageData = new ImageData(
+                new Uint8ClampedArray(originalLayerData.data),
+                originalLayerData.width,
+                originalLayerData.height
+            );
             const data = imageData.data;
 
+            // Apply brightness and contrast
             for (let i = 0; i < data.length; i += 4) {
-                data[i] = Math.max(0, Math.min(255, data[i] + brightness));
-                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + brightness));
-                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + brightness));
+                // Brightness
+                let r = data[i] + brightness;
+                let g = data[i + 1] + brightness;
+                let b = data[i + 2] + brightness;
+
+                // Contrast
+                r = ((r - 128) * contrast) + 128;
+                g = ((g - 128) * contrast) + 128;
+                b = ((b - 128) * contrast) + 128;
+
+                // Saturation
+                const gray = 0.2989 * r + 0.587 * g + 0.114 * b;
+                r = gray + (r - gray) * saturation;
+                g = gray + (g - gray) * saturation;
+                b = gray + (b - gray) * saturation;
+
+                data[i] = Math.max(0, Math.min(255, r));
+                data[i + 1] = Math.max(0, Math.min(255, g));
+                data[i + 2] = Math.max(0, Math.min(255, b));
+            }
+
+            // Apply blur if needed
+            if (blurRadius > 0) {
+                imageData = blurImageData(imageData, blurRadius);
             }
 
             layerCtx.putImageData(imageData, 0, 0);
             composeLayers();
+        }
+
+        function applyAdjustments() {
+            // Adjustments are already applied via preview, just save and close
             saveHistory();
+            originalLayerData = null;
             closeModal('actionsModal');
         }
 
-        function adjustContrast() {
-            const value = prompt('Enter contrast adjustment (-100 to 100):', '20');
-            if (value === null) return;
-
-            const contrast = parseInt(value) / 100 + 1;
-            const currentLayer = layers[currentLayerIndex];
-            const layerCtx = currentLayer.canvas.getContext('2d');
-            const imageData = layerCtx.getImageData(0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
-            const data = imageData.data;
-
-            for (let i = 0; i < data.length; i += 4) {
-                data[i] = Math.max(0, Math.min(255, ((data[i] - 128) * contrast) + 128));
-                data[i + 1] = Math.max(0, Math.min(255, ((data[i + 1] - 128) * contrast) + 128));
-                data[i + 2] = Math.max(0, Math.min(255, ((data[i + 2] - 128) * contrast) + 128));
+        function cancelAdjustments() {
+            // Restore original data
+            if (originalLayerData) {
+                const currentLayer = layers[currentLayerIndex];
+                const layerCtx = currentLayer.canvas.getContext('2d');
+                layerCtx.putImageData(originalLayerData, 0, 0);
+                composeLayers();
+                originalLayerData = null;
             }
-
-            layerCtx.putImageData(imageData, 0, 0);
-            composeLayers();
-            saveHistory();
-            closeModal('actionsModal');
-        }
-
-        function adjustHue() {
-            const value = prompt('Enter hue rotation (0-360 degrees):', '30');
-            if (value === null) return;
-
-            const hue = parseInt(value);
-            const currentLayer = layers[currentLayerIndex];
-            const layerCtx = currentLayer.canvas.getContext('2d');
-
-            layerCtx.save();
-            layerCtx.filter = `hue-rotate(${hue}deg)`;
-            layerCtx.drawImage(currentLayer.canvas, 0, 0);
-            layerCtx.restore();
-
-            composeLayers();
-            saveHistory();
             closeModal('actionsModal');
         }
 
@@ -4456,25 +5394,8 @@
             }
 
             layerCtx.putImageData(imageData, 0, 0);
+            originalLayerData = layerCtx.getImageData(0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
             composeLayers();
-            saveHistory();
-            closeModal('actionsModal');
-        }
-
-        function applyGaussianBlur() {
-            const value = prompt('Enter blur radius (1-10):', '5');
-            if (value === null) return;
-
-            const radius = parseInt(value);
-            const currentLayer = layers[currentLayerIndex];
-            const layerCtx = currentLayer.canvas.getContext('2d');
-            const imageData = layerCtx.getImageData(0, 0, currentLayer.canvas.width, currentLayer.canvas.height);
-            const blurred = blurImageData(imageData, radius);
-
-            layerCtx.putImageData(blurred, 0, 0);
-            composeLayers();
-            saveHistory();
-            closeModal('actionsModal');
         }
 
         function sharpenImage() {
@@ -4520,6 +5441,33 @@
             composeLayers();
             saveHistory();
             closeModal('actionsModal');
+        }
+
+        // Zoom functions
+        function applyZoom() {
+            canvas.style.transform = `scale(${zoomLevel})`;
+            canvas.style.transformOrigin = 'center center';
+            updateZoomDisplay();
+        }
+
+        function updateZoomDisplay() {
+            const zoomPercent = Math.round(zoomLevel * 100);
+            document.getElementById('canvasSize').textContent = `${canvas.width} × ${canvas.height} px | ${zoomPercent}%`;
+        }
+
+        function resetZoom() {
+            zoomLevel = 1;
+            applyZoom();
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(maxZoom, zoomLevel + 0.25);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(minZoom, zoomLevel - 0.25);
+            applyZoom();
         }
 
         // Grid overlay
