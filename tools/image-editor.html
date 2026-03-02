@@ -688,8 +688,10 @@
 
                 return `
                     <div class="project-card" onclick="openProject(${project.id})">
-                        <div class="project-thumbnail image">
-                            <i class="fas fa-image"></i>
+                        <div class="project-thumbnail image" ${project.thumbnail ? `style="padding:0;"` : ''}>
+                            ${project.thumbnail
+                                ? `<img src="${project.thumbnail}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+                                : `<i class="fas fa-image"></i>`}
                             <span class="project-type-badge">Photo</span>
                         </div>
                         <div class="project-info">

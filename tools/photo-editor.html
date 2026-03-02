@@ -798,8 +798,9 @@
                 // Hide upload overlay
                 document.getElementById('uploadOverlay').classList.add('hidden');
 
-                // Save to history
+                // Save to history and persist
                 saveToHistory();
+                saveToIndexedDB();
             };
             img.src = dataUrl;
         }
@@ -2173,9 +2174,53 @@
             }
         }
 
-        function goBack() {
+        async function goBack() {
+            await saveToIndexedDB();
+            await updateProjectThumbnail();
             window.location.href = 'image-editor.html';
         }
+
+        async function updateProjectThumbnail() {
+            if (!projectId || canvas.width === 0) return;
+            try {
+                // Create a small thumbnail
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = 320;
+                thumbCanvas.height = Math.round(canvas.height * (320 / canvas.width));
+                const thumbCtx = thumbCanvas.getContext('2d');
+                thumbCtx.drawImage(canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+                const thumbnail = thumbCanvas.toDataURL('image/jpeg', 0.7);
+
+                // Update project in localStorage
+                const saved = localStorage.getItem('editorProjects');
+                if (saved) {
+                    const projects = JSON.parse(saved);
+                    const project = projects.find(p => p.id === projectId);
+                    if (project) {
+                        project.thumbnail = thumbnail;
+                        project.date = new Date().toISOString();
+                        localStorage.setItem('editorProjects', JSON.stringify(projects));
+                    }
+                }
+            } catch (e) {
+                console.error('Thumbnail update failed:', e);
+            }
+        }
+
+        // Save before leaving the page
+        window.addEventListener('beforeunload', () => {
+            if (canvas.width > 0) {
+                saveToIndexedDB();
+                updateProjectThumbnail();
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && canvas.width > 0) {
+                saveToIndexedDB();
+                updateProjectThumbnail();
+            }
+        });
 
         // Update slider display values
         document.addEventListener('input', (e) => {
