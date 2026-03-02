@@ -929,6 +929,13 @@
             purple: { background: 'linear-gradient(135deg, #8e2de2, #4a00e0)', color: '#ffffff' }
         };
 
+        // Clean up stale data from previous attempts
+        try { indexedDB.deleteDatabase('PresentationDB'); } catch(e) {}
+        localStorage.removeItem('presentationSlides');
+        localStorage.removeItem('presentationSlideIndex');
+
+        let initialized = false;
+
         // Initialize (SIMPLE)
         function init() {
             loadAllPresentations();
@@ -937,8 +944,8 @@
             if (slides.length === 0) {
                 addSlide();
             } else {
-                renderSlidesList();
-                // Display current slide
+                // IMPORTANT: set content on DOM BEFORE renderSlidesList,
+                // because renderSlidesList syncs DOM → array
                 const slide = slides[currentSlideIndex];
                 if (slide) {
                     const canvas = document.getElementById('slideCanvas');
@@ -951,7 +958,9 @@
 
                     updateSlideInfo();
                 }
+                renderSlidesList();
             }
+            initialized = true;
         }
 
         // Toggle presentations menu
@@ -1555,10 +1564,12 @@
                 }
 
                 // Save everything to localStorage
-                localStorage.setItem('presentationData', JSON.stringify(slides));
+                const data = JSON.stringify(slides);
+                localStorage.setItem('presentationData', data);
                 localStorage.setItem('currentSlideIndex', currentSlideIndex.toString());
+                console.log('[Presentation] autoSave: saved', slides.length, 'slides, size:', data.length);
             } catch (e) {
-                console.error('Save failed:', e);
+                console.error('[Presentation] Save failed:', e);
             }
         }
 
