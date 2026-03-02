@@ -111,6 +111,309 @@
             color: #fff;
         }
 
+        /* ===== ALARM ===== */
+        .alarm-section { width: 100%; max-width: 500px; }
+
+        .alarm-add-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .alarm-time-input {
+            flex: 1;
+            padding: 14px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .alarm-time-input:focus { outline: none; border-color: #ea580c; }
+
+        .alarm-label-input {
+            flex: 1;
+            padding: 14px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .alarm-label-input:focus { outline: none; border-color: #ea580c; }
+
+        .alarm-add-btn {
+            padding: 14px 20px;
+            background: #ea580c;
+            border: none;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .alarm-add-btn:hover { background: #c2410c; }
+
+        .alarm-card {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alarm-card.ringing {
+            border: 1px solid #ea580c;
+            animation: pulseGlow 1.5s infinite;
+        }
+
+        .alarm-card-left { display: flex; flex-direction: column; gap: 4px; }
+
+        .alarm-card-time {
+            font-size: 2rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .alarm-card-time .alarm-ampm { font-size: 1rem; color: #ea580c; margin-left: 6px; }
+
+        .alarm-card-label { font-size: 0.85rem; color: #888; }
+
+        .alarm-card-days { font-size: 0.75rem; color: #666; margin-top: 2px; }
+
+        .alarm-card-right { display: flex; align-items: center; gap: 14px; }
+
+        .alarm-toggle {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: #333;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .alarm-toggle.on { background: #ea580c; }
+
+        .alarm-toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+        }
+
+        .alarm-toggle.on::after { transform: translateX(22px); }
+
+        .alarm-delete {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+        }
+
+        .alarm-delete:hover { color: #f44; }
+
+        .alarm-days-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .day-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #444;
+            background: transparent;
+            color: #888;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-btn.active { background: #ea580c; border-color: #ea580c; color: #fff; }
+
+        .alarm-dismiss-btn {
+            padding: 8px 18px;
+            background: #ea580c;
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ===== WORLD CLOCK ===== */
+        .world-clock-section { width: 100%; max-width: 500px; }
+
+        .wc-add-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .wc-select {
+            flex: 1;
+            padding: 14px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .wc-select:focus { outline: none; border-color: #ea580c; }
+
+        .wc-add-btn {
+            padding: 14px 20px;
+            background: #ea580c;
+            border: none;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .wc-add-btn:hover { background: #c2410c; }
+
+        .wc-card {
+            background: #1a1a1a;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .wc-card-left { display: flex; flex-direction: column; gap: 2px; }
+        .wc-city { font-size: 1.1rem; font-weight: 500; }
+        .wc-tz { font-size: 0.75rem; color: #666; }
+        .wc-diff { font-size: 0.8rem; color: #888; margin-top: 2px; }
+
+        .wc-card-right { display: flex; align-items: center; gap: 14px; }
+
+        .wc-time {
+            font-size: 1.8rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .wc-time .wc-ampm { font-size: 0.9rem; color: #ea580c; margin-left: 4px; }
+        .wc-date { font-size: 0.75rem; color: #888; text-align: right; }
+
+        .wc-remove {
+            background: none;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+        }
+
+        .wc-remove:hover { color: #f44; }
+
+        /* ===== TIMEZONE CONVERTER ===== */
+        .tz-section { width: 100%; max-width: 500px; }
+
+        .tz-converter-card {
+            background: #1a1a1a;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .tz-row {
+            margin-bottom: 20px;
+        }
+
+        .tz-row:last-child { margin-bottom: 0; }
+
+        .tz-label { font-size: 0.8rem; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .tz-select {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+
+        .tz-select:focus { outline: none; border-color: #ea580c; }
+
+        .tz-time-input {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-family: inherit;
+        }
+
+        .tz-time-input:focus { outline: none; border-color: #ea580c; }
+
+        .tz-swap-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 16px 0;
+        }
+
+        .tz-swap-btn button {
+            background: #333;
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .tz-swap-btn button:hover { background: #ea580c; }
+
+        .tz-result {
+            background: #222;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .tz-result-time {
+            font-size: 2rem;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tz-result-date { font-size: 0.85rem; color: #888; margin-top: 4px; }
+
         /* ===== TIMER ===== */
         .timer-setup { width: 100%; max-width: 500px; }
 
@@ -389,11 +692,15 @@
         @media (max-width: 500px) {
             .clock-display { font-size: 3rem; }
             .clock-seconds { font-size: 1.8rem; }
+            .clock-ampm { font-size: 1.2rem; }
             .stopwatch-display { font-size: 3rem; }
             .stopwatch-ms { font-size: 1.8rem; }
             .preset-grid { grid-template-columns: repeat(3, 1fr); }
             .timer-ring { width: 130px; height: 130px; }
             .timer-ring svg { width: 130px; height: 130px; }
+            .alarm-card-time { font-size: 1.5rem; }
+            .wc-time { font-size: 1.4rem; }
+            .alarm-add-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -479,6 +786,68 @@
         </div>
     </div>
 
+    <!-- ALARM VIEW -->
+    <div class="view" id="view-alarm">
+        <div class="alarm-section">
+            <div class="clock-toggle" style="margin-top:0;margin-bottom:20px;align-self:center;width:fit-content">
+                <button class="clock-mode-btn" data-mode="12" onclick="setClockMode(12)">12 Hour</button>
+                <button class="clock-mode-btn" data-mode="24" onclick="setClockMode(24)">24 Hour</button>
+            </div>
+            <div class="alarm-add-row">
+                <input type="time" class="alarm-time-input" id="alarmTimeInput">
+                <input type="text" class="alarm-label-input" id="alarmLabelInput" placeholder="Label (optional)">
+                <button class="alarm-add-btn" onclick="addAlarm()"><i class="fas fa-plus"></i> Add</button>
+            </div>
+            <div id="alarmList"></div>
+        </div>
+    </div>
+
+    <!-- WORLD CLOCK VIEW -->
+    <div class="view" id="view-world-clock">
+        <div class="world-clock-section">
+            <div class="clock-toggle" style="margin-top:0;margin-bottom:20px;align-self:center;width:fit-content">
+                <button class="clock-mode-btn" data-mode="12" onclick="setClockMode(12)">12 Hour</button>
+                <button class="clock-mode-btn" data-mode="24" onclick="setClockMode(24)">24 Hour</button>
+            </div>
+            <div class="wc-add-row">
+                <input type="text" class="wc-select" id="wcSearchInput" list="wcDatalist" placeholder="Search city or timezone...">
+                <datalist id="wcDatalist"></datalist>
+                <button class="wc-add-btn" onclick="addWorldClock()"><i class="fas fa-plus"></i> Add</button>
+            </div>
+            <div id="wcList"></div>
+        </div>
+    </div>
+
+    <!-- TIMEZONE CONVERTER VIEW -->
+    <div class="view" id="view-timezone">
+        <div class="tz-section">
+            <div class="clock-toggle" style="margin-top:0;margin-bottom:20px;align-self:center;width:fit-content">
+                <button class="clock-mode-btn" data-mode="12" onclick="setClockMode(12)">12 Hour</button>
+                <button class="clock-mode-btn" data-mode="24" onclick="setClockMode(24)">24 Hour</button>
+            </div>
+            <div class="tz-converter-card">
+                <div class="tz-row">
+                    <div class="tz-label">From</div>
+                    <input type="text" class="tz-select" id="tzFromInput" list="tzFromList" placeholder="Search timezone..." onchange="convertTimezone()">
+                    <datalist id="tzFromList"></datalist>
+                    <input type="datetime-local" class="tz-time-input" id="tzTimeInput" onchange="convertTimezone()">
+                </div>
+                <div class="tz-swap-btn">
+                    <button onclick="swapTimezones()"><i class="fas fa-exchange-alt fa-rotate-90"></i></button>
+                </div>
+                <div class="tz-row">
+                    <div class="tz-label">To</div>
+                    <input type="text" class="tz-select" id="tzToInput" list="tzToList" placeholder="Search timezone..." onchange="convertTimezone()">
+                    <datalist id="tzToList"></datalist>
+                </div>
+                <div class="tz-result" id="tzResult">
+                    <div class="tz-result-time" id="tzResultTime">--:--</div>
+                    <div class="tz-result-date" id="tzResultDate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== NAVIGATION =====
         function goBack() {
@@ -489,19 +858,25 @@
         const titles = {
             clock: '<i class="fas fa-clock"></i> Clock',
             timer: '<i class="fas fa-hourglass-half"></i> Timer',
-            stopwatch: '<i class="fas fa-stopwatch"></i> Stopwatch'
+            stopwatch: '<i class="fas fa-stopwatch"></i> Stopwatch',
+            alarm: '<i class="fas fa-bell"></i> Alarm Clock',
+            'world-clock': '<i class="fas fa-globe"></i> World Clock',
+            timezone: '<i class="fas fa-globe-americas"></i> Timezone Converter'
         };
+
+        const validViews = ['clock', 'timer', 'stopwatch', 'alarm', 'world-clock', 'timezone'];
 
         function showView(view) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             const el = document.getElementById(`view-${view}`);
             if (el) el.classList.add('active');
             document.getElementById('pageTitle').innerHTML = titles[view] || titles.clock;
-            document.title = (view.charAt(0).toUpperCase() + view.slice(1)) + ' - Tools Hub';
+            const name = view.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            document.title = name + ' - Tools Hub';
         }
 
         const currentView = window.location.hash.replace('#', '') || 'clock';
-        showView(['clock', 'timer', 'stopwatch'].includes(currentView) ? currentView : 'clock');
+        showView(validViews.includes(currentView) ? currentView : 'clock');
 
         // ===== NOTIFICATIONS =====
         if ('Notification' in window && Notification.permission === 'default') {
@@ -575,9 +950,16 @@
         function setClockMode(mode) {
             clockMode = mode;
             localStorage.setItem('clockMode', mode);
+            // Sync all toggle buttons across all views
+            document.querySelectorAll('.clock-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.mode) === mode);
+            });
             document.getElementById('btn12h').classList.toggle('active', mode === 12);
             document.getElementById('btn24h').classList.toggle('active', mode === 24);
             updateClock();
+            if (typeof renderAlarms === 'function') renderAlarms();
+            if (typeof renderWorldClocks === 'function') renderWorldClocks();
+            if (typeof convertTimezone === 'function') convertTimezone();
         }
 
         function updateClock() {
@@ -602,9 +984,12 @@
             document.getElementById('clockDay').textContent = now.toLocaleDateString(undefined, { weekday: 'long' });
         }
 
-        // Set initial toggle state
+        // Set initial toggle state on all mode buttons
         document.getElementById('btn12h').classList.toggle('active', clockMode === 12);
         document.getElementById('btn24h').classList.toggle('active', clockMode === 24);
+        document.querySelectorAll('.clock-mode-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.mode) === clockMode);
+        });
 
         updateClock();
         setInterval(updateClock, 1000);
@@ -962,6 +1347,346 @@
             const centis = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
             return `${mins}:${secs}.${centis}`;
         }
+
+        // ===== ALARM CLOCK =====
+        let alarms = JSON.parse(localStorage.getItem('toolshub_alarms') || '[]');
+        const ringingAlarms = new Map();
+
+        function saveAlarms() {
+            localStorage.setItem('toolshub_alarms', JSON.stringify(alarms));
+        }
+
+        function addAlarm() {
+            const timeInput = document.getElementById('alarmTimeInput');
+            const labelInput = document.getElementById('alarmLabelInput');
+            if (!timeInput.value) { timeInput.focus(); return; }
+            const [h, m] = timeInput.value.split(':').map(Number);
+            alarms.push({
+                id: Date.now(),
+                hour: h,
+                minute: m,
+                label: labelInput.value || '',
+                enabled: true,
+                days: [new Date().getDay()] // default to today, [0-6] for repeat (0=Sun)
+            });
+            saveAlarms();
+            renderAlarms();
+            timeInput.value = '';
+            labelInput.value = '';
+        }
+
+        function toggleAlarm(id) {
+            const a = alarms.find(x => x.id === id);
+            if (a) {
+                a.enabled = !a.enabled;
+                if (!a.enabled) dismissAlarmSound(id);
+                saveAlarms();
+                renderAlarms();
+            }
+        }
+
+        function toggleAlarmDay(id, day) {
+            const a = alarms.find(x => x.id === id);
+            if (a) {
+                const idx = a.days.indexOf(day);
+                if (idx === -1) a.days.push(day);
+                else a.days.splice(idx, 1);
+                saveAlarms();
+                renderAlarms();
+            }
+        }
+
+        function deleteAlarm(id) {
+            dismissAlarmSound(id);
+            alarms = alarms.filter(x => x.id !== id);
+            saveAlarms();
+            renderAlarms();
+        }
+
+        function dismissAlarmSound(id) {
+            stopAlarm('alarm_' + id);
+            ringingAlarms.delete(id);
+        }
+
+        function formatAlarmTime(h, m) {
+            if (clockMode === 12) {
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                let h12 = h % 12;
+                if (h12 === 0) h12 = 12;
+                return `${h12}:${m.toString().padStart(2, '0')}<span class="alarm-ampm">${ampm}</span>`;
+            }
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        }
+
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+        function renderAlarms() {
+            const list = document.getElementById('alarmList');
+            if (alarms.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#666;padding:40px;">No alarms set</div>';
+                return;
+            }
+            list.innerHTML = alarms.map(a => {
+                const isRinging = ringingAlarms.has(a.id);
+                const daysText = a.days.length === 7 ? 'Every day' :
+                    a.days.length === 0 ? 'One time' :
+                    a.days.sort().map(d => dayNames[d]).join(', ');
+                return `
+                    <div class="alarm-card ${isRinging ? 'ringing' : ''}">
+                        <div class="alarm-card-left">
+                            <div class="alarm-card-time">${formatAlarmTime(a.hour, a.minute)}</div>
+                            ${a.label ? `<div class="alarm-card-label">${a.label}</div>` : ''}
+                            <div class="alarm-card-days">${daysText}</div>
+                            <div class="alarm-days-row">
+                                ${dayLetters.map((l, i) => `<button class="day-btn ${a.days.includes(i) ? 'active' : ''}" onclick="toggleAlarmDay(${a.id}, ${i})">${l}</button>`).join('')}
+                            </div>
+                        </div>
+                        <div class="alarm-card-right">
+                            ${isRinging ? `<button class="alarm-dismiss-btn" onclick="dismissAlarmSound(${a.id});renderAlarms()">Dismiss</button>` : ''}
+                            <div class="alarm-toggle ${a.enabled ? 'on' : ''}" onclick="toggleAlarm(${a.id})"></div>
+                            <button class="alarm-delete" onclick="deleteAlarm(${a.id})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // Check alarms every second
+        let lastAlarmMinute = -1;
+        function checkAlarms() {
+            const now = new Date();
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const day = now.getDay();
+            const currentMinute = h * 60 + m;
+
+            if (currentMinute === lastAlarmMinute) return;
+
+            alarms.forEach(a => {
+                if (!a.enabled) return;
+                if (a.hour === h && a.minute === m) {
+                    // Check day match
+                    if (a.days.length > 0 && !a.days.includes(day)) return;
+                    if (!ringingAlarms.has(a.id)) {
+                        ringingAlarms.set(a.id, true);
+                        startAlarm('alarm_' + a.id);
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('Alarm!', {
+                                body: a.label || `${formatAlarmTime(a.hour, a.minute).replace(/<[^>]*>/g, '')}`,
+                                requireInteraction: true
+                            });
+                        }
+                        // Disable one-time alarms after firing
+                        if (a.days.length === 0) {
+                            a.enabled = false;
+                            saveAlarms();
+                        }
+                        renderAlarms();
+                    }
+                }
+            });
+
+            lastAlarmMinute = currentMinute;
+        }
+
+        renderAlarms();
+        setInterval(checkAlarms, 1000);
+
+        // Set default alarm input to current time + 1 hour
+        const alarmDefault = new Date();
+        alarmDefault.setHours(alarmDefault.getHours() + 1, 0);
+        document.getElementById('alarmTimeInput').value =
+            alarmDefault.getHours().toString().padStart(2, '0') + ':' +
+            alarmDefault.getMinutes().toString().padStart(2, '0');
+
+        // ===== WORLD CLOCK =====
+        const worldTimezones = [
+            { city: 'New York', tz: 'America/New_York' },
+            { city: 'Los Angeles', tz: 'America/Los_Angeles' },
+            { city: 'Chicago', tz: 'America/Chicago' },
+            { city: 'London', tz: 'Europe/London' },
+            { city: 'Paris', tz: 'Europe/Paris' },
+            { city: 'Berlin', tz: 'Europe/Berlin' },
+            { city: 'Moscow', tz: 'Europe/Moscow' },
+            { city: 'Dubai', tz: 'Asia/Dubai' },
+            { city: 'Mumbai', tz: 'Asia/Kolkata' },
+            { city: 'Kolkata', tz: 'Asia/Kolkata' },
+            { city: 'Bangkok', tz: 'Asia/Bangkok' },
+            { city: 'Singapore', tz: 'Asia/Singapore' },
+            { city: 'Hong Kong', tz: 'Asia/Hong_Kong' },
+            { city: 'Shanghai', tz: 'Asia/Shanghai' },
+            { city: 'Tokyo', tz: 'Asia/Tokyo' },
+            { city: 'Seoul', tz: 'Asia/Seoul' },
+            { city: 'Sydney', tz: 'Australia/Sydney' },
+            { city: 'Auckland', tz: 'Pacific/Auckland' },
+            { city: 'Honolulu', tz: 'Pacific/Honolulu' },
+            { city: 'Toronto', tz: 'America/Toronto' },
+            { city: 'Vancouver', tz: 'America/Vancouver' },
+            { city: 'São Paulo', tz: 'America/Sao_Paulo' },
+            { city: 'Buenos Aires', tz: 'America/Argentina/Buenos_Aires' },
+            { city: 'Cairo', tz: 'Africa/Cairo' },
+            { city: 'Johannesburg', tz: 'Africa/Johannesburg' },
+            { city: 'Istanbul', tz: 'Europe/Istanbul' },
+            { city: 'Jakarta', tz: 'Asia/Jakarta' },
+            { city: 'Taipei', tz: 'Asia/Taipei' },
+            { city: 'Riyadh', tz: 'Asia/Riyadh' },
+            { city: 'Karachi', tz: 'Asia/Karachi' }
+        ];
+
+        let worldClocks = JSON.parse(localStorage.getItem('toolshub_worldclocks') || '[]');
+
+        // Populate searchable datalist
+        const wcDatalist = document.getElementById('wcDatalist');
+        worldTimezones.forEach(tz => {
+            const opt = document.createElement('option');
+            opt.value = `${tz.city} (${tz.tz})`;
+            wcDatalist.appendChild(opt);
+        });
+
+        function saveWorldClocks() {
+            localStorage.setItem('toolshub_worldclocks', JSON.stringify(worldClocks));
+        }
+
+        function addWorldClock() {
+            const input = document.getElementById('wcSearchInput');
+            const text = input.value.trim();
+            if (!text) { input.focus(); return; }
+            // Match against city list
+            const match = worldTimezones.find(tz =>
+                `${tz.city} (${tz.tz})` === text ||
+                tz.city.toLowerCase() === text.toLowerCase() ||
+                tz.tz.toLowerCase() === text.toLowerCase()
+            );
+            if (!match) { alert('City not found. Please select from the list.'); return; }
+            if (worldClocks.find(w => w.tz === match.tz && w.city === match.city)) {
+                input.value = '';
+                return;
+            }
+            worldClocks.push({ city: match.city, tz: match.tz });
+            saveWorldClocks();
+            renderWorldClocks();
+            input.value = '';
+        }
+
+        function removeWorldClock(index) {
+            worldClocks.splice(index, 1);
+            saveWorldClocks();
+            renderWorldClocks();
+        }
+
+        function getTimeDiff(tz) {
+            const now = new Date();
+            const local = new Date(now.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+            const remote = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+            const diffMs = remote - local;
+            const diffH = Math.round(diffMs / 3600000);
+            if (diffH === 0) return 'Same time';
+            return diffH > 0 ? `+${diffH}h` : `${diffH}h`;
+        }
+
+        function renderWorldClocks() {
+            const list = document.getElementById('wcList');
+            if (worldClocks.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:#666;padding:40px;">No world clocks added</div>';
+                return;
+            }
+            const now = new Date();
+            list.innerHTML = worldClocks.map((w, i) => {
+                const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: clockMode === 12, timeZone: w.tz };
+                const timeStr = now.toLocaleTimeString('en-US', opts);
+                const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: w.tz });
+                const diff = getTimeDiff(w.tz);
+                return `
+                    <div class="wc-card">
+                        <div class="wc-card-left">
+                            <div class="wc-city">${w.city}</div>
+                            <div class="wc-tz">${w.tz}</div>
+                            <div class="wc-diff">${diff} from local</div>
+                        </div>
+                        <div class="wc-card-right">
+                            <div>
+                                <div class="wc-time">${timeStr}</div>
+                                <div class="wc-date">${dateStr}</div>
+                            </div>
+                            <button class="wc-remove" onclick="removeWorldClock(${i})"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        renderWorldClocks();
+        setInterval(renderWorldClocks, 1000);
+
+        // ===== TIMEZONE CONVERTER =====
+        const allTimezones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : worldTimezones.map(t => t.tz);
+        const tzFromList = document.getElementById('tzFromList');
+        const tzToList = document.getElementById('tzToList');
+
+        allTimezones.forEach(tz => {
+            const label = tz.replace(/_/g, ' ');
+            const o1 = document.createElement('option');
+            o1.value = tz;
+            o1.label = label;
+            tzFromList.appendChild(o1);
+            const o2 = document.createElement('option');
+            o2.value = tz;
+            o2.label = label;
+            tzToList.appendChild(o2);
+        });
+
+        // Set defaults
+        const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.getElementById('tzFromInput').value = localTz;
+        document.getElementById('tzToInput').value = 'America/New_York';
+
+        // Set default time to now
+        const nowLocal = new Date();
+        const pad2 = n => n.toString().padStart(2, '0');
+        document.getElementById('tzTimeInput').value =
+            `${nowLocal.getFullYear()}-${pad2(nowLocal.getMonth() + 1)}-${pad2(nowLocal.getDate())}T${pad2(nowLocal.getHours())}:${pad2(nowLocal.getMinutes())}`;
+
+        function convertTimezone() {
+            const fromTz = document.getElementById('tzFromInput').value;
+            const toTz = document.getElementById('tzToInput').value;
+            const inputVal = document.getElementById('tzTimeInput').value;
+            if (!inputVal || !allTimezones.includes(fromTz) || !allTimezones.includes(toTz)) return;
+
+            // Parse the input as a time in the "from" timezone
+            const inputDate = new Date(inputVal);
+            // Get the input time string in the fromTz
+            const fromStr = inputDate.toLocaleString('en-US', { timeZone: fromTz });
+            const fromDate = new Date(fromStr);
+            // Get the same instant in local time
+            const localStr = inputDate.toLocaleString('en-US');
+            const localDate = new Date(localStr);
+            // Offset difference
+            const offsetDiff = fromDate - localDate;
+            const actualDate = new Date(inputDate.getTime() - offsetDiff);
+
+            // Now format in target timezone
+            const resultTime = actualDate.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: clockMode === 12, timeZone: toTz
+            });
+            const resultDate = actualDate.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                timeZone: toTz
+            });
+
+            document.getElementById('tzResultTime').textContent = resultTime;
+            document.getElementById('tzResultDate').textContent = resultDate;
+        }
+
+        function swapTimezones() {
+            const fromInput = document.getElementById('tzFromInput');
+            const toInput = document.getElementById('tzToInput');
+            const temp = fromInput.value;
+            fromInput.value = toInput.value;
+            toInput.value = temp;
+            convertTimezone();
+        }
+
+        convertTimezone();
     </script>
 </body>
 </html>

@@ -141,7 +141,7 @@
         }
 
         /* Time Management - Classic Orange */
-        .clock, .timer, .stopwatch, .alarm, .world-clock, .countdown, .meeting-scheduler, .timezone {
+        .clock, .timer, .stopwatch, .alarm, .world-clock, .timezone {
             background: #ea580c;
         }
 
@@ -271,9 +271,7 @@
             <button class="tool-btn stopwatch" onclick="openTool('stopwatch')"><span class="tool-icon"><i class="fas fa-stopwatch"></i></span><span class="tool-name">Stopwatch</span></button>
             <button class="tool-btn alarm" onclick="openTool('alarm')"><span class="tool-icon"><i class="fas fa-bell"></i></span><span class="tool-name">Alarm Clock</span></button>
             <button class="tool-btn world-clock" onclick="openTool('world-clock')"><span class="tool-icon"><i class="fas fa-globe"></i></span><span class="tool-name">World Clock</span></button>
-            <button class="tool-btn countdown" onclick="openTool('countdown')"><span class="tool-icon"><i class="fas fa-hourglass-start"></i></span><span class="tool-name">Countdown Timer</span></button>
-            <button class="tool-btn meeting-scheduler" onclick="openTool('meeting-scheduler')"><span class="tool-icon"><i class="fas fa-calendar-check"></i></span><span class="tool-name">Meeting Scheduler</span></button>
-            <button class="tool-btn timezone" onclick="openTool('timezone')"><span class="tool-icon"><i class="fas fa-globe-americas"></i></span><span class="tool-name">Timezone Converter</span></button>
+<button class="tool-btn timezone" onclick="openTool('timezone')"><span class="tool-icon"><i class="fas fa-globe-americas"></i></span><span class="tool-name">Timezone Converter</span></button>
         </div>
 
         <h2 class="category-title">Learning & Education</h2>
@@ -393,7 +391,10 @@
                 'color-picker': 'tools/color-picker.html',
                 'clock': 'tools/clock.html#clock',
                 'timer': 'tools/clock.html#timer',
-                'stopwatch': 'tools/clock.html#stopwatch'
+                'stopwatch': 'tools/clock.html#stopwatch',
+                'alarm': 'tools/clock.html#alarm',
+                'world-clock': 'tools/clock.html#world-clock',
+                'timezone': 'tools/clock.html#timezone'
             };
 
             if (availableTools[toolName]) {
