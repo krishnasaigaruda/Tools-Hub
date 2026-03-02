@@ -1898,9 +1898,9 @@
             tempCanvas.height = cropSelection.height;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // Draw the cropped portion
+            // Crop from the clean originalImage (without effects) so effects can be re-applied
             tempCtx.drawImage(
-                canvas,
+                originalImage,
                 cropSelection.x, cropSelection.y, cropSelection.width, cropSelection.height,
                 0, 0, cropSelection.width, cropSelection.height
             );
@@ -1908,16 +1908,16 @@
             // Update main canvas
             canvas.width = cropSelection.width;
             canvas.height = cropSelection.height;
-            ctx.drawImage(tempCanvas, 0, 0);
 
-            // Update original image
+            // Update original image to the clean cropped version
             const img = new Image();
             img.onload = () => {
                 originalImage = img;
-                saveToHistory();
+                // Re-apply current adjustments/effects on the cropped image
+                applyAdjustments();
                 saveToIndexedDB();
             };
-            img.src = canvas.toDataURL('image/png');
+            img.src = tempCanvas.toDataURL('image/png');
 
             // Hide crop overlay and close panel
             document.getElementById('cropOverlay').classList.remove('active');
@@ -1986,9 +1986,11 @@
             tempCtx.imageSmoothingEnabled = true;
             tempCtx.imageSmoothingQuality = 'high';
 
-            // Draw from ORIGINAL image, not current canvas
+            // Draw from ORIGINAL image with current effects applied
+            tempCtx.filter = buildFilterString();
             tempCtx.drawImage(originalImage, 0, 0, originalImage.width, originalImage.height,
                              0, 0, width, height);
+            tempCtx.filter = 'none';
 
             // Update canvas with preview
             canvas.width = width;
@@ -1996,6 +1998,10 @@
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(tempCanvas, 0, 0);
+
+            // Apply sharpen/vignette on preview too
+            if (adjustments.sharpen > 0) applySharpenFilter();
+            if (adjustments.vignette > 0) applyVignetteEffect();
         }
 
         function applyResize() {
@@ -2020,6 +2026,7 @@
             // Always work from the original high-quality image, not canvas
             if (!originalImage) return;
 
+            // Draw clean (no filters) resized image for new originalImage
             tempCtx.drawImage(originalImage, 0, 0, originalImage.width, originalImage.height,
                              0, 0, width, height);
 
@@ -2028,16 +2035,16 @@
             canvas.height = height;
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(tempCanvas, 0, 0);
 
-            // Update original image reference to the NEW resized version
+            // Update original image reference to the clean resized version
             const img = new Image();
             img.onload = () => {
                 originalImage = img;
-                saveToHistory();
+                // Re-apply current adjustments/effects on the resized image
+                applyAdjustments();
                 saveToIndexedDB();
             };
-            img.src = canvas.toDataURL('image/png');
+            img.src = tempCanvas.toDataURL('image/png');
 
             // Clear saved state
             originalCanvasState = null;

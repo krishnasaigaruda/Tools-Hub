@@ -1183,6 +1183,12 @@
 
         // Render slides list (SIMPLE)
         function renderSlidesList() {
+            // Sync current slide content before rendering previews
+            const slideContent = document.getElementById('slideContent');
+            if (slideContent && slides[currentSlideIndex]) {
+                slides[currentSlideIndex].content = slideContent.innerHTML;
+            }
+
             const list = document.getElementById('slidesList');
             list.innerHTML = '';
 
@@ -1586,12 +1592,24 @@
         }
 
         // Content change listener (SIMPLE)
+        let thumbnailUpdateTimer = null;
         document.getElementById('slideContent').addEventListener('input', () => {
             hasUnsavedChanges = true;
             // Update slide content in array
             if (slides[currentSlideIndex]) {
                 slides[currentSlideIndex].content = document.getElementById('slideContent').innerHTML;
             }
+            // Update thumbnail preview with debounce
+            clearTimeout(thumbnailUpdateTimer);
+            thumbnailUpdateTimer = setTimeout(() => {
+                const thumb = document.querySelectorAll('.slide-thumbnail')[currentSlideIndex];
+                if (thumb) {
+                    const preview = thumb.querySelector('.slide-thumbnail-content');
+                    if (preview) {
+                        preview.innerHTML = slides[currentSlideIndex].content;
+                    }
+                }
+            }, 300);
         });
 
         // Selection change listener

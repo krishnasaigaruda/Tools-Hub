@@ -6,6 +6,7 @@
     <title>Notes - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -425,8 +426,8 @@
             <button class="header-btn" onclick="saveAsPDF()">
                 <i class="fas fa-file-pdf"></i> Save Note
             </button>
-            <button class="header-btn" onclick="saveAllNotesAsPDF()">
-                <i class="fas fa-file-pdf"></i> Export All
+            <button class="header-btn" onclick="exportAllNotesAsZip()">
+                <i class="fas fa-file-archive"></i> Export All
             </button>
         </div>
     </div>
@@ -806,8 +807,8 @@
             }
         }
 
-        // Save ALL notes as PDF
-        async function saveAllNotesAsPDF() {
+        // Export all notes as a zip of individual PDFs
+        async function exportAllNotesAsZip() {
             // Sync current note content first
             if (currentNoteId) {
                 const note = notes.find(n => n.id === currentNoteId);
@@ -822,74 +823,72 @@
                 return;
             }
 
-            const name = prompt('Enter PDF name:', 'All Notes');
-            if (!name) {
-                document.getElementById('saveStatus').textContent = 'Save cancelled';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
-                return;
-            }
+            document.getElementById('saveStatus').textContent = `Generating PDFs (0/${notes.length})...`;
 
-            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+            const zip = new JSZip();
 
-            // Create container with all notes
-            const content = document.createElement('div');
+            for (let i = 0; i < notes.length; i++) {
+                const note = notes[i];
+                const noteTitle = note.title || 'Untitled Note';
+                document.getElementById('saveStatus').textContent = `Generating PDFs (${i + 1}/${notes.length})...`;
 
-            // Add each note as a separate page
-            notes.forEach((note, index) => {
-                const noteDiv = document.createElement('div');
-                noteDiv.style.cssText = `
-                    padding: 40px;
-                    background: ${colors[note.color]};
-                    font-family: 'Segoe UI', sans-serif;
-                    min-height: 297mm;
-                    width: 210mm;
-                    box-sizing: border-box;
-                    page-break-after: always;
-                `;
-
-                noteDiv.innerHTML = `
-                    <h1 style="margin-bottom: 10px; color: #333; font-size: 24px;">${note.title || 'Untitled Note'}</h1>
+                const content = document.createElement('div');
+                content.style.cssText = `padding: 40px; background: ${colors[note.color]}; font-family: 'Segoe UI', sans-serif;`;
+                content.innerHTML = `
+                    <h1 style="margin-bottom: 20px; color: #333;">${noteTitle}</h1>
                     <p style="font-size: 12px; color: #666; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
                         ${new Date(note.updatedAt).toLocaleString()}
                     </p>
-                    <div style="font-size: 16px; line-height: 1.8; color: #333;">${note.content || '<em>No content</em>'}</div>
+                    <div style="font-size: 16px; line-height: 1.8; color: #333;">${note.content || ''}</div>
                 `;
-                content.appendChild(noteDiv);
-            });
 
-            document.body.appendChild(content);
+                document.body.appendChild(content);
+                await new Promise(resolve => setTimeout(resolve, 200));
 
-            // Wait for rendering
-            await new Promise(resolve => setTimeout(resolve, 100));
+                const opt = {
+                    margin: 10,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            const opt = {
-                margin: 0,
-                filename: name + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: 'css' }
-            };
+                try {
+                    const pdfBlob = await html2pdf().set(opt).from(content).outputPdf('blob');
+                    // Sanitize filename and ensure uniqueness
+                    let safeName = noteTitle.replace(/[^a-zA-Z0-9 _-]/g, '').substring(0, 50) || 'note';
+                    let fileName = safeName + '.pdf';
+                    // If a file with this name already exists in the zip, add a number suffix
+                    let counter = 2;
+                    while (zip.files[fileName]) {
+                        fileName = safeName + ' (' + counter + ').pdf';
+                        counter++;
+                    }
+                    zip.file(fileName, pdfBlob);
+                } catch (error) {
+                    console.error('PDF generation error for note:', noteTitle, error);
+                }
+
+                document.body.removeChild(content);
+            }
+
+            document.getElementById('saveStatus').textContent = 'Creating zip...';
 
             try {
-                await html2pdf().set(opt).from(content).save();
-                document.body.removeChild(content);
-                document.getElementById('saveStatus').textContent = `Downloaded ${name}.pdf (${notes.length} notes)`;
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(zipBlob);
+                a.download = 'Notes.zip';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                document.getElementById('saveStatus').textContent = `Downloaded Notes.zip (${notes.length} notes)`;
             } catch (error) {
-                console.error('PDF generation error:', error);
-                if (content && content.parentNode) {
-                    document.body.removeChild(content);
-                }
-                document.getElementById('saveStatus').textContent = 'PDF generation failed';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
+                console.error('Zip generation error:', error);
+                document.getElementById('saveStatus').textContent = 'Export failed';
             }
+
+            setTimeout(() => {
+                document.getElementById('saveStatus').textContent = 'Ready';
+            }, 2000);
         }
 
         // Save notes to localStorage
