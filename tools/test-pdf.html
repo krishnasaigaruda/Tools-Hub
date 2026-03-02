@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+        h2 { margin-top: 20px; }
+        .result { margin-top: 10px; padding: 10px; background: #eee; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>PDF Gray Line Test</h1>
+    <p>Click each button and check the PDF for gray lines.</p>
+
+    <h2>Test 1: margin:10, no body bg change</h2>
+    <button onclick="test1()">Test 1</button>
+    <div class="result" id="r1"></div>
+
+    <h2>Test 2: margin:0, padding in content</h2>
+    <button onclick="test2()">Test 2</button>
+    <div class="result" id="r2"></div>
+
+    <h2>Test 3: margin:0, body bg white, padding in content</h2>
+    <button onclick="test3()">Test 3</button>
+    <div class="result" id="r3"></div>
+
+    <h2>Test 4: margin:0, body bg white, backgroundColor option</h2>
+    <button onclick="test4()">Test 4</button>
+    <div class="result" id="r4"></div>
+
+    <h2>Test 5: margin:10, body bg white + backgroundColor option</h2>
+    <button onclick="test5()">Test 5</button>
+    <div class="result" id="r5"></div>
+
+    <h2>Test 6: margin:0, no padding, just content</h2>
+    <button onclick="test6()">Test 6</button>
+    <div class="result" id="r6"></div>
+
+<script>
+function makeContent(padding) {
+    const div = document.createElement('div');
+    div.style.cssText = `
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 16px; line-height: 1.6; color: #333;
+        background: #ffffff;
+        ${padding ? 'padding: 10mm;' : ''}
+    `;
+    div.innerHTML = '<h1>Test Document</h1><p>This is test content to check for gray lines in the PDF output. The quick brown fox jumps over the lazy dog.</p><p>Second paragraph with more text to fill the page a bit.</p>';
+    return div;
+}
+
+async function test1() {
+    document.getElementById('r1').textContent = 'Generating...';
+    const content = makeContent(false);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 10,
+        filename: 'test1-margin10.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.getElementById('r1').textContent = 'Done - check test1-margin10.pdf';
+}
+
+async function test2() {
+    document.getElementById('r2').textContent = 'Generating...';
+    const content = makeContent(true);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 0,
+        filename: 'test2-margin0-padding.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.getElementById('r2').textContent = 'Done - check test2-margin0-padding.pdf';
+}
+
+async function test3() {
+    document.getElementById('r3').textContent = 'Generating...';
+    const origBg = document.body.style.background;
+    document.body.style.background = '#ffffff';
+    const content = makeContent(true);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 0,
+        filename: 'test3-margin0-whitebody.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.body.style.background = origBg;
+    document.getElementById('r3').textContent = 'Done - check test3-margin0-whitebody.pdf';
+}
+
+async function test4() {
+    document.getElementById('r4').textContent = 'Generating...';
+    const origBg = document.body.style.background;
+    document.body.style.background = '#ffffff';
+    const content = makeContent(true);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 0,
+        filename: 'test4-margin0-whitebody-bgopt.pdf',
+        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.body.style.background = origBg;
+    document.getElementById('r4').textContent = 'Done - check test4-margin0-whitebody-bgopt.pdf';
+}
+
+async function test5() {
+    document.getElementById('r5').textContent = 'Generating...';
+    const origBg = document.body.style.background;
+    document.body.style.background = '#ffffff';
+    const content = makeContent(false);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 10,
+        filename: 'test5-margin10-whitebody-bgopt.pdf',
+        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.body.style.background = origBg;
+    document.getElementById('r5').textContent = 'Done - check test5-margin10-whitebody-bgopt.pdf';
+}
+
+async function test6() {
+    document.getElementById('r6').textContent = 'Generating...';
+    const content = makeContent(false);
+    document.body.appendChild(content);
+    await new Promise(r => setTimeout(r, 100));
+    await html2pdf().set({
+        margin: 0,
+        filename: 'test6-margin0-nopadding.pdf',
+        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(content).save();
+    document.body.removeChild(content);
+    document.getElementById('r6').textContent = 'Done - check test6-margin0-nopadding.pdf';
+}
+</script>
+</body>
+</html>

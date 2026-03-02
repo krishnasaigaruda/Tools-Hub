@@ -768,6 +768,9 @@
                 return;
             }
 
+            const origBodyBg = document.body.style.background;
+            document.body.style.background = '#ffffff';
+
             const content = document.createElement('div');
             content.style.cssText = `padding: 40px; background: ${colors[note.color]}; font-family: 'Segoe UI', sans-serif;`;
             content.innerHTML = `
@@ -791,12 +794,14 @@
             try {
                 await html2pdf().set(opt).from(content).save();
                 document.body.removeChild(content);
+                document.body.style.background = origBodyBg;
                 document.getElementById('saveStatus').textContent = 'Downloaded ' + name + '.pdf';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
                 }, 2000);
             } catch (error) {
                 console.error('PDF generation error:', error);
+                document.body.style.background = origBodyBg;
                 if (content && content.parentNode) {
                     document.body.removeChild(content);
                 }

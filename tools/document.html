@@ -859,15 +859,20 @@
 
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
-            // Build PDF content - gather all page content into one flowing div
+            // Build PDF content - gather all page content into one clean div
+            // Temporarily set body background to white so html2canvas doesn't capture gray
+            const origBodyBg = document.body.style.background;
+            document.body.style.background = '#ffffff';
+
             const pdfContainer = document.createElement('div');
             pdfContainer.style.cssText = `
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 font-size: 16px; line-height: 1.6; color: #333;
-                background: white;
+                background: #ffffff;
             `;
 
             let hasContent = false;
+            let pageCount = 0;
             pages.forEach((page) => {
                 const content = page.content || '';
                 const textContent = content.replace(/<[^>]*>/g, '').trim();
@@ -876,11 +881,14 @@
                 hasContent = true;
 
                 const pageDiv = document.createElement('div');
+                if (pageCount > 0) pageDiv.style.pageBreakBefore = 'always';
                 pageDiv.innerHTML = content;
                 pdfContainer.appendChild(pageDiv);
+                pageCount++;
             });
 
             if (!hasContent) {
+                document.body.style.background = origBodyBg;
                 document.getElementById('saveStatus').textContent = 'No content to save';
                 setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
                 return;
@@ -893,6 +901,7 @@
                 margin: 10,
                 filename: currentDocumentName + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
+                pagebreak: { mode: ['css'] },
                 html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
@@ -910,6 +919,7 @@
             }
 
             if (pdfContainer.parentNode) document.body.removeChild(pdfContainer);
+            document.body.style.background = origBodyBg;
         }
 
         // Fallback: Save to localStorage
@@ -1265,24 +1275,55 @@
         }
 
         // Save document as PDF file
-        function saveDocument() {
+        async function saveDocument() {
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
-            const container = document.getElementById('documentContainer');
+            // Sync editor content to pages array
+            pages.forEach(page => {
+                const editor = document.querySelector(`.editor[data-page-id="${page.id}"]`);
+                if (editor) page.content = editor.innerHTML;
+            });
+
+            const origBodyBg = document.body.style.background;
+            document.body.style.background = '#ffffff';
+
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.cssText = `font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6; color: #333; background: #ffffff;`;
+
+            let pageCount2 = 0;
+            pages.forEach(page => {
+                const content = page.content || '';
+                const textContent = content.replace(/<[^>]*>/g, '').trim();
+                if (textContent.length === 0 && !content.includes('<img')) return;
+                const pageDiv = document.createElement('div');
+                if (pageCount2 > 0) pageDiv.style.pageBreakBefore = 'always';
+                pageDiv.innerHTML = content;
+                pdfContainer.appendChild(pageDiv);
+                pageCount2++;
+            });
+
+            document.body.appendChild(pdfContainer);
+            await new Promise(r => setTimeout(r, 200));
+
             const opt = {
                 margin: 10,
-                filename: 'document.pdf',
+                filename: (currentDocumentName || 'document') + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                pagebreak: { mode: ['css'] },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(container).save().then(() => {
+            try {
+                await html2pdf().set(opt).from(pdfContainer).save();
                 document.getElementById('saveStatus').textContent = 'PDF Downloaded!';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
-            });
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                document.getElementById('saveStatus').textContent = 'PDF generation failed';
+            }
+            document.body.removeChild(pdfContainer);
+            document.body.style.background = origBodyBg;
+            setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
         }
 
         // Print document

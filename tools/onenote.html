@@ -1034,6 +1034,9 @@
 
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
+            const origBodyBg = document.body.style.background;
+            document.body.style.background = '#ffffff';
+
             const content = document.createElement('div');
             content.style.cssText = 'padding: 40px; background: white; font-family: "Segoe UI", sans-serif;';
             content.innerHTML = `
@@ -1041,6 +1044,9 @@
                 <p style="font-size: 12px; color: #999; margin-bottom: 30px;">${page.createdAt}</p>
                 <div style="font-size: 15px; line-height: 1.6; color: #333;">${page.content}</div>
             `;
+
+            document.body.appendChild(content);
+            await new Promise(r => setTimeout(r, 100));
 
             const opt = {
                 margin: 10,
@@ -1052,6 +1058,8 @@
 
             try {
                 await html2pdf().set(opt).from(content).save();
+                document.body.removeChild(content);
+                document.body.style.background = origBodyBg;
                 document.getElementById('saveStatus').textContent = 'Downloaded ' + name + '.pdf';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
@@ -1092,6 +1100,9 @@
             if (!name) return;
 
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            const origBodyBg2 = document.body.style.background;
+            document.body.style.background = '#ffffff';
 
             // Create container with all pages from all sections
             const content = document.createElement('div');
@@ -1151,6 +1162,7 @@
             try {
                 await html2pdf().set(opt).from(content).save();
                 document.body.removeChild(content);
+                document.body.style.background = origBodyBg2;
                 document.getElementById('saveStatus').textContent = `Downloaded ${name}.pdf (${totalPages} pages)`;
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
