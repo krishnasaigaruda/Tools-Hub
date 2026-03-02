@@ -78,6 +78,39 @@
             margin-top: 6px;
         }
 
+        .clock-ampm {
+            font-size: 2rem;
+            color: #ea580c;
+            margin-left: 8px;
+            font-weight: 400;
+        }
+
+        .clock-toggle {
+            display: flex;
+            gap: 0;
+            margin-top: 30px;
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .clock-toggle button {
+            padding: 10px 24px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clock-toggle button.active {
+            background: #ea580c;
+            color: #fff;
+        }
+
         /* ===== TIMER ===== */
         .timer-setup { width: 100%; max-width: 500px; }
 
@@ -379,6 +412,10 @@
         <div class="clock-display" id="clockTime"></div>
         <div class="clock-date" id="clockDate"></div>
         <div class="clock-day" id="clockDay"></div>
+        <div class="clock-toggle">
+            <button id="btn12h" class="active" onclick="setClockMode(12)">12 Hour</button>
+            <button id="btn24h" onclick="setClockMode(24)">24 Hour</button>
+        </div>
     </div>
 
     <!-- TIMER VIEW -->
@@ -533,17 +570,42 @@
         }
 
         // ===== CLOCK =====
+        let clockMode = parseInt(localStorage.getItem('clockMode')) || 12;
+
+        function setClockMode(mode) {
+            clockMode = mode;
+            localStorage.setItem('clockMode', mode);
+            document.getElementById('btn12h').classList.toggle('active', mode === 12);
+            document.getElementById('btn24h').classList.toggle('active', mode === 24);
+            updateClock();
+        }
+
         function updateClock() {
             const now = new Date();
-            const h = now.getHours().toString().padStart(2, '0');
+            const hours24 = now.getHours();
             const m = now.getMinutes().toString().padStart(2, '0');
             const s = now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('clockTime').innerHTML = `${h}:${m}<span class="clock-seconds">:${s}</span>`;
+
+            if (clockMode === 12) {
+                const ampm = hours24 >= 12 ? 'PM' : 'AM';
+                let h12 = hours24 % 12;
+                if (h12 === 0) h12 = 12;
+                document.getElementById('clockTime').innerHTML =
+                    `${h12.toString().padStart(2, '0')}:${m}<span class="clock-seconds">:${s}</span><span class="clock-ampm">${ampm}</span>`;
+            } else {
+                document.getElementById('clockTime').innerHTML =
+                    `${hours24.toString().padStart(2, '0')}:${m}<span class="clock-seconds">:${s}</span>`;
+            }
 
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('clockDate').textContent = now.toLocaleDateString(undefined, options);
             document.getElementById('clockDay').textContent = now.toLocaleDateString(undefined, { weekday: 'long' });
         }
+
+        // Set initial toggle state
+        document.getElementById('btn12h').classList.toggle('active', clockMode === 12);
+        document.getElementById('btn24h').classList.toggle('active', clockMode === 24);
+
         updateClock();
         setInterval(updateClock, 1000);
 

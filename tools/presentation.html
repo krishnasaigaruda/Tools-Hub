@@ -1564,10 +1564,8 @@
                 }
 
                 // Save everything to localStorage
-                const data = JSON.stringify(slides);
-                localStorage.setItem('presentationData', data);
+                localStorage.setItem('presentationData', JSON.stringify(slides));
                 localStorage.setItem('currentSlideIndex', currentSlideIndex.toString());
-                console.log('[Presentation] autoSave: saved', slides.length, 'slides, size:', data.length);
             } catch (e) {
                 console.error('[Presentation] Save failed:', e);
             }
