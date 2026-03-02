@@ -78,6 +78,13 @@
             margin-top: 6px;
         }
 
+        .clock-tz-label {
+            font-size: 0.9rem;
+            color: #ea580c;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+
         .clock-ampm {
             font-size: 2rem;
             color: #ea580c;
@@ -719,9 +726,17 @@
         <div class="clock-display" id="clockTime"></div>
         <div class="clock-date" id="clockDate"></div>
         <div class="clock-day" id="clockDay"></div>
+        <div class="clock-tz-label" id="clockTzLabel"></div>
         <div class="clock-toggle">
             <button id="btn12h" class="active" onclick="setClockMode(12)">12 Hour</button>
             <button id="btn24h" onclick="setClockMode(24)">24 Hour</button>
+        </div>
+        <div class="tz-search-wrapper" style="margin-top:10px;position:relative;width:300px;">
+            <input type="text" id="clockTzSearch" placeholder="Search timezone or city..." autocomplete="off"
+                style="width:100%;background:#222;color:#fff;border:1px solid #444;padding:10px 14px 10px 36px;border-radius:8px;font-size:14px;outline:none;"
+                onfocus="showTzDropdown()" oninput="filterTzDropdown(this.value)">
+            <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#666;font-size:13px;pointer-events:none;"></i>
+            <div id="clockTzDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:250px;overflow-y:auto;background:#1a1a1a;border:1px solid #444;border-radius:8px;margin-top:4px;z-index:100;"></div>
         </div>
     </div>
 
@@ -946,11 +961,222 @@
 
         // ===== CLOCK =====
         let clockMode = parseInt(localStorage.getItem('clockMode')) || 12;
+        // Auto-detect local timezone
+        const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        let clockTimezone = localStorage.getItem('clockTimezone') || localTz;
+
+        // Build timezone list
+        let allTimezones = [];
+        try {
+            allTimezones = Intl.supportedValuesOf('timeZone');
+        } catch(e) {
+            allTimezones = ['America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Europe/Berlin','Europe/Moscow','Asia/Tokyo','Asia/Shanghai','Asia/Kolkata','Asia/Dubai','Australia/Sydney','Pacific/Auckland'];
+        }
+
+        // Friendly names for single-timezone countries
+        const tzCountryNames = {
+            'Asia/Calcutta': 'India',
+            'Asia/Tokyo': 'Japan',
+            'Asia/Seoul': 'South Korea',
+            'Asia/Shanghai': 'China',
+            'Asia/Taipei': 'Taiwan',
+            'Asia/Hong_Kong': 'Hong Kong',
+            'Asia/Singapore': 'Singapore',
+            'Asia/Dhaka': 'Bangladesh',
+            'Asia/Karachi': 'Pakistan',
+            'Asia/Colombo': 'Sri Lanka',
+            'Asia/Kathmandu': 'Nepal',
+            'Asia/Rangoon': 'Myanmar',
+            'Asia/Bangkok': 'Thailand',
+            'Asia/Jakarta': 'Indonesia',
+            'Asia/Dubai': 'UAE',
+            'Asia/Riyadh': 'Saudi Arabia',
+            'Asia/Tehran': 'Iran',
+            'Asia/Jerusalem': 'Israel',
+            'Asia/Kabul': 'Afghanistan',
+            'Asia/Baghdad': 'Iraq',
+            'Asia/Kuwait': 'Kuwait',
+            'Asia/Qatar': 'Qatar',
+            'Asia/Bahrain': 'Bahrain',
+            'Asia/Muscat': 'Oman',
+            'Asia/Manila': 'Philippines',
+            'Asia/Kuala_Lumpur': 'Malaysia',
+            'Asia/Phnom_Penh': 'Cambodia',
+            'Asia/Vientiane': 'Laos',
+            'Asia/Saigon': 'Vietnam',
+            'Europe/London': 'United Kingdom',
+            'Europe/Paris': 'France',
+            'Europe/Berlin': 'Germany',
+            'Europe/Rome': 'Italy',
+            'Europe/Madrid': 'Spain',
+            'Europe/Moscow': 'Russia',
+            'Europe/Istanbul': 'Turkey',
+            'Europe/Athens': 'Greece',
+            'Europe/Amsterdam': 'Netherlands',
+            'Europe/Brussels': 'Belgium',
+            'Europe/Vienna': 'Austria',
+            'Europe/Zurich': 'Switzerland',
+            'Europe/Stockholm': 'Sweden',
+            'Europe/Oslo': 'Norway',
+            'Europe/Copenhagen': 'Denmark',
+            'Europe/Helsinki': 'Finland',
+            'Europe/Warsaw': 'Poland',
+            'Europe/Prague': 'Czech Republic',
+            'Europe/Budapest': 'Hungary',
+            'Europe/Bucharest': 'Romania',
+            'Europe/Dublin': 'Ireland',
+            'Europe/Lisbon': 'Portugal',
+            'Europe/Kiev': 'Ukraine',
+            'Europe/Belgrade': 'Serbia',
+            'Africa/Cairo': 'Egypt',
+            'Africa/Lagos': 'Nigeria',
+            'Africa/Johannesburg': 'South Africa',
+            'Africa/Nairobi': 'Kenya',
+            'Africa/Casablanca': 'Morocco',
+            'Africa/Accra': 'Ghana',
+            'Africa/Addis_Ababa': 'Ethiopia',
+            'Africa/Dar_es_Salaam': 'Tanzania',
+            'America/Sao_Paulo': 'Brazil',
+            'America/Argentina/Buenos_Aires': 'Argentina',
+            'America/Mexico_City': 'Mexico',
+            'America/Bogota': 'Colombia',
+            'America/Lima': 'Peru',
+            'America/Santiago': 'Chile',
+            'America/Caracas': 'Venezuela',
+            'Pacific/Auckland': 'New Zealand',
+            'Pacific/Fiji': 'Fiji',
+        };
+
+        // City aliases for search
+        const tzAliases = {
+            'Asia/Calcutta': ['India','Mumbai','Delhi','Chennai','Bangalore','Hyderabad','Pune','Kolkata','IST','Indian Standard Time'],
+            'Asia/Shanghai': ['Beijing','China','CST','Shenzhen','Guangzhou'],
+            'Asia/Tokyo': ['Japan','JST','Osaka'],
+            'Asia/Seoul': ['South Korea','KST','Busan'],
+            'Asia/Taipei': ['Taiwan'],
+            'Asia/Hong_Kong': ['HKT'],
+            'Asia/Singapore': ['SGT'],
+            'Asia/Dhaka': ['Bangladesh','BST'],
+            'Asia/Karachi': ['Pakistan','PKT','Lahore','Islamabad'],
+            'Asia/Colombo': ['Sri Lanka'],
+            'Asia/Kathmandu': ['Nepal','Katmandu'],
+            'Asia/Rangoon': ['Myanmar','Burma','Yangon'],
+            'Asia/Bangkok': ['Thailand','Vietnam','Hanoi'],
+            'Asia/Jakarta': ['Indonesia','WIB','Bali'],
+            'Asia/Dubai': ['UAE','Abu Dhabi','GST'],
+            'Asia/Riyadh': ['Saudi Arabia','Jeddah','Mecca'],
+            'Asia/Tehran': ['Iran','IRST'],
+            'Asia/Jerusalem': ['Israel','Tel Aviv'],
+            'Asia/Manila': ['Philippines','PHT'],
+            'Asia/Kuala_Lumpur': ['Malaysia','MYT'],
+            'Asia/Saigon': ['Vietnam','Ho Chi Minh'],
+            'Europe/London': ['UK','United Kingdom','GMT','England','Scotland','Wales'],
+            'Europe/Paris': ['France','CET'],
+            'Europe/Berlin': ['Germany','CET','Munich','Frankfurt'],
+            'Europe/Rome': ['Italy','Milan'],
+            'Europe/Madrid': ['Spain','Barcelona'],
+            'Europe/Moscow': ['Russia','MSK','Saint Petersburg'],
+            'Europe/Istanbul': ['Turkey','TRT','Ankara'],
+            'Europe/Amsterdam': ['Netherlands','Holland'],
+            'Europe/Dublin': ['Ireland'],
+            'Europe/Lisbon': ['Portugal'],
+            'America/New_York': ['EST','EDT','Eastern','USA East','Boston','Miami','Washington DC'],
+            'America/Chicago': ['CST','CDT','Central','USA Central','Dallas','Houston'],
+            'America/Denver': ['MST','MDT','Mountain','USA Mountain','Salt Lake City'],
+            'America/Los_Angeles': ['PST','PDT','Pacific','USA West','San Francisco','Seattle','Hollywood'],
+            'America/Sao_Paulo': ['Brazil','BRT','Rio'],
+            'America/Argentina/Buenos_Aires': ['Argentina'],
+            'America/Mexico_City': ['Mexico'],
+            'America/Toronto': ['Canada East','Ontario'],
+            'America/Vancouver': ['Canada West','British Columbia'],
+            'Australia/Sydney': ['AEST','Australia East','Melbourne'],
+            'Australia/Perth': ['AWST','Australia West'],
+            'Pacific/Auckland': ['New Zealand','NZST','Wellington'],
+            'Africa/Cairo': ['Egypt','EET'],
+            'Africa/Lagos': ['Nigeria','WAT'],
+            'Africa/Johannesburg': ['South Africa','SAST','Cape Town'],
+            'Africa/Nairobi': ['Kenya','EAT'],
+        };
+
+        function getTzDisplay(tz) {
+            if (tzCountryNames[tz]) return tzCountryNames[tz];
+            return tz.replace(/_/g, ' ').replace(/\//g, ' / ');
+        }
+
+
+        function setClockTimezone(tz) {
+            clockTimezone = tz;
+            localStorage.setItem('clockTimezone', tz);
+            document.getElementById('clockTzSearch').value = getTzDisplay(tz);
+            hideTzDropdown();
+            updateClock();
+        }
+
+        function showTzDropdown() {
+            document.getElementById('clockTzSearch').value = '';
+            filterTzDropdown('');
+            document.getElementById('clockTzDropdown').style.display = 'block';
+        }
+
+        function hideTzDropdown() {
+            setTimeout(() => {
+                document.getElementById('clockTzDropdown').style.display = 'none';
+            }, 150);
+        }
+
+        function filterTzDropdown(query) {
+            const dropdown = document.getElementById('clockTzDropdown');
+            const q = query.toLowerCase();
+            // Search by timezone name and aliases
+            const seen = new Set();
+            const matches = [];
+            // First: alias matches (prioritized)
+            if (q) {
+                for (const [tz, aliases] of Object.entries(tzAliases)) {
+                    if (aliases.some(a => a.toLowerCase().includes(q)) || tz.toLowerCase().replace(/_/g, ' ').includes(q)) {
+                        if (!seen.has(tz) && allTimezones.includes(tz)) {
+                            seen.add(tz);
+                            const matchedAlias = aliases.find(a => a.toLowerCase().includes(q));
+                            matches.push({ tz, hint: matchedAlias || null });
+                        }
+                    }
+                }
+            }
+            // Then: direct timezone name matches
+            allTimezones.forEach(tz => {
+                if (!seen.has(tz) && tz.toLowerCase().replace(/_/g, ' ').includes(q)) {
+                    seen.add(tz);
+                    matches.push({ tz, hint: null });
+                }
+            });
+            dropdown.innerHTML = '';
+            matches.slice(0, 40).forEach(({ tz, hint }) => {
+                const item = document.createElement('div');
+                const displayName = getTzDisplay(tz);
+                const isCountry = !!tzCountryNames[tz];
+                const rawTz = tz.replace(/_/g, ' ').replace(/\//g, ' / ');
+                // Show country name prominently, with raw tz as subtitle if it's a country
+                if (isCountry) {
+                    item.innerHTML = displayName + `<span style="color:#666;margin-left:8px;font-size:11px;">${rawTz}</span>` + (hint && hint !== displayName ? `<span style="color:#ea580c;margin-left:6px;font-size:11px;">${hint}</span>` : '');
+                } else {
+                    item.innerHTML = displayName + (hint ? `<span style="color:#ea580c;margin-left:8px;font-size:11px;">${hint}</span>` : '');
+                }
+                item.style.cssText = 'padding:8px 14px;cursor:pointer;font-size:13px;color:#ccc;border-bottom:1px solid #2a2a2a;';
+                item.onmouseenter = () => item.style.background = '#333';
+                item.onmouseleave = () => item.style.background = 'none';
+                item.onmousedown = (e) => { e.preventDefault(); setClockTimezone(tz); };
+                dropdown.appendChild(item);
+            });
+            dropdown.style.display = matches.length ? 'block' : 'none';
+        }
+
+        document.getElementById('clockTzSearch').addEventListener('blur', hideTzDropdown);
+        // Set initial display
+        document.getElementById('clockTzSearch').value = getTzDisplay(clockTimezone);
 
         function setClockMode(mode) {
             clockMode = mode;
             localStorage.setItem('clockMode', mode);
-            // Sync all toggle buttons across all views
             document.querySelectorAll('.clock-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', parseInt(btn.dataset.mode) === mode);
             });
@@ -964,9 +1190,17 @@
 
         function updateClock() {
             const now = new Date();
-            const hours24 = now.getHours();
-            const m = now.getMinutes().toString().padStart(2, '0');
-            const s = now.getSeconds().toString().padStart(2, '0');
+            const tz = clockTimezone;
+            const locale = 'en-US';
+
+            const timeParts = new Intl.DateTimeFormat(locale, {
+                hour: 'numeric', minute: '2-digit', second: '2-digit',
+                hour12: false, timeZone: tz
+            }).formatToParts(now);
+
+            const hours24 = parseInt(timeParts.find(p => p.type === 'hour').value);
+            const m = timeParts.find(p => p.type === 'minute').value;
+            const s = timeParts.find(p => p.type === 'second').value;
 
             if (clockMode === 12) {
                 const ampm = hours24 >= 12 ? 'PM' : 'AM';
@@ -979,9 +1213,9 @@
                     `${hours24.toString().padStart(2, '0')}:${m}<span class="clock-seconds">:${s}</span>`;
             }
 
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('clockDate').textContent = now.toLocaleDateString(undefined, options);
-            document.getElementById('clockDay').textContent = now.toLocaleDateString(undefined, { weekday: 'long' });
+            document.getElementById('clockDate').textContent = now.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', timeZone: tz });
+            document.getElementById('clockDay').textContent = now.toLocaleDateString(locale, { weekday: 'long', timeZone: tz });
+            document.getElementById('clockTzLabel').textContent = getTzDisplay(tz);
         }
 
         // Set initial toggle state on all mode buttons
@@ -1618,11 +1852,11 @@
         setInterval(renderWorldClocks, 1000);
 
         // ===== TIMEZONE CONVERTER =====
-        const allTimezones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : worldTimezones.map(t => t.tz);
+        const converterTimezones = Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : worldTimezones.map(t => t.tz);
         const tzFromList = document.getElementById('tzFromList');
         const tzToList = document.getElementById('tzToList');
 
-        allTimezones.forEach(tz => {
+        converterTimezones.forEach(tz => {
             const label = tz.replace(/_/g, ' ');
             const o1 = document.createElement('option');
             o1.value = tz;
@@ -1635,7 +1869,6 @@
         });
 
         // Set defaults
-        const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         document.getElementById('tzFromInput').value = localTz;
         document.getElementById('tzToInput').value = 'America/New_York';
 
@@ -1649,7 +1882,7 @@
             const fromTz = document.getElementById('tzFromInput').value;
             const toTz = document.getElementById('tzToInput').value;
             const inputVal = document.getElementById('tzTimeInput').value;
-            if (!inputVal || !allTimezones.includes(fromTz) || !allTimezones.includes(toTz)) return;
+            if (!inputVal || !converterTimezones.includes(fromTz) || !converterTimezones.includes(toTz)) return;
 
             // Parse the input as a time in the "from" timezone
             const inputDate = new Date(inputVal);

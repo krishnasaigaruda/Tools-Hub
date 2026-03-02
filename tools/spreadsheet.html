@@ -449,6 +449,83 @@
             gap: 15px;
         }
 
+        /* Cell Image */
+        td.has-image {
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        td.has-image .cell {
+            display: none;
+        }
+
+        .cell-image-wrapper {
+            position: relative;
+            display: block;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .cell-image-wrapper img {
+            display: block;
+            pointer-events: none;
+        }
+
+        .cell-image-wrapper.selected-image {
+            box-shadow: inset 0 0 0 2px #16a34a;
+        }
+
+        .cell-image-wrapper.selected-image .image-controls {
+            display: flex;
+        }
+
+        .image-controls {
+            display: none;
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            gap: 2px;
+            z-index: 20;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            padding: 2px;
+        }
+
+        .image-controls button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #444;
+        }
+
+        .image-controls button:hover {
+            background: #e8e8e8;
+        }
+
+        .image-controls button.delete-img-btn:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .image-resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background: #16a34a;
+            cursor: nwse-resize;
+            display: none;
+        }
+
+        .cell-image-wrapper.selected-image .image-resize-handle {
+            display: block;
+        }
+
         /* Print Styles */
         @media print {
             .header, .toolbar, .formula-bar, .status-bar {
@@ -629,8 +706,8 @@
     </div>
 
     <script>
-        const ROWS = 50;
-        const COLS = 26;
+        let ROWS = 50;
+        let COLS = 26;
         let currentCell = null;
         let cellData = {};
         let cellStyles = {};
@@ -642,6 +719,11 @@
         // Initialize spreadsheet
         function initSpreadsheet() {
             loadAllSpreadsheets();
+            // Restore saved grid size
+            const savedRows = localStorage.getItem('spreadsheetRows');
+            const savedCols = localStorage.getItem('spreadsheetCols');
+            if (savedRows) ROWS = Math.max(50, parseInt(savedRows));
+            if (savedCols) COLS = Math.max(26, Math.min(26, parseInt(savedCols)));
             const table = document.getElementById('spreadsheet');
             let html = '<thead><tr><th class="corner"></th>';
 
@@ -851,7 +933,26 @@
                 Object.keys(cellStyles).forEach(cellId => {
                     const cell = document.getElementById(cellId);
                     if (cell) {
-                        Object.assign(cell.style, cellStyles[cellId]);
+                        const styles = {...cellStyles[cellId]};
+                        const rowHeight = styles.rowHeight;
+                        const imageData = styles.imageData;
+                        const imageWidth = styles.imageWidth;
+                        const imageHeight = styles.imageHeight;
+                        delete styles.rowHeight;
+                        delete styles.imageData;
+                        delete styles.imageWidth;
+                        delete styles.imageHeight;
+                        delete styles.backgroundImage;
+                        delete styles.backgroundSize;
+                        delete styles.backgroundRepeat;
+                        delete styles.backgroundPosition;
+                        Object.assign(cell.style, styles);
+                        if (rowHeight && cell.parentElement) {
+                            cell.parentElement.style.height = rowHeight;
+                        }
+                        if (imageData) {
+                            placeImageInCell(cellId, imageData, imageWidth || 120, imageHeight || 80);
+                        }
                     }
                 });
 
@@ -1173,14 +1274,45 @@
 
         // Add row
         function addRow() {
-            // Rows are already pre-generated, just scroll to bottom
+            ROWS++;
+            const table = document.getElementById('spreadsheet');
+            const tbody = table.querySelector('tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<th class="row-header">${ROWS}</th>`;
+            for (let c = 0; c < COLS; c++) {
+                const cellId = String.fromCharCode(65 + c) + ROWS;
+                const td = document.createElement('td');
+                td.innerHTML = `<input type="text" class="cell" id="${cellId}" onfocus="selectCell('${cellId}')" onblur="updateCell('${cellId}')" oninput="syncFormula('${cellId}')">`;
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
             const container = document.querySelector('.spreadsheet-container');
             container.scrollTop = container.scrollHeight;
         }
 
         // Add column
         function addColumn() {
-            // Columns are already pre-generated (A-Z), just scroll to right
+            if (COLS >= 26) {
+                alert('Maximum 26 columns (A-Z) supported');
+                return;
+            }
+            COLS++;
+            const table = document.getElementById('spreadsheet');
+            const colLetter = String.fromCharCode(65 + COLS - 1);
+            // Add header
+            const headerRow = table.querySelector('thead tr');
+            const th = document.createElement('th');
+            th.textContent = colLetter;
+            headerRow.appendChild(th);
+            // Add cell to each row
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach((tr, i) => {
+                const r = i + 1;
+                const cellId = colLetter + r;
+                const td = document.createElement('td');
+                td.innerHTML = `<input type="text" class="cell" id="${cellId}" onfocus="selectCell('${cellId}')" onblur="updateCell('${cellId}')" oninput="syncFormula('${cellId}')">`;
+                tr.appendChild(td);
+            });
             const container = document.querySelector('.spreadsheet-container');
             container.scrollLeft = container.scrollWidth;
         }
@@ -1199,6 +1331,8 @@
         }
 
         // Insert image from file
+        let selectedImageCell = null;
+
         function insertImage(event) {
             if (!currentCell) {
                 alert('Please select a cell first');
@@ -1208,23 +1342,189 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const cell = document.getElementById(currentCell);
-                    cell.style.backgroundImage = `url(${e.target.result})`;
-                    cell.style.backgroundSize = 'contain';
-                    cell.style.backgroundRepeat = 'no-repeat';
-                    cell.style.backgroundPosition = 'center';
-                    cell.parentElement.style.height = '80px';
-                    cellStyles[currentCell] = cellStyles[currentCell] || {};
-                    cellStyles[currentCell].backgroundImage = cell.style.backgroundImage;
-                    cellStyles[currentCell].backgroundSize = 'contain';
-                    cellStyles[currentCell].backgroundRepeat = 'no-repeat';
-                    cellStyles[currentCell].backgroundPosition = 'center';
+                    const cellId = currentCell;
+                    placeImageInCell(cellId, e.target.result, 120, 80);
                     autoSave();
                 };
                 reader.readAsDataURL(file);
             }
             event.target.value = '';
         }
+
+        function placeImageInCell(cellId, src, width, height) {
+            const cell = document.getElementById(cellId);
+            const td = cell.parentElement;
+            // Store image data
+            cellStyles[cellId] = cellStyles[cellId] || {};
+            cellStyles[cellId].imageData = src;
+            cellStyles[cellId].imageWidth = width;
+            cellStyles[cellId].imageHeight = height;
+
+            // Remove old wrapper if exists
+            const oldWrap = td.querySelector('.cell-image-wrapper');
+            if (oldWrap) oldWrap.remove();
+
+            td.classList.add('has-image');
+
+            // Create image wrapper sized exactly to image
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cell-image-wrapper';
+            wrapper.style.width = width + 'px';
+            wrapper.style.height = height + 'px';
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.style.width = width + 'px';
+            img.style.height = height + 'px';
+
+            const controls = document.createElement('div');
+            controls.className = 'image-controls';
+            controls.innerHTML = `
+                <button onclick="event.stopPropagation();resizeImageSmaller('${cellId}')" title="Smaller"><i class="fas fa-minus"></i></button>
+                <button onclick="event.stopPropagation();resizeImageBigger('${cellId}')" title="Bigger"><i class="fas fa-plus"></i></button>
+                <button class="delete-img-btn" onclick="event.stopPropagation();deleteImage('${cellId}')" title="Delete"><i class="fas fa-trash"></i></button>
+            `;
+
+            const handle = document.createElement('div');
+            handle.className = 'image-resize-handle';
+            handle.addEventListener('mousedown', (e) => startImageResize(e, cellId));
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(controls);
+            wrapper.appendChild(handle);
+
+            wrapper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectImage(cellId);
+            });
+
+            td.appendChild(wrapper);
+        }
+
+        function selectImage(cellId) {
+            // Deselect previous
+            document.querySelectorAll('.cell-image-wrapper.selected-image').forEach(w => w.classList.remove('selected-image'));
+            selectedImageCell = cellId;
+            const td = document.getElementById(cellId).parentElement;
+            const wrapper = td.querySelector('.cell-image-wrapper');
+            if (wrapper) wrapper.classList.add('selected-image');
+        }
+
+        function deselectAllImages() {
+            document.querySelectorAll('.cell-image-wrapper.selected-image').forEach(w => w.classList.remove('selected-image'));
+            selectedImageCell = null;
+        }
+
+        function resizeImageSmaller(cellId) {
+            const s = cellStyles[cellId];
+            if (!s || !s.imageData) return;
+            s.imageWidth = Math.max(30, (s.imageWidth || 120) - 20);
+            s.imageHeight = Math.max(20, (s.imageHeight || 80) - 15);
+            const td = document.getElementById(cellId).parentElement;
+            const wrapper = td.querySelector('.cell-image-wrapper');
+            const img = wrapper ? wrapper.querySelector('img') : null;
+            if (wrapper) { wrapper.style.width = s.imageWidth + 'px'; wrapper.style.height = s.imageHeight + 'px'; }
+            if (img) { img.style.width = s.imageWidth + 'px'; img.style.height = s.imageHeight + 'px'; }
+            autoSave();
+        }
+
+        function resizeImageBigger(cellId) {
+            const s = cellStyles[cellId];
+            if (!s || !s.imageData) return;
+            s.imageWidth = (s.imageWidth || 120) + 20;
+            s.imageHeight = (s.imageHeight || 80) + 15;
+            const td = document.getElementById(cellId).parentElement;
+            const wrapper = td.querySelector('.cell-image-wrapper');
+            const img = wrapper ? wrapper.querySelector('img') : null;
+            if (wrapper) { wrapper.style.width = s.imageWidth + 'px'; wrapper.style.height = s.imageHeight + 'px'; }
+            if (img) { img.style.width = s.imageWidth + 'px'; img.style.height = s.imageHeight + 'px'; }
+            autoSave();
+        }
+
+        function deleteImage(cellId) {
+            const cell = document.getElementById(cellId);
+            const td = cell.parentElement;
+            const wrapper = td.querySelector('.cell-image-wrapper');
+            if (wrapper) wrapper.remove();
+            td.classList.remove('has-image');
+            if (cellStyles[cellId]) {
+                delete cellStyles[cellId].imageData;
+                delete cellStyles[cellId].imageWidth;
+                delete cellStyles[cellId].imageHeight;
+                delete cellStyles[cellId].rowHeight;
+                if (Object.keys(cellStyles[cellId]).length === 0) delete cellStyles[cellId];
+            }
+            selectedImageCell = null;
+            autoSave();
+        }
+
+        let resizingImage = null;
+        let resizeStartX = 0, resizeStartY = 0, resizeStartW = 0, resizeStartH = 0;
+
+        function startImageResize(e, cellId) {
+            e.preventDefault();
+            e.stopPropagation();
+            resizingImage = cellId;
+            const s = cellStyles[cellId];
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            resizeStartW = s.imageWidth || 120;
+            resizeStartH = s.imageHeight || 80;
+            document.addEventListener('mousemove', doImageResize);
+            document.addEventListener('mouseup', stopImageResize);
+        }
+
+        function doImageResize(e) {
+            if (!resizingImage) return;
+            const dx = e.clientX - resizeStartX;
+            const dy = e.clientY - resizeStartY;
+            const newW = Math.max(30, resizeStartW + dx);
+            const newH = Math.max(20, resizeStartH + dy);
+            const td = document.getElementById(resizingImage).parentElement;
+            const wrapper = td.querySelector('.cell-image-wrapper');
+            const img = td.querySelector('.cell-image-wrapper img');
+            if (img) {
+                img.style.width = newW + 'px';
+                img.style.height = newH + 'px';
+            }
+            if (wrapper) {
+                wrapper.style.width = newW + 'px';
+                wrapper.style.height = newH + 'px';
+            }
+        }
+
+        function stopImageResize(e) {
+            if (!resizingImage) return;
+            const dx = e.clientX - resizeStartX;
+            const dy = e.clientY - resizeStartY;
+            const newW = Math.max(30, resizeStartW + dx);
+            const newH = Math.max(20, resizeStartH + dy);
+            const s = cellStyles[resizingImage];
+            if (s) {
+                s.imageWidth = newW;
+                s.imageHeight = newH;
+            }
+            resizingImage = null;
+            document.removeEventListener('mousemove', doImageResize);
+            document.removeEventListener('mouseup', stopImageResize);
+            autoSave();
+        }
+
+        // Deselect image when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.cell-image-wrapper') && !e.target.closest('.image-controls')) {
+                deselectAllImages();
+            }
+        });
+
+        // Delete image with Delete/Backspace key
+        document.addEventListener('keydown', (e) => {
+            if (selectedImageCell && (e.key === 'Delete' || e.key === 'Backspace')) {
+                if (document.activeElement && document.activeElement.classList.contains('cell') && document.activeElement.id !== selectedImageCell) return;
+                e.preventDefault();
+                deleteImage(selectedImageCell);
+            }
+        });
 
 
         // Close menu when clicking outside
@@ -1350,6 +1650,8 @@
             }
             localStorage.setItem('spreadsheetData', JSON.stringify(cellData));
             localStorage.setItem('spreadsheetStyles', JSON.stringify(cellStyles));
+            localStorage.setItem('spreadsheetRows', ROWS);
+            localStorage.setItem('spreadsheetCols', COLS);
         }
 
         // Load saved data
@@ -1377,7 +1679,27 @@
                 Object.keys(cellStyles).forEach(cellId => {
                     const cell = document.getElementById(cellId);
                     if (cell) {
-                        Object.assign(cell.style, cellStyles[cellId]);
+                        const styles = {...cellStyles[cellId]};
+                        const rowHeight = styles.rowHeight;
+                        const imageData = styles.imageData;
+                        const imageWidth = styles.imageWidth;
+                        const imageHeight = styles.imageHeight;
+                        delete styles.rowHeight;
+                        delete styles.imageData;
+                        delete styles.imageWidth;
+                        delete styles.imageHeight;
+                        // Remove old background-image style properties (migrating from old format)
+                        delete styles.backgroundImage;
+                        delete styles.backgroundSize;
+                        delete styles.backgroundRepeat;
+                        delete styles.backgroundPosition;
+                        Object.assign(cell.style, styles);
+                        if (rowHeight && cell.parentElement) {
+                            cell.parentElement.style.height = rowHeight;
+                        }
+                        if (imageData) {
+                            placeImageInCell(cellId, imageData, imageWidth || 120, imageHeight || 80);
+                        }
                     }
                 });
             }

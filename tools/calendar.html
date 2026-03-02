@@ -406,6 +406,13 @@
             color: #ccc;
         }
 
+        .day-cell.empty-cell {
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+            pointer-events: none;
+        }
+
         .day-number {
             font-size: 14px;
             font-weight: 600;
@@ -1133,12 +1140,11 @@
                 grid.appendChild(header);
             });
 
-            // Previous month days
-            const prevMonthLastDay = new Date(year, month, 0).getDate();
-            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-                const day = prevMonthLastDay - i;
-                const date = new Date(year, month - 1, day);
-                grid.appendChild(createDayCell(day, date, true));
+            // Empty cells before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'day-cell empty-cell';
+                grid.appendChild(empty);
             }
 
             // Current month days
@@ -1147,11 +1153,13 @@
                 grid.appendChild(createDayCell(day, date, false));
             }
 
-            // Next month days
-            const remainingCells = 42 - (startingDayOfWeek + monthLength);
-            for (let day = 1; day <= remainingCells; day++) {
-                const date = new Date(year, month + 1, day);
-                grid.appendChild(createDayCell(day, date, true));
+            // Empty cells to complete last row
+            const totalCells = startingDayOfWeek + monthLength;
+            const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 0; i < remainingCells; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'day-cell empty-cell';
+                grid.appendChild(empty);
             }
         }
 
@@ -1228,12 +1236,11 @@
                 grid.appendChild(el);
             });
 
-            // Previous month days
-            const prevMonthLastDay = new Date(year, month, 0).getDate();
-            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-                const day = prevMonthLastDay - i;
-                const date = new Date(year, month - 1, day);
-                grid.appendChild(createMiniDay(day, date, true));
+            // Empty cells before month starts
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'mini-day empty';
+                grid.appendChild(empty);
             }
 
             // Current month days
