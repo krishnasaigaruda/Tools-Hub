@@ -6,6 +6,7 @@
     <title>Notebook - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -577,7 +578,7 @@
                 <i class="fas fa-file-pdf"></i> Export Page
             </button>
             <button class="header-btn" onclick="saveAllAsPDF()">
-                <i class="fas fa-file-pdf"></i> Export All
+                <i class="fas fa-file-zipper"></i> Export All
             </button>
         </div>
     </div>
@@ -965,14 +966,14 @@
                        value="${page.title}" oninput="autoSave()" placeholder="Page title">
                 <div class="page-date">${page.createdAt}</div>
                 <div class="toolbar">
-                    <button class="toolbar-btn" onclick="formatDoc('bold')"><i class="fas fa-bold"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('italic')"><i class="fas fa-italic"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('underline')"><i class="fas fa-underline"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('justifyCenter')"><i class="fas fa-align-center"></i></button>
-                    <button class="toolbar-btn" onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
+                    <button class="toolbar-btn" id="btn-bold" onclick="formatDoc('bold')"><i class="fas fa-bold"></i></button>
+                    <button class="toolbar-btn" id="btn-italic" onclick="formatDoc('italic')"><i class="fas fa-italic"></i></button>
+                    <button class="toolbar-btn" id="btn-underline" onclick="formatDoc('underline')"><i class="fas fa-underline"></i></button>
+                    <button class="toolbar-btn" id="btn-insertUnorderedList" onclick="formatDoc('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+                    <button class="toolbar-btn" id="btn-insertOrderedList" onclick="formatDoc('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+                    <button class="toolbar-btn" id="btn-justifyLeft" onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
+                    <button class="toolbar-btn" id="btn-justifyCenter" onclick="formatDoc('justifyCenter')"><i class="fas fa-align-center"></i></button>
+                    <button class="toolbar-btn" id="btn-justifyRight" onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
                 </div>
                 <div class="editor" contenteditable="true" id="pageEditor" oninput="autoSave()">${page.content}</div>
             `;
@@ -984,8 +985,24 @@
         function formatDoc(command) {
             document.execCommand(command, false, null);
             document.getElementById('pageEditor').focus();
+            updateToolbarState();
             autoSave();
         }
+
+        function updateToolbarState() {
+            const commands = ['bold', 'italic', 'underline', 'insertUnorderedList', 'insertOrderedList', 'justifyLeft', 'justifyCenter', 'justifyRight'];
+            commands.forEach(cmd => {
+                const btn = document.getElementById('btn-' + cmd);
+                if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+            });
+        }
+
+        document.addEventListener('selectionchange', () => {
+            const editor = document.getElementById('pageEditor');
+            if (editor && editor.contains(document.getSelection().anchorNode)) {
+                updateToolbarState();
+            }
+        });
 
         // Auto save
         function autoSave() {
@@ -1079,103 +1096,92 @@
                 saveCurrentPage();
             }
 
-            const notebook = notebooks.find(n => n.id === currentNotebookId);
-            if (!notebook) {
-                alert('Please select a notebook first');
-                return;
-            }
-
-            // Count total pages
+            // Count total pages across ALL notebooks
             let totalPages = 0;
-            notebook.sections.forEach(section => {
-                totalPages += section.pages.length;
+            notebooks.forEach(nb => {
+                nb.sections.forEach(section => {
+                    totalPages += section.pages.length;
+                });
             });
 
             if (totalPages === 0) {
-                alert('No pages to export in this notebook');
+                alert('No pages to export');
                 return;
             }
 
-            const name = prompt('Enter PDF name:', notebook.name);
-            if (!name) return;
-
-            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+            document.getElementById('saveStatus').textContent = `Exporting ${totalPages} pages as ZIP...`;
 
             const origBodyBg2 = document.body.style.background;
             document.body.style.background = '#ffffff';
 
-            // Create container with all pages from all sections
-            const content = document.createElement('div');
-            // Add each section and its pages
-            notebook.sections.forEach((section) => {
-                if (section.pages.length > 0) {
-                    // Add section header
-                    const sectionHeader = document.createElement('div');
-                    sectionHeader.style.cssText = `
-                        padding: 40px;
-                        background: #7c3aed;
-                        color: white;
-                        font-family: 'Segoe UI', sans-serif;
-                        min-height: 150px;
-                        box-sizing: border-box;
-                    `;
-                    sectionHeader.innerHTML = `
-                        <p style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">${notebook.name}</p>
-                        <h1 style="font-size: 36px; margin: 0;">${section.name}</h1>
-                        <p style="font-size: 14px; margin-top: 10px; opacity: 0.8;">${section.pages.length} page(s)</p>
-                    `;
-                    content.appendChild(sectionHeader);
+            const zip = new JSZip();
+            let exported = 0;
 
-                    // Add each page
-                    section.pages.forEach((page) => {
-                        const pageDiv = document.createElement('div');
-                        pageDiv.style.cssText = `
-                            padding: 40px;
-                            background: white;
-                            font-family: 'Segoe UI', sans-serif;
-                            box-sizing: border-box;
-                        `;
-                        pageDiv.innerHTML = `
-                            <p style="font-size: 12px; color: #7c3aed; margin-bottom: 5px;">${section.name}</p>
+            for (const nb of notebooks) {
+                const nbFolder = zip.folder(nb.name.replace(/[^a-zA-Z0-9 _-]/g, ''));
+
+                for (const section of nb.sections) {
+                    const secFolder = nbFolder.folder(section.name.replace(/[^a-zA-Z0-9 _-]/g, ''));
+
+                    for (const page of section.pages) {
+                        exported++;
+                        document.getElementById('saveStatus').textContent = `Generating PDF ${exported}/${totalPages}...`;
+
+                        const content = document.createElement('div');
+                        content.style.cssText = `background: white; font-family: 'Segoe UI', sans-serif;`;
+                        content.innerHTML = `
+                            <p style="font-size: 12px; color: #7c3aed; margin-bottom: 5px;">${nb.name} &rsaquo; ${section.name}</p>
                             <h1 style="margin-bottom: 10px; color: #333; font-size: 28px;">${page.title}</h1>
                             <p style="font-size: 12px; color: #999; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px;">${page.createdAt}</p>
                             <div style="font-size: 15px; line-height: 1.6; color: #333;">${page.content || '<em>No content</em>'}</div>
                         `;
-                        content.appendChild(pageDiv);
-                    });
+
+                        document.body.appendChild(content);
+                        await new Promise(r => setTimeout(r, 100));
+
+                        const opt = {
+                            margin: 10,
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+
+                        try {
+                            const pdfBlob = await html2pdf().set(opt).from(content).outputPdf('blob');
+                            let safeName = page.title.replace(/[^a-zA-Z0-9 _-]/g, '').substring(0, 50) || 'page';
+                            let fileName = safeName + '.pdf';
+                            let dupCount = 1;
+                            while (secFolder.file(fileName)) {
+                                dupCount++;
+                                fileName = safeName + ' (' + dupCount + ').pdf';
+                            }
+                            secFolder.file(fileName, pdfBlob);
+                        } catch (err) {
+                            console.error('Failed to export page:', page.title, err);
+                        }
+
+                        document.body.removeChild(content);
+                    }
                 }
-            });
+            }
 
-            document.body.appendChild(content);
-
-            // Wait for rendering
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            const opt = {
-                margin: 10,
-                filename: name + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            document.body.style.background = origBodyBg2;
 
             try {
-                await html2pdf().set(opt).from(content).save();
-                document.body.removeChild(content);
-                document.body.style.background = origBodyBg2;
-                document.getElementById('saveStatus').textContent = `Downloaded ${name}.pdf (${totalPages} pages)`;
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
+                document.getElementById('saveStatus').textContent = 'Creating ZIP file...';
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'All Notebooks.zip';
+                a.click();
+                URL.revokeObjectURL(url);
+                document.getElementById('saveStatus').textContent = `Exported ${totalPages} pages as ZIP`;
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
             } catch (error) {
-                console.error('PDF generation error:', error);
-                if (content && content.parentNode) {
-                    document.body.removeChild(content);
-                }
-                document.getElementById('saveStatus').textContent = 'PDF generation failed';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
+                console.error('ZIP generation error:', error);
+                document.getElementById('saveStatus').textContent = 'Export failed';
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
             }
         }
 
