@@ -635,7 +635,57 @@
         }
 
         .week-cell:hover {
-            background: #f9fafb;
+            background: #f0f4ff;
+        }
+
+        .week-cell.today {
+            background: #eff6ff;
+        }
+
+        .week-day-header.today {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .week-date {
+            font-size: 10px;
+            color: #999;
+        }
+
+        .week-event {
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .week-event.reminder {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .week-event.trip {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .week-event.absence {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .week-now-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ef4444;
+            z-index: 5;
+            pointer-events: none;
         }
 
         /* Notifications */
@@ -850,8 +900,12 @@
 
             <div class="modal-row" id="timeContainer">
                 <div>
-                    <label class="modal-label">Date & Time</label>
+                    <label class="modal-label">Start Time</label>
                     <input type="time" class="modal-input" id="eventStartTime">
+                </div>
+                <div>
+                    <label class="modal-label">End Time</label>
+                    <input type="time" class="modal-input" id="eventEndTime">
                 </div>
             </div>
 
@@ -1014,6 +1068,7 @@
             renderCalendar();
             renderMiniCalendar();
             renderUpcomingEvents();
+            if (currentView === 'week') renderWeekView();
             closeModal();
         }
 
@@ -1049,6 +1104,7 @@
                 renderCalendar();
                 renderMiniCalendar();
                 renderUpcomingEvents();
+                if (currentView === 'week') renderWeekView();
             }
         }
 
@@ -1286,29 +1342,80 @@
 
         // Render week view
         function renderWeekView() {
-            // Simplified week view
             const header = document.getElementById('weekHeader');
             const grid = document.getElementById('weekGrid');
+            const today = new Date();
+            const todayStr = formatDateForInput(today);
 
-            header.innerHTML = '<div></div>';
+            // Calculate week start (Sunday) based on currentDate
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+            // Build array of 7 dates for this week
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(d.getDate() + i);
+                weekDates.push(d);
+            }
+
+            // Render header with actual dates
             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            dayNames.forEach(day => {
+            header.innerHTML = '<div></div>';
+            weekDates.forEach((date, i) => {
                 const el = document.createElement('div');
-                el.className = 'week-day-header';
-                el.textContent = day;
+                const dateStr = formatDateForInput(date);
+                el.className = 'week-day-header' + (dateStr === todayStr ? ' today' : '');
+                el.innerHTML = `${dayNames[i]} <span class="week-date">${date.getMonth() + 1}/${date.getDate()}</span>`;
                 header.appendChild(el);
             });
 
+            // Render grid with events
             grid.innerHTML = '';
-            for (let hour = 0; hour < 24; hour++) {
+            for (let hour = 6; hour < 23; hour++) {
                 const timeSlot = document.createElement('div');
                 timeSlot.className = 'time-slot';
-                timeSlot.textContent = `${hour}:00`;
+                const h = hour % 12 || 12;
+                const ampm = hour < 12 ? 'AM' : 'PM';
+                timeSlot.textContent = `${h} ${ampm}`;
                 grid.appendChild(timeSlot);
 
                 for (let day = 0; day < 7; day++) {
                     const cell = document.createElement('div');
-                    cell.className = 'week-cell';
+                    const dateStr = formatDateForInput(weekDates[day]);
+                    cell.className = 'week-cell' + (dateStr === todayStr ? ' today' : '');
+
+                    // Find events for this date and hour
+                    const hourStr = String(hour).padStart(2, '0');
+                    const cellEvents = events.filter(ev => {
+                        // Check if event falls on this date
+                        if (ev.startDate > dateStr || (ev.endDate || ev.startDate) < dateStr) return false;
+                        // Check time match for timed events
+                        if (ev.startTime) {
+                            const evHour = parseInt(ev.startTime.split(':')[0]);
+                            return evHour === hour;
+                        }
+                        // All-day events show at 8 AM
+                        return hour === 8;
+                    });
+
+                    cellEvents.forEach(ev => {
+                        const evDiv = document.createElement('div');
+                        evDiv.className = 'week-event ' + (ev.type || 'reminder');
+                        evDiv.textContent = (ev.startTime ? ev.startTime + ' ' : '') + ev.title;
+                        evDiv.title = ev.title + (ev.description ? '\n' + ev.description : '');
+                        evDiv.onclick = (e) => { e.stopPropagation(); editEvent(ev.id); };
+                        cell.appendChild(evDiv);
+                    });
+
+                    // Click to create event at this time/date
+                    cell.onclick = () => {
+                        const clickDate = weekDates[day];
+                        openModal('reminder', clickDate);
+                        document.getElementById('eventStartTime').value = hourStr + ':00';
+                        document.getElementById('eventEndTime').value = String(hour + 1).padStart(2, '0') + ':00';
+                    };
+
                     grid.appendChild(cell);
                 }
             }
