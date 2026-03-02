@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Maker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background: #0d9488; color: white; padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .back-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+        .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .header-right { display: flex; gap: 8px; }
+        .header-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .header-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .main-container { flex: 1; overflow-y: auto; padding: 24px; }
+
+        /* Setup Screen */
+        .setup-screen { max-width: 600px; margin: 0 auto; }
+        .setup-card { background: #1e293b; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; border: 1px solid #334155; }
+        .setup-card h2 { font-size: 28px; color: #f1f5f9; margin-bottom: 8px; }
+        .setup-card p { color: #94a3b8; margin-bottom: 32px; font-size: 15px; }
+        .setup-card .icon-big { font-size: 64px; color: #14b8a6; margin-bottom: 20px; }
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 28px; text-align: left; }
+        .category-chip { padding: 10px 14px; border-radius: 10px; border: 2px solid #334155; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 8px; color: #94a3b8; }
+        .category-chip:hover { border-color: #14b8a6; color: #14b8a6; }
+        .category-chip.selected { border-color: #14b8a6; background: rgba(20,184,166,0.1); color: #14b8a6; }
+        .category-chip i { width: 16px; text-align: center; }
+        .count-selector { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 28px; }
+        .count-selector label { font-size: 15px; font-weight: 500; color: #cbd5e1; }
+        .count-input { width: 100px; padding: 10px 14px; border: 2px solid #334155; border-radius: 10px; font-size: 16px; text-align: center; outline: none; background: #0f172a; color: #e2e8f0; }
+        .count-input:focus { border-color: #14b8a6; }
+        .start-btn { background: #0d9488; color: white; border: none; padding: 14px 48px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .start-btn:hover { background: #0f766e; transform: translateY(-1px); }
+        .start-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; transform: none; }
+        .available-count { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+
+        /* Quiz Screen */
+        .quiz-screen { max-width: 700px; margin: 0 auto; display: none; }
+        .progress-bar-container { background: #1e293b; border-radius: 20px; height: 8px; margin-bottom: 20px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #0d9488, #14b8a6); border-radius: 20px; transition: width 0.4s ease; }
+        .quiz-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; color: #94a3b8; font-size: 14px; }
+        .quiz-info .score { font-weight: 600; color: #14b8a6; }
+        .question-card { background: #1e293b; border-radius: 16px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #334155; }
+        .question-number { font-size: 13px; color: #14b8a6; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .question-category { font-size: 12px; color: #94a3b8; margin-bottom: 12px; display: inline-block; background: #334155; padding: 3px 10px; border-radius: 20px; }
+        .question-text { font-size: 18px; font-weight: 600; color: #f1f5f9; margin-bottom: 24px; line-height: 1.5; }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { padding: 14px 18px; border: 2px solid #334155; border-radius: 12px; background: #0f172a; cursor: pointer; font-size: 15px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 12px; color: #e2e8f0; }
+        .option-btn:hover:not(.disabled):not(.selected) { border-color: #14b8a6; background: rgba(20,184,166,0.05); }
+        .option-btn .option-letter { width: 28px; height: 28px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; color: #94a3b8; flex-shrink: 0; }
+        .option-btn.selected { border-color: #14b8a6; background: rgba(20,184,166,0.1); }
+        .option-btn.selected .option-letter { background: #14b8a6; color: white; }
+        .option-btn.correct { border-color: #22c55e; background: rgba(34,197,94,0.1); }
+        .option-btn.correct .option-letter { background: #22c55e; color: white; }
+        .option-btn.wrong { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+        .option-btn.wrong .option-letter { background: #ef4444; color: white; }
+        .option-btn.disabled { cursor: default; opacity: 0.5; }
+        .option-btn.disabled.correct { opacity: 1; }
+        .option-btn.disabled.selected { opacity: 1; }
+        .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+        .confirm-btn { background: #0d9488; color: white; border: none; padding: 12px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: none; }
+        .confirm-btn:hover { background: #0f766e; }
+        .confirm-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+        .next-btn { background: #0d9488; color: white; border: none; padding: 12px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: none; }
+        .next-btn:hover { background: #0f766e; }
+
+        /* Results Screen */
+        .results-screen { max-width: 600px; margin: 0 auto; display: none; }
+        .results-card { background: #1e293b; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; border: 1px solid #334155; }
+        .results-card h2 { font-size: 28px; margin-bottom: 8px; color: #f1f5f9; }
+        .score-circle { width: 160px; height: 160px; border-radius: 50%; margin: 24px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 42px; font-weight: 700; color: white; }
+        .score-circle span { font-size: 14px; font-weight: 400; opacity: 0.9; }
+        .score-great { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .score-good { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .score-bad { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .results-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
+        .stat-box { padding: 16px; border-radius: 12px; background: #0f172a; border: 1px solid #334155; }
+        .stat-box .num { font-size: 24px; font-weight: 700; }
+        .stat-box .label { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .stat-correct .num { color: #22c55e; }
+        .stat-wrong .num { color: #ef4444; }
+        .stat-percent .num { color: #14b8a6; }
+        .results-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+        .results-actions button { padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .retry-btn { background: #0d9488; color: white; }
+        .retry-btn:hover { background: #0f766e; }
+        .new-btn { background: #334155; color: #e2e8f0; }
+        .new-btn:hover { background: #475569; }
+
+        /* Review Section */
+        .review-section { margin-top: 24px; text-align: left; }
+        .review-toggle { background: none; border: 2px solid #334155; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; color: #94a3b8; width: 100%; margin-bottom: 16px; }
+        .review-toggle:hover { border-color: #14b8a6; color: #14b8a6; }
+        .review-list { display: none; }
+        .review-list.show { display: block; }
+        .review-item { padding: 16px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid; }
+        .review-item.was-correct { background: rgba(34,197,94,0.08); border-color: #22c55e; }
+        .review-item.was-wrong { background: rgba(239,68,68,0.08); border-color: #ef4444; }
+        .review-item .ri-q { font-weight: 600; margin-bottom: 6px; font-size: 14px; color: #e2e8f0; }
+        .review-item .ri-a { font-size: 13px; color: #94a3b8; }
+        .review-item .ri-a strong { color: #22c55e; }
+        .review-item .ri-your { font-size: 13px; color: #ef4444; }
+
+        @media (max-width: 600px) {
+            .main-container { padding: 16px; }
+            .setup-card, .question-card, .results-card { padding: 24px; }
+            .question-text { font-size: 16px; }
+            .category-grid { grid-template-columns: repeat(2, 1fr); }
+            .results-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        }
+
+        /* Print Quiz Sheet */
+        .print-quiz-container { display: none; }
+
+        @media print {
+            body { background: white !important; color: black !important; }
+            .header, .setup-screen, .quiz-screen, .results-screen { display: none !important; }
+            .main-container { padding: 0 !important; overflow: visible !important; }
+            .print-quiz-container { display: block !important; padding: 20px; }
+            .print-quiz-container h1 { font-size: 22px; text-align: center; margin-bottom: 4px; color: black; }
+            .print-quiz-container .print-meta { text-align: center; font-size: 12px; color: #666; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            .print-q { margin-bottom: 18px; page-break-inside: avoid; }
+            .print-q .pq-text { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: black; }
+            .print-q .pq-options { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #333; }
+            .print-q .pq-opt { padding: 2px 0; display: flex; gap: 6px; }
+            .print-q .pq-opt .pq-letter { font-weight: 600; min-width: 16px; }
+            .print-q .pq-opt .pq-circle { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #333; border-radius: 50%; margin-right: 4px; flex-shrink: 0; margin-top: 2px; }
+            .print-answer-key { page-break-before: always; padding-top: 20px; }
+            .print-answer-key h2 { font-size: 18px; margin-bottom: 12px; text-align: center; color: black; border-bottom: 2px solid #333; padding-bottom: 8px; }
+            .print-answers-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px 12px; font-size: 12px; color: black; }
+            .print-answers-grid .pa-item { display: flex; gap: 4px; }
+            .print-answers-grid .pa-num { font-weight: 600; min-width: 28px; }
+            .print-name-line { margin: 16px 0; font-size: 14px; color: black; }
+            .print-name-line span { display: inline-block; border-bottom: 1px solid #333; width: 250px; margin-left: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i><span>Back</span></button>
+            <h1><i class="fas fa-question-circle"></i> Quiz Maker</h1>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" onclick="resetQuiz()"><i class="fas fa-redo"></i> New Quiz</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Setup -->
+        <div class="setup-screen" id="setupScreen">
+            <div class="setup-card">
+                <div class="icon-big"><i class="fas fa-brain"></i></div>
+                <h2>Quiz Maker</h2>
+                <p>Test your knowledge with randomized multiple choice questions!</p>
+
+                <div style="text-align:left;margin-bottom:8px;font-weight:600;font-size:14px;color:#f1f5f9;">Select Categories:</div>
+                <div class="category-grid" id="categoryGrid"></div>
+
+                <div class="available-count" id="availableCount">0 questions available</div>
+
+                <div class="count-selector">
+                    <label for="questionCount">Number of questions:</label>
+                    <input type="number" id="questionCount" class="count-input" min="10" max="1000" value="10">
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+                    <button class="start-btn" id="startBtn" onclick="startQuiz()" style="width:100%;max-width:300px;">Start Quiz</button>
+                    <button class="start-btn" id="printBtn" style="background:#334155;width:100%;max-width:300px;" onclick="printQuiz()"><i class="fas fa-print"></i> Print Quiz</button>
+                    <button class="start-btn" id="pdfBtn" style="background:#334155;width:100%;max-width:300px;" onclick="downloadPDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz -->
+        <div class="quiz-screen" id="quizScreen">
+            <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+            <div class="quiz-info">
+                <span id="questionCounter">Question 1 of 10</span>
+                <span class="score">Score: <span id="scoreDisplay">0</span></span>
+            </div>
+            <div class="question-card">
+                <div class="question-category" id="qCategory"></div>
+                <div class="question-number" id="qNumber">Question 1</div>
+                <div class="question-text" id="qText"></div>
+                <div class="options" id="optionsContainer"></div>
+                <div class="quiz-actions">
+                    <button class="confirm-btn" id="confirmBtn" onclick="confirmAnswer()"><i class="fas fa-check"></i> Confirm</button>
+                    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-screen" id="resultsScreen">
+            <div class="results-card">
+                <h2>Quiz Complete!</h2>
+                <div class="score-circle" id="scoreCircle">
+                    <div id="scorePct">0%</div>
+                    <span id="scoreLabel">0 / 0</span>
+                </div>
+                <div class="results-stats">
+                    <div class="stat-box stat-correct"><div class="num" id="rCorrect">0</div><div class="label">Correct</div></div>
+                    <div class="stat-box stat-wrong"><div class="num" id="rWrong">0</div><div class="label">Wrong</div></div>
+                    <div class="stat-box stat-percent"><div class="num" id="rPercent">0%</div><div class="label">Score</div></div>
+                </div>
+                <div class="results-actions">
+                    <button class="retry-btn" onclick="retryQuiz()"><i class="fas fa-redo"></i> Retry Same</button>
+                    <button class="new-btn" onclick="resetQuiz()"><i class="fas fa-plus"></i> New Quiz</button>
+                </div>
+                <div class="review-section">
+                    <button class="review-toggle" onclick="toggleReview()"><i class="fas fa-list"></i> Review Answers</button>
+                    <div class="review-list" id="reviewList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print/PDF Container (hidden on screen) -->
+        <div class="print-quiz-container" id="printContainer"></div>
+    </div>
+
+<script>
+function goBack() { window.location.href = '../Tools.html'; }
+
+// ============== QUESTION BANK ==============
+const allQuestions = [
+// SCIENCE (200)
+{c:"Science",q:"What is the chemical symbol for gold?",o:["Au","Ag","Fe","Cu"],a:0},
+{c:"Science",q:"What planet is known as the Red Planet?",o:["Venus","Mars","Jupiter","Saturn"],a:1},
+{c:"Science",q:"What is the hardest natural substance on Earth?",o:["Iron","Platinum","Diamond","Titanium"],a:2},
+{c:"Science",q:"What gas do plants absorb from the atmosphere?",o:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"],a:2},
+{c:"Science",q:"How many bones are in the adult human body?",o:["186","206","226","246"],a:1},
+{c:"Science",q:"What is the speed of light in km/s (approx)?",o:["150,000","300,000","450,000","600,000"],a:1},
+{c:"Science",q:"What is the largest organ in the human body?",o:["Liver","Brain","Skin","Heart"],a:2},
+{c:"Science",q:"What element does 'O' represent on the periodic table?",o:["Osmium","Oganesson","Oxygen","Gold"],a:2},
+{c:"Science",q:"What is the powerhouse of the cell?",o:["Nucleus","Ribosome","Mitochondria","Golgi Body"],a:2},
+{c:"Science",q:"What force keeps us on the ground?",o:["Magnetism","Friction","Gravity","Inertia"],a:2},
+{c:"Science",q:"What is the boiling point of water in Celsius?",o:["90","95","100","110"],a:2},
+{c:"Science",q:"What type of animal is a frog?",o:["Reptile","Mammal","Amphibian","Fish"],a:2},
+{c:"Science",q:"What is the chemical formula for water?",o:["H2O","CO2","NaCl","O2"],a:0},
+{c:"Science",q:"Which planet is the largest in our solar system?",o:["Saturn","Neptune","Jupiter","Uranus"],a:2},
+{c:"Science",q:"What is the smallest unit of life?",o:["Atom","Molecule","Cell","Organ"],a:2},
+{c:"Science",q:"What part of the plant conducts photosynthesis?",o:["Root","Stem","Leaf","Flower"],a:2},
+{c:"Science",q:"What is the atomic number of carbon?",o:["4","6","8","12"],a:1},
+{c:"Science",q:"What is the nearest star to Earth?",o:["Alpha Centauri","Sirius","The Sun","Betelgeuse"],a:2},
+{c:"Science",q:"Which blood type is the universal donor?",o:["A","B","AB","O negative"],a:3},
+{c:"Science",q:"What is the pH of pure water?",o:["5","6","7","8"],a:2},
+{c:"Science",q:"What vitamin is produced when skin is exposed to sunlight?",o:["Vitamin A","Vitamin B","Vitamin C","Vitamin D"],a:3},
+{c:"Science",q:"What is the most abundant gas in Earth's atmosphere?",o:["Oxygen","Carbon Dioxide","Nitrogen","Argon"],a:2},
+{c:"Science",q:"How many chambers does the human heart have?",o:["2","3","4","5"],a:2},
+{c:"Science",q:"What is the study of fungi called?",o:["Botany","Mycology","Zoology","Virology"],a:1},
+{c:"Science",q:"What particle has a positive charge?",o:["Electron","Neutron","Proton","Photon"],a:2},
+{c:"Science",q:"What is the largest mammal?",o:["African Elephant","Blue Whale","Giraffe","Hippopotamus"],a:1},
+{c:"Science",q:"What is the freezing point of water in Fahrenheit?",o:["0","16","32","40"],a:2},
+{c:"Science",q:"What process converts sugar into energy in cells?",o:["Photosynthesis","Osmosis","Cellular Respiration","Fermentation"],a:2},
+{c:"Science",q:"Which planet has the most moons?",o:["Jupiter","Saturn","Uranus","Neptune"],a:1},
+{c:"Science",q:"What is the chemical symbol for sodium?",o:["So","Sd","Na","No"],a:2},
+{c:"Science",q:"What organ produces insulin?",o:["Liver","Kidney","Pancreas","Stomach"],a:2},
+{c:"Science",q:"What type of rock is formed by volcanic activity?",o:["Sedimentary","Metamorphic","Igneous","Limestone"],a:2},
+{c:"Science",q:"What is the main component of the Sun?",o:["Helium","Oxygen","Hydrogen","Carbon"],a:2},
+{c:"Science",q:"How many teeth does an adult human have?",o:["28","30","32","34"],a:2},
+{c:"Science",q:"What is the scientific name for the study of weather?",o:["Geology","Meteorology","Astronomy","Ecology"],a:1},
+{c:"Science",q:"What metal is liquid at room temperature?",o:["Lead","Tin","Mercury","Aluminum"],a:2},
+{c:"Science",q:"What is the largest bone in the human body?",o:["Tibia","Humerus","Femur","Pelvis"],a:2},
+{c:"Science",q:"What causes tides on Earth?",o:["Wind","Earth's rotation","Moon's gravity","Sun's heat"],a:2},
+{c:"Science",q:"What is the chemical symbol for iron?",o:["Ir","In","Io","Fe"],a:3},
+{c:"Science",q:"How many planets are in our solar system?",o:["7","8","9","10"],a:1},
+{c:"Science",q:"What is absolute zero in Celsius?",o:["-100","-173","-273","-373"],a:2},
+{c:"Science",q:"What connects muscles to bones?",o:["Ligaments","Cartilage","Tendons","Nerves"],a:2},
+{c:"Science",q:"What is the most common element in the universe?",o:["Oxygen","Carbon","Helium","Hydrogen"],a:3},
+{c:"Science",q:"Which vitamin helps blood clotting?",o:["Vitamin A","Vitamin C","Vitamin D","Vitamin K"],a:3},
+{c:"Science",q:"What is the study of earthquakes called?",o:["Seismology","Volcanology","Geology","Tectonics"],a:0},
+{c:"Science",q:"What type of wave is sound?",o:["Transverse","Electromagnetic","Longitudinal","Surface"],a:2},
+{c:"Science",q:"What is the smallest planet in our solar system?",o:["Mars","Venus","Mercury","Pluto"],a:2},
+{c:"Science",q:"What structure carries genetic information?",o:["RNA","Protein","DNA","Lipid"],a:2},
+{c:"Science",q:"What is the speed of sound in air (approx m/s)?",o:["143","243","343","443"],a:2},
+{c:"Science",q:"What is the main gas in a neon sign?",o:["Argon","Helium","Neon","Xenon"],a:2},
+{c:"Science",q:"What part of the brain controls balance?",o:["Cerebrum","Cerebellum","Brainstem","Hypothalamus"],a:1},
+{c:"Science",q:"What is the chemical formula for table salt?",o:["KCl","NaCl","CaCl2","MgCl2"],a:1},
+{c:"Science",q:"How long does it take light to reach Earth from the Sun?",o:["4 minutes","6 minutes","8 minutes","12 minutes"],a:2},
+{c:"Science",q:"What is the densest planet in our solar system?",o:["Jupiter","Mars","Earth","Mercury"],a:2},
+{c:"Science",q:"What causes a rainbow?",o:["Reflection only","Refraction of light","Radiation","Diffusion"],a:1},
+{c:"Science",q:"What is the smallest bone in the human body?",o:["Stapes","Incus","Malleus","Hyoid"],a:0},
+{c:"Science",q:"What organelle stores water in plant cells?",o:["Chloroplast","Nucleus","Vacuole","Ribosome"],a:2},
+{c:"Science",q:"What is the half-life of Carbon-14 (approx years)?",o:["1,730","3,730","5,730","7,730"],a:2},
+{c:"Science",q:"What is the most abundant mineral in the human body?",o:["Iron","Potassium","Sodium","Calcium"],a:3},
+{c:"Science",q:"What is the SI unit of force?",o:["Joule","Watt","Newton","Pascal"],a:2},
+{c:"Science",q:"What planet rotates on its side?",o:["Neptune","Saturn","Uranus","Pluto"],a:2},
+{c:"Science",q:"What is the function of white blood cells?",o:["Carry oxygen","Fight infection","Clot blood","Transport nutrients"],a:1},
+{c:"Science",q:"What element has the atomic number 1?",o:["Helium","Lithium","Hydrogen","Carbon"],a:2},
+{c:"Science",q:"What is the largest desert on Earth?",o:["Sahara","Gobi","Arabian","Antarctic"],a:3},
+{c:"Science",q:"What is the study of insects called?",o:["Ornithology","Entomology","Herpetology","Ichthyology"],a:1},
+{c:"Science",q:"What type of lens converges light?",o:["Concave","Convex","Flat","Cylindrical"],a:1},
+{c:"Science",q:"What is the main function of the large intestine?",o:["Digest food","Absorb water","Produce bile","Filter blood"],a:1},
+{c:"Science",q:"What is the chemical symbol for potassium?",o:["Po","Pt","P","K"],a:3},
+{c:"Science",q:"What phenomenon causes the Northern Lights?",o:["Meteor showers","Solar wind particles","Moonlight refraction","Volcanic gases"],a:1},
+{c:"Science",q:"How many pairs of chromosomes do humans have?",o:["21","22","23","24"],a:2},
+{c:"Science",q:"What is the unit of electrical resistance?",o:["Volt","Ampere","Ohm","Watt"],a:2},
+{c:"Science",q:"What planet has the Great Red Spot?",o:["Mars","Saturn","Jupiter","Neptune"],a:2},
+{c:"Science",q:"What is the process of a liquid turning to gas?",o:["Condensation","Evaporation","Sublimation","Deposition"],a:1},
+{c:"Science",q:"What is the strongest muscle in the human body?",o:["Bicep","Quadricep","Heart","Masseter (jaw)"],a:3},
+{c:"Science",q:"What causes an eclipse of the Sun?",o:["Earth blocks Sun","Moon blocks Sun","Venus blocks Sun","Cloud cover"],a:1},
+{c:"Science",q:"What is the atomic mass of hydrogen?",o:["0.5","1","1.5","2"],a:1},
+{c:"Science",q:"What planet is known for its rings?",o:["Jupiter","Uranus","Neptune","Saturn"],a:3},
+{c:"Science",q:"What organ filters blood in the body?",o:["Heart","Liver","Kidney","Spleen"],a:2},
+{c:"Science",q:"What is the study of stars and space called?",o:["Astrology","Astronomy","Cosmology","Astrophysics"],a:1},
+{c:"Science",q:"What is the main function of red blood cells?",o:["Fight disease","Carry oxygen","Clot wounds","Produce antibodies"],a:1},
+{c:"Science",q:"What subatomic particle has no charge?",o:["Proton","Electron","Neutron","Positron"],a:2},
+{c:"Science",q:"What layer of Earth's atmosphere do we live in?",o:["Stratosphere","Mesosphere","Troposphere","Thermosphere"],a:2},
+{c:"Science",q:"What is the chemical symbol for silver?",o:["Si","Sr","Sv","Ag"],a:3},
+{c:"Science",q:"What hormone regulates blood sugar?",o:["Adrenaline","Cortisol","Insulin","Thyroxine"],a:2},
+{c:"Science",q:"What is the approximate age of the Earth?",o:["2.5 billion years","3.5 billion years","4.5 billion years","5.5 billion years"],a:2},
+{c:"Science",q:"What is the name of the galaxy we live in?",o:["Andromeda","Milky Way","Triangulum","Whirlpool"],a:1},
+{c:"Science",q:"What causes rust on iron?",o:["Heat","Water alone","Oxidation","Acid"],a:2},
+{c:"Science",q:"What is the basic unit of heredity?",o:["Chromosome","Gene","Cell","DNA strand"],a:1},
+{c:"Science",q:"What is the SI unit of energy?",o:["Newton","Watt","Joule","Calorie"],a:2},
+{c:"Science",q:"What tissue connects bone to bone?",o:["Tendon","Muscle","Ligament","Cartilage"],a:2},
+{c:"Science",q:"What is the most conductive metal?",o:["Gold","Copper","Silver","Aluminum"],a:2},
+{c:"Science",q:"Which organ produces bile?",o:["Stomach","Pancreas","Gallbladder","Liver"],a:3},
+{c:"Science",q:"What is the largest species of shark?",o:["Great White","Hammerhead","Whale Shark","Tiger Shark"],a:2},
+{c:"Science",q:"What is the chemical symbol for lead?",o:["Le","Ld","Pb","Pl"],a:2},
+{c:"Science",q:"What type of energy does the Sun primarily emit?",o:["Kinetic","Chemical","Nuclear","Radiant"],a:3},
+{c:"Science",q:"How many lungs does a human have?",o:["1","2","3","4"],a:1},
+{c:"Science",q:"What is the process by which cells divide?",o:["Osmosis","Mitosis","Diffusion","Symbiosis"],a:1},
+{c:"Science",q:"What is the thinnest layer of Earth?",o:["Mantle","Core","Crust","Asthenosphere"],a:2},
+{c:"Science",q:"What planet is closest to the Sun?",o:["Venus","Earth","Mars","Mercury"],a:3},
+{c:"Science",q:"What is Newton's first law about?",o:["Force equals mass times acceleration","Every action has a reaction","Objects in motion stay in motion","Energy is conserved"],a:2},
+{c:"Science",q:"What vitamin prevents scurvy?",o:["Vitamin A","Vitamin B","Vitamin C","Vitamin D"],a:2},
+
+// HISTORY (160)
+{c:"History",q:"In what year did World War II end?",o:["1943","1944","1945","1946"],a:2},
+{c:"History",q:"Who was the first President of the United States?",o:["John Adams","Thomas Jefferson","George Washington","Benjamin Franklin"],a:2},
+{c:"History",q:"What ancient civilization built the pyramids?",o:["Roman","Greek","Egyptian","Mesopotamian"],a:2},
+{c:"History",q:"In what year did the Titanic sink?",o:["1910","1912","1914","1916"],a:1},
+{c:"History",q:"Who discovered America in 1492?",o:["Vasco da Gama","Ferdinand Magellan","Christopher Columbus","Amerigo Vespucci"],a:2},
+{c:"History",q:"What wall divided Berlin from 1961 to 1989?",o:["Great Wall","Iron Curtain","Berlin Wall","Hadrian's Wall"],a:2},
+{c:"History",q:"Who was the first person to walk on the Moon?",o:["Buzz Aldrin","Neil Armstrong","Yuri Gagarin","John Glenn"],a:1},
+{c:"History",q:"What year did World War I begin?",o:["1912","1914","1916","1918"],a:1},
+{c:"History",q:"Which empire was ruled by Caesar?",o:["Greek","Persian","Roman","Ottoman"],a:2},
+{c:"History",q:"Who wrote the Declaration of Independence?",o:["George Washington","Benjamin Franklin","Thomas Jefferson","John Adams"],a:2},
+{c:"History",q:"In what year did the French Revolution begin?",o:["1776","1789","1799","1804"],a:1},
+{c:"History",q:"What ship brought the Pilgrims to America?",o:["Santa Maria","Mayflower","Endeavour","Victoria"],a:1},
+{c:"History",q:"Who was the British Prime Minister during most of WWII?",o:["Neville Chamberlain","Winston Churchill","Clement Attlee","Anthony Eden"],a:1},
+{c:"History",q:"What ancient wonder was located in Alexandria?",o:["Hanging Gardens","Colossus","Lighthouse","Temple of Artemis"],a:2},
+{c:"History",q:"Who invented the printing press?",o:["Thomas Edison","Johannes Gutenberg","Benjamin Franklin","Leonardo da Vinci"],a:1},
+{c:"History",q:"What year did the American Civil War start?",o:["1855","1858","1861","1864"],a:2},
+{c:"History",q:"Who was known as the Iron Lady?",o:["Queen Victoria","Margaret Thatcher","Indira Gandhi","Angela Merkel"],a:1},
+{c:"History",q:"What country was formerly known as Persia?",o:["Iraq","Turkey","Iran","Afghanistan"],a:2},
+{c:"History",q:"In what year was the Magna Carta signed?",o:["1066","1215","1492","1776"],a:1},
+{c:"History",q:"Who painted the Mona Lisa?",o:["Michelangelo","Raphael","Leonardo da Vinci","Donatello"],a:2},
+{c:"History",q:"What event started World War I?",o:["Invasion of Poland","Sinking of Lusitania","Assassination of Archduke Franz Ferdinand","Treaty of Versailles"],a:2},
+{c:"History",q:"Who was the first Emperor of China?",o:["Kublai Khan","Qin Shi Huang","Confucius","Sun Tzu"],a:1},
+{c:"History",q:"What year did India gain independence?",o:["1945","1947","1949","1950"],a:1},
+{c:"History",q:"Who led the Soviet Union during WWII?",o:["Lenin","Trotsky","Stalin","Khrushchev"],a:2},
+{c:"History",q:"What civilization invented democracy?",o:["Roman","Egyptian","Greek","Persian"],a:2},
+{c:"History",q:"In what year did apartheid end in South Africa?",o:["1990","1991","1993","1994"],a:3},
+{c:"History",q:"Who was the leader of Nazi Germany?",o:["Mussolini","Hitler","Franco","Stalin"],a:1},
+{c:"History",q:"What was the longest war in history?",o:["Hundred Years' War","Thirty Years' War","Reconquista","Seven Years' War"],a:2},
+{c:"History",q:"Who was the first woman to fly solo across the Atlantic?",o:["Amelia Earhart","Bessie Coleman","Harriet Quimby","Jacqueline Cochran"],a:0},
+{c:"History",q:"What year was the United Nations founded?",o:["1942","1945","1948","1950"],a:1},
+{c:"History",q:"What ancient city was buried by Mount Vesuvius?",o:["Rome","Athens","Pompeii","Carthage"],a:2},
+{c:"History",q:"Who was the last Pharaoh of Egypt?",o:["Nefertiti","Hatshepsut","Cleopatra","Tutankhamun"],a:2},
+{c:"History",q:"What year did the Cold War end?",o:["1985","1989","1991","1993"],a:2},
+{c:"History",q:"Who led the Indian independence movement with nonviolence?",o:["Jawaharlal Nehru","Subhas Chandra Bose","Mahatma Gandhi","B.R. Ambedkar"],a:2},
+{c:"History",q:"What year did man first land on the Moon?",o:["1965","1967","1969","1971"],a:2},
+{c:"History",q:"What treaty ended World War I?",o:["Treaty of Paris","Treaty of Versailles","Treaty of Ghent","Treaty of Vienna"],a:1},
+{c:"History",q:"Who was the first female Prime Minister of the UK?",o:["Theresa May","Margaret Thatcher","Queen Victoria","Elizabeth I"],a:1},
+{c:"History",q:"What empire did Genghis Khan found?",o:["Ottoman","Persian","Mongol","Roman"],a:2},
+{c:"History",q:"In what year did the Boston Tea Party occur?",o:["1770","1773","1776","1780"],a:1},
+{c:"History",q:"Who was the 16th President of the United States?",o:["Andrew Johnson","Ulysses Grant","Abraham Lincoln","James Buchanan"],a:2},
+{c:"History",q:"What country was the birthplace of the Renaissance?",o:["France","Spain","Italy","England"],a:2},
+{c:"History",q:"What year did the Korean War begin?",o:["1948","1950","1952","1954"],a:1},
+{c:"History",q:"Who was Alexander the Great's teacher?",o:["Socrates","Plato","Aristotle","Pythagoras"],a:2},
+{c:"History",q:"What civilization built Machu Picchu?",o:["Maya","Aztec","Inca","Olmec"],a:2},
+{c:"History",q:"In what year did Columbus first reach the Americas?",o:["1490","1492","1494","1496"],a:1},
+{c:"History",q:"What dynasty built the Great Wall of China?",o:["Han","Ming","Qin","Tang"],a:2},
+{c:"History",q:"Who was the first human in space?",o:["Neil Armstrong","John Glenn","Yuri Gagarin","Alan Shepard"],a:2},
+{c:"History",q:"What year did the Berlin Wall fall?",o:["1987","1988","1989","1990"],a:2},
+{c:"History",q:"Who led the Reformation in 1517?",o:["John Calvin","Henry VIII","Martin Luther","Erasmus"],a:2},
+{c:"History",q:"What war was fought between the North and South US states?",o:["Revolutionary War","War of 1812","Civil War","Mexican-American War"],a:2},
+{c:"History",q:"What year was the atomic bomb dropped on Hiroshima?",o:["1943","1944","1945","1946"],a:2},
+{c:"History",q:"Who conquered England in 1066?",o:["Julius Caesar","William the Conqueror","Charlemagne","Viking Danes"],a:1},
+{c:"History",q:"What ancient civilization created cuneiform writing?",o:["Egyptian","Sumerian","Chinese","Indus Valley"],a:1},
+{c:"History",q:"Who was the first African American President of the US?",o:["Colin Powell","Barack Obama","Condoleezza Rice","Martin Luther King Jr."],a:1},
+{c:"History",q:"What year did the USSR dissolve?",o:["1989","1990","1991","1992"],a:2},
+{c:"History",q:"What was the largest empire in history by land area?",o:["Roman Empire","Mongol Empire","British Empire","Ottoman Empire"],a:2},
+{c:"History",q:"Who invented the telephone?",o:["Thomas Edison","Nikola Tesla","Alexander Graham Bell","Guglielmo Marconi"],a:2},
+{c:"History",q:"What year did the Vietnam War end?",o:["1973","1975","1977","1979"],a:1},
+{c:"History",q:"What was the code name for the D-Day invasion?",o:["Operation Barbarossa","Operation Overlord","Operation Market Garden","Operation Torch"],a:1},
+{c:"History",q:"Who founded the Mongol Empire?",o:["Kublai Khan","Timur","Genghis Khan","Attila"],a:2},
+{c:"History",q:"What year did the Great Fire of London occur?",o:["1656","1666","1676","1686"],a:1},
+{c:"History",q:"Who was the first ruler of the Roman Empire?",o:["Julius Caesar","Nero","Augustus","Caligula"],a:2},
+{c:"History",q:"What ancient trade route connected China to the West?",o:["Spice Route","Amber Road","Silk Road","Incense Route"],a:2},
+{c:"History",q:"What year did the Spanish Armada fail?",o:["1568","1578","1588","1598"],a:2},
+{c:"History",q:"Who was the Sun King of France?",o:["Louis XIV","Louis XVI","Napoleon","Charlemagne"],a:0},
+{c:"History",q:"What event triggered the US entry into WWII?",o:["Sinking of Lusitania","D-Day","Pearl Harbor attack","Battle of Britain"],a:2},
+{c:"History",q:"What civilization is known for the Parthenon?",o:["Roman","Egyptian","Greek","Persian"],a:2},
+{c:"History",q:"Who wrote 'The Communist Manifesto'?",o:["Lenin","Engels alone","Karl Marx and Friedrich Engels","Stalin"],a:2},
+{c:"History",q:"What year did the Great Depression begin?",o:["1927","1929","1931","1933"],a:1},
+{c:"History",q:"What empire controlled most of the Middle East by 1500?",o:["Roman","Byzantine","Mongol","Ottoman"],a:3},
+
+// GEOGRAPHY (160)
+{c:"Geography",q:"What is the largest continent?",o:["Africa","North America","Europe","Asia"],a:3},
+{c:"Geography",q:"What is the longest river in the world?",o:["Amazon","Mississippi","Yangtze","Nile"],a:3},
+{c:"Geography",q:"What is the smallest country in the world?",o:["Monaco","San Marino","Vatican City","Liechtenstein"],a:2},
+{c:"Geography",q:"What ocean is the largest?",o:["Atlantic","Indian","Arctic","Pacific"],a:3},
+{c:"Geography",q:"What is the capital of Australia?",o:["Sydney","Melbourne","Canberra","Brisbane"],a:2},
+{c:"Geography",q:"What mountain is the tallest in the world?",o:["K2","Kangchenjunga","Mount Everest","Lhotse"],a:2},
+{c:"Geography",q:"What country has the most people?",o:["USA","India","China","Indonesia"],a:1},
+{c:"Geography",q:"What is the driest continent?",o:["Africa","Australia","Asia","Antarctica"],a:3},
+{c:"Geography",q:"What river runs through Paris?",o:["Rhine","Thames","Seine","Danube"],a:2},
+{c:"Geography",q:"How many continents are there?",o:["5","6","7","8"],a:2},
+{c:"Geography",q:"What is the capital of Japan?",o:["Osaka","Kyoto","Tokyo","Nagoya"],a:2},
+{c:"Geography",q:"What is the largest island in the world?",o:["Borneo","Madagascar","Greenland","New Guinea"],a:2},
+{c:"Geography",q:"What country is shaped like a boot?",o:["Greece","Spain","Portugal","Italy"],a:3},
+{c:"Geography",q:"What is the deepest ocean trench?",o:["Tonga Trench","Philippine Trench","Mariana Trench","Java Trench"],a:2},
+{c:"Geography",q:"What desert is the largest hot desert?",o:["Gobi","Arabian","Kalahari","Sahara"],a:3},
+{c:"Geography",q:"What is the capital of Brazil?",o:["Rio de Janeiro","Sao Paulo","Brasilia","Salvador"],a:2},
+{c:"Geography",q:"What country has the most islands?",o:["Indonesia","Philippines","Japan","Sweden"],a:3},
+{c:"Geography",q:"What is the longest mountain range?",o:["Himalayas","Rocky Mountains","Andes","Alps"],a:2},
+{c:"Geography",q:"What is the capital of Canada?",o:["Toronto","Vancouver","Montreal","Ottawa"],a:3},
+{c:"Geography",q:"What sea is the saltiest?",o:["Red Sea","Mediterranean","Dead Sea","Caspian Sea"],a:2},
+{c:"Geography",q:"What African country has the largest population?",o:["South Africa","Ethiopia","Egypt","Nigeria"],a:3},
+{c:"Geography",q:"What is the capital of Egypt?",o:["Alexandria","Cairo","Luxor","Giza"],a:1},
+{c:"Geography",q:"What is the largest lake in Africa?",o:["Lake Chad","Lake Tanganyika","Lake Malawi","Lake Victoria"],a:3},
+{c:"Geography",q:"What European country is the largest by area?",o:["France","Germany","Ukraine","Russia"],a:3},
+{c:"Geography",q:"What is the capital of South Korea?",o:["Busan","Incheon","Seoul","Daegu"],a:2},
+{c:"Geography",q:"What is the tallest waterfall in the world?",o:["Niagara Falls","Victoria Falls","Angel Falls","Iguazu Falls"],a:2},
+{c:"Geography",q:"What country is known as the Land of the Rising Sun?",o:["China","Thailand","Japan","Vietnam"],a:2},
+{c:"Geography",q:"What strait separates Europe from Africa?",o:["Strait of Hormuz","Strait of Malacca","Strait of Gibraltar","Bosphorus"],a:2},
+{c:"Geography",q:"What is the capital of India?",o:["Mumbai","Kolkata","New Delhi","Chennai"],a:2},
+{c:"Geography",q:"What is the largest country by area?",o:["Canada","China","USA","Russia"],a:3},
+{c:"Geography",q:"What river is the longest in Europe?",o:["Danube","Rhine","Volga","Thames"],a:2},
+{c:"Geography",q:"What is the capital of Germany?",o:["Munich","Frankfurt","Hamburg","Berlin"],a:3},
+{c:"Geography",q:"What is the highest capital city in the world?",o:["Bogota","Quito","La Paz","Kathmandu"],a:2},
+{c:"Geography",q:"What ocean lies between Africa and Australia?",o:["Pacific","Atlantic","Arctic","Indian"],a:3},
+{c:"Geography",q:"What is the capital of Turkey?",o:["Istanbul","Ankara","Izmir","Antalya"],a:1},
+{c:"Geography",q:"What US state is the largest by area?",o:["Texas","California","Montana","Alaska"],a:3},
+{c:"Geography",q:"What is the smallest ocean?",o:["Indian","Southern","Arctic","Atlantic"],a:2},
+{c:"Geography",q:"What country has the longest coastline?",o:["Australia","Indonesia","Russia","Canada"],a:3},
+{c:"Geography",q:"What is the capital of Argentina?",o:["Cordoba","Mendoza","Rosario","Buenos Aires"],a:3},
+{c:"Geography",q:"What mountain range separates Europe from Asia?",o:["Alps","Caucasus","Himalayas","Ural Mountains"],a:3},
+{c:"Geography",q:"What is the capital of Thailand?",o:["Chiang Mai","Phuket","Bangkok","Pattaya"],a:2},
+{c:"Geography",q:"What river runs through London?",o:["Seine","Danube","Rhine","Thames"],a:3},
+{c:"Geography",q:"What is the capital of Mexico?",o:["Guadalajara","Monterrey","Cancun","Mexico City"],a:3},
+{c:"Geography",q:"What is the driest place on Earth?",o:["Sahara Desert","Death Valley","Atacama Desert","Arabian Desert"],a:2},
+{c:"Geography",q:"What is the largest freshwater lake by area?",o:["Lake Michigan","Lake Baikal","Caspian Sea","Lake Superior"],a:3},
+{c:"Geography",q:"What is the capital of Nigeria?",o:["Lagos","Abuja","Kano","Ibadan"],a:1},
+{c:"Geography",q:"What country is both in Europe and Asia?",o:["Russia","Egypt","Turkey","Georgia"],a:2},
+{c:"Geography",q:"What is the wettest place on Earth?",o:["Amazon Rainforest","Mawsynram, India","Borneo Rainforest","Colombia"],a:1},
+{c:"Geography",q:"What is the capital of Russia?",o:["St. Petersburg","Moscow","Novosibirsk","Kazan"],a:1},
+{c:"Geography",q:"What is the deepest lake in the world?",o:["Lake Superior","Lake Tanganyika","Lake Baikal","Caspian Sea"],a:2},
+{c:"Geography",q:"What is the capital of Spain?",o:["Barcelona","Seville","Madrid","Valencia"],a:2},
+{c:"Geography",q:"What is the largest river by volume?",o:["Nile","Mississippi","Congo","Amazon"],a:3},
+{c:"Geography",q:"What is the capital of Kenya?",o:["Mombasa","Kisumu","Nairobi","Nakuru"],a:2},
+{c:"Geography",q:"What two countries share the longest border?",o:["USA-Mexico","Russia-China","USA-Canada","Brazil-Argentina"],a:2},
+{c:"Geography",q:"What is the capital of Italy?",o:["Milan","Venice","Florence","Rome"],a:3},
+{c:"Geography",q:"What is the most populated city in the world?",o:["Delhi","Shanghai","Tokyo","Sao Paulo"],a:2},
+{c:"Geography",q:"What island nation is south of India?",o:["Maldives","Sri Lanka","Indonesia","Madagascar"],a:1},
+{c:"Geography",q:"What is the capital of Poland?",o:["Krakow","Gdansk","Wroclaw","Warsaw"],a:3},
+{c:"Geography",q:"What continent is the Amazon Rainforest on?",o:["Africa","Asia","North America","South America"],a:3},
+{c:"Geography",q:"What is the capital of Greece?",o:["Thessaloniki","Sparta","Crete","Athens"],a:3},
+{c:"Geography",q:"What is the Ring of Fire?",o:["A desert belt","A volcanic zone around the Pacific","A coral reef","An asteroid belt"],a:1},
+{c:"Geography",q:"What is the capital of Sweden?",o:["Gothenburg","Malmo","Uppsala","Stockholm"],a:3},
+{c:"Geography",q:"What is the longest river in Asia?",o:["Mekong","Ganges","Yangtze","Yellow River"],a:2},
+{c:"Geography",q:"What is the capital of Peru?",o:["Cusco","Arequipa","Lima","Trujillo"],a:2},
+{c:"Geography",q:"What is the flattest continent?",o:["Europe","Africa","South America","Australia"],a:3},
+
+// MATH (120)
+{c:"Math",q:"What is the value of Pi to two decimal places?",o:["3.12","3.14","3.16","3.18"],a:1},
+{c:"Math",q:"What is the square root of 144?",o:["10","11","12","13"],a:2},
+{c:"Math",q:"What is 15% of 200?",o:["20","25","30","35"],a:2},
+{c:"Math",q:"What is the next prime number after 7?",o:["8","9","10","11"],a:3},
+{c:"Math",q:"How many sides does a hexagon have?",o:["5","6","7","8"],a:1},
+{c:"Math",q:"What is 8 x 7?",o:["54","56","58","63"],a:1},
+{c:"Math",q:"What is 2 to the power of 10?",o:["512","1000","1024","2048"],a:2},
+{c:"Math",q:"What is the sum of angles in a triangle?",o:["90","180","270","360"],a:1},
+{c:"Math",q:"What is the Roman numeral for 50?",o:["C","D","L","V"],a:2},
+{c:"Math",q:"What shape has 4 equal sides and 4 right angles?",o:["Rectangle","Rhombus","Square","Parallelogram"],a:2},
+{c:"Math",q:"What is 1/4 as a decimal?",o:["0.15","0.20","0.25","0.30"],a:2},
+{c:"Math",q:"What is the area formula for a circle?",o:["2*Pi*r","Pi*r^2","Pi*d","2*Pi*r^2"],a:1},
+{c:"Math",q:"What is 17 x 6?",o:["96","98","100","102"],a:3},
+{c:"Math",q:"How many degrees in a right angle?",o:["45","60","90","180"],a:2},
+{c:"Math",q:"What is the factorial of 5 (5!)?",o:["25","60","100","120"],a:3},
+{c:"Math",q:"What is the cube root of 27?",o:["2","3","4","9"],a:1},
+{c:"Math",q:"What is 3/8 as a percentage?",o:["33.5%","37.5%","38.5%","40%"],a:1},
+{c:"Math",q:"How many sides does a decagon have?",o:["8","9","10","12"],a:2},
+{c:"Math",q:"What is the value of 'e' (approx)?",o:["2.414","2.618","2.718","2.818"],a:2},
+{c:"Math",q:"What is 25 squared?",o:["525","600","625","650"],a:2},
+{c:"Math",q:"What is the Fibonacci sequence's 7th number?",o:["8","11","13","21"],a:2},
+{c:"Math",q:"What is the least common multiple of 4 and 6?",o:["8","10","12","24"],a:2},
+{c:"Math",q:"What is the sum of the first 10 natural numbers?",o:["45","50","55","60"],a:2},
+{c:"Math",q:"How many faces does a cube have?",o:["4","5","6","8"],a:2},
+{c:"Math",q:"What is 7! (7 factorial)?",o:["720","2520","5040","40320"],a:2},
+{c:"Math",q:"What is the GCD of 12 and 18?",o:["2","3","6","9"],a:2},
+{c:"Math",q:"What is 0.125 as a fraction?",o:["1/4","1/6","1/8","1/10"],a:2},
+{c:"Math",q:"What is the perimeter of a square with side 9?",o:["27","36","45","81"],a:1},
+{c:"Math",q:"What is the interior angle of a regular hexagon?",o:["100","108","120","135"],a:2},
+{c:"Math",q:"What is log base 10 of 1000?",o:["2","3","4","10"],a:1},
+{c:"Math",q:"What is the hypotenuse of a 3-4-5 triangle?",o:["4","5","6","7"],a:1},
+{c:"Math",q:"What is 2^8?",o:["128","256","512","1024"],a:1},
+{c:"Math",q:"How many edges does a cube have?",o:["6","8","10","12"],a:3},
+{c:"Math",q:"What is the average of 10, 20, 30, 40, 50?",o:["25","30","35","40"],a:1},
+{c:"Math",q:"What is the Roman numeral for 100?",o:["C","D","L","M"],a:0},
+{c:"Math",q:"What is 33 x 3?",o:["96","99","102","111"],a:1},
+{c:"Math",q:"What is the volume formula for a sphere?",o:["4/3 Pi r^3","Pi r^2 h","2 Pi r^2","4 Pi r^2"],a:0},
+{c:"Math",q:"What is the square root of 256?",o:["14","15","16","17"],a:2},
+{c:"Math",q:"What is 45% of 80?",o:["32","34","36","38"],a:2},
+{c:"Math",q:"What is the sum of angles in a quadrilateral?",o:["180","270","360","540"],a:2},
+{c:"Math",q:"What is 12^2?",o:["124","132","144","156"],a:2},
+{c:"Math",q:"What is the smallest prime number?",o:["0","1","2","3"],a:2},
+{c:"Math",q:"What is the value of the golden ratio (approx)?",o:["1.414","1.518","1.618","1.718"],a:2},
+{c:"Math",q:"How many vertices does a triangle have?",o:["2","3","4","5"],a:1},
+{c:"Math",q:"What is 1000 divided by 8?",o:["120","125","130","135"],a:1},
+{c:"Math",q:"What is the binary representation of 10?",o:["1001","1010","1100","1110"],a:1},
+{c:"Math",q:"What is the circumference of a circle with radius 7? (use Pi=22/7)",o:["22","33","44","55"],a:2},
+{c:"Math",q:"What is 15 squared?",o:["200","215","225","250"],a:2},
+{c:"Math",q:"What type of number is -5?",o:["Natural","Whole","Integer","Irrational"],a:2},
+{c:"Math",q:"What is the next number: 2, 6, 18, 54, ...?",o:["108","126","162","180"],a:2},
+
+// ENGLISH & LITERATURE (120)
+{c:"English",q:"Who wrote 'Romeo and Juliet'?",o:["Charles Dickens","Jane Austen","William Shakespeare","Mark Twain"],a:2},
+{c:"English",q:"What is a synonym for 'happy'?",o:["Sad","Joyful","Angry","Tired"],a:1},
+{c:"English",q:"What is the past tense of 'run'?",o:["Runned","Ran","Runed","Running"],a:1},
+{c:"English",q:"What is a noun?",o:["An action word","A describing word","A person, place, or thing","A connecting word"],a:2},
+{c:"English",q:"Who wrote '1984'?",o:["Aldous Huxley","George Orwell","Ray Bradbury","H.G. Wells"],a:1},
+{c:"English",q:"What is the plural of 'mouse'?",o:["Mouses","Mices","Mice","Meese"],a:2},
+{c:"English",q:"What figure of speech compares using 'like' or 'as'?",o:["Metaphor","Simile","Hyperbole","Personification"],a:1},
+{c:"English",q:"Who wrote 'Pride and Prejudice'?",o:["Emily Bronte","Charlotte Bronte","Jane Austen","Virginia Woolf"],a:2},
+{c:"English",q:"What is an antonym for 'ancient'?",o:["Old","Historic","Modern","Classic"],a:2},
+{c:"English",q:"What part of speech describes a verb?",o:["Adjective","Adverb","Pronoun","Preposition"],a:1},
+{c:"English",q:"Who wrote 'The Great Gatsby'?",o:["Ernest Hemingway","F. Scott Fitzgerald","John Steinbeck","William Faulkner"],a:1},
+{c:"English",q:"What is an oxymoron?",o:["Contradictory terms together","Extreme exaggeration","Repeated sounds","A question with no answer"],a:0},
+{c:"English",q:"What is the longest word in English commonly cited?",o:["Supercalifragilistic","Pneumonoultramicroscopicsilicovolcanoconiosis","Antidisestablishmentarianism","Floccinaucinihilipilification"],a:1},
+{c:"English",q:"Who wrote 'To Kill a Mockingbird'?",o:["Harper Lee","Truman Capote","Toni Morrison","Maya Angelou"],a:0},
+{c:"English",q:"What is alliteration?",o:["Repetition of vowel sounds","Repetition of initial consonant sounds","Exaggeration","A type of rhyme"],a:1},
+{c:"English",q:"What is the subject in: 'The cat sat on the mat'?",o:["Sat","Mat","The cat","On"],a:2},
+{c:"English",q:"Who wrote 'Hamlet'?",o:["Christopher Marlowe","Ben Jonson","William Shakespeare","John Milton"],a:2},
+{c:"English",q:"What is a verb?",o:["A naming word","An action word","A describing word","A joining word"],a:1},
+{c:"English",q:"What literary device gives human qualities to non-human things?",o:["Simile","Metaphor","Personification","Irony"],a:2},
+{c:"English",q:"Who wrote 'The Odyssey'?",o:["Virgil","Sophocles","Homer","Plato"],a:2},
+{c:"English",q:"What is a palindrome?",o:["A word spelled the same forwards and backwards","A word with two meanings","A silent letter word","A borrowed word"],a:0},
+{c:"English",q:"What is the comparative form of 'good'?",o:["Gooder","More good","Better","Best"],a:2},
+{c:"English",q:"Who wrote 'Moby Dick'?",o:["Herman Melville","Nathaniel Hawthorne","Edgar Allan Poe","Mark Twain"],a:0},
+{c:"English",q:"What is the main purpose of a thesis statement?",o:["To entertain","To state the main argument","To list sources","To conclude"],a:1},
+{c:"English",q:"What punctuation ends an interrogative sentence?",o:["Period","Exclamation mark","Question mark","Semicolon"],a:2},
+{c:"English",q:"Who wrote 'A Tale of Two Cities'?",o:["Thomas Hardy","Charles Dickens","Oscar Wilde","George Eliot"],a:1},
+{c:"English",q:"What is irony?",o:["A type of rhyme","When the opposite of what's expected occurs","An extreme exaggeration","Repeating words for effect"],a:1},
+{c:"English",q:"What is the superlative form of 'bad'?",o:["Worse","Baddest","Most bad","Worst"],a:3},
+{c:"English",q:"Who wrote 'Brave New World'?",o:["George Orwell","Aldous Huxley","Ray Bradbury","Kurt Vonnegut"],a:1},
+{c:"English",q:"What does 'benevolent' mean?",o:["Cruel","Indifferent","Kind and generous","Wealthy"],a:2},
+{c:"English",q:"What is an adjective?",o:["A word that describes a noun","A word that describes a verb","A joining word","An action word"],a:0},
+{c:"English",q:"Who wrote 'Lord of the Flies'?",o:["J.R.R. Tolkien","William Golding","C.S. Lewis","George Orwell"],a:1},
+{c:"English",q:"What is the plural of 'cactus'?",o:["Cactuses","Cactii","Cacti","Cactus"],a:2},
+{c:"English",q:"What does 'ephemeral' mean?",o:["Permanent","Short-lived","Beautiful","Mysterious"],a:1},
+{c:"English",q:"Who wrote 'The Catcher in the Rye'?",o:["J.D. Salinger","Jack Kerouac","Kurt Vonnegut","Philip Roth"],a:0},
+{c:"English",q:"What is onomatopoeia?",o:["Words that sound like what they describe","Words with opposite meanings","Exaggerated statements","Repeated consonant sounds"],a:0},
+{c:"English",q:"What is a protagonist?",o:["The villain","The narrator","The main character","The author"],a:2},
+{c:"English",q:"Who wrote 'Frankenstein'?",o:["Bram Stoker","Mary Shelley","Edgar Allan Poe","H.G. Wells"],a:1},
+{c:"English",q:"What does 'ubiquitous' mean?",o:["Rare","Found everywhere","Invisible","Ancient"],a:1},
+{c:"English",q:"What is a conjunction?",o:["A describing word","A word that joins words or clauses","A naming word","An action word"],a:1},
+
+// TECHNOLOGY (80)
+{c:"Technology",q:"What does 'CPU' stand for?",o:["Computer Personal Unit","Central Processing Unit","Central Program Utility","Computer Processing Unit"],a:1},
+{c:"Technology",q:"Who co-founded Apple?",o:["Bill Gates","Mark Zuckerberg","Steve Jobs","Jeff Bezos"],a:2},
+{c:"Technology",q:"What does 'HTML' stand for?",o:["Hyper Text Markup Language","High Tech Modern Language","Hyper Transfer Markup Language","Home Tool Markup Language"],a:0},
+{c:"Technology",q:"What year was the iPhone first released?",o:["2005","2006","2007","2008"],a:2},
+{c:"Technology",q:"What does 'RAM' stand for?",o:["Read Access Memory","Random Access Memory","Run Application Memory","Rapid Access Module"],a:1},
+{c:"Technology",q:"Who created Facebook?",o:["Jack Dorsey","Elon Musk","Mark Zuckerberg","Larry Page"],a:2},
+{c:"Technology",q:"What programming language is known for web development?",o:["Python","C++","JavaScript","Rust"],a:2},
+{c:"Technology",q:"What does 'URL' stand for?",o:["Universal Resource Locator","Uniform Resource Locator","Universal Reference Link","Uniform Reference Locator"],a:1},
+{c:"Technology",q:"What company created Windows?",o:["Apple","Google","Microsoft","IBM"],a:2},
+{c:"Technology",q:"What does 'AI' stand for?",o:["Automated Intelligence","Artificial Intelligence","Advanced Integration","Automatic Input"],a:1},
+{c:"Technology",q:"What is the main language of Android apps?",o:["Swift","Python","Kotlin/Java","C#"],a:2},
+{c:"Technology",q:"What does 'GPS' stand for?",o:["Global Positioning System","General Purpose Satellite","Geographic Position Service","Global Program System"],a:0},
+{c:"Technology",q:"Who is the CEO of Tesla?",o:["Jeff Bezos","Tim Cook","Elon Musk","Sundar Pichai"],a:2},
+{c:"Technology",q:"What does 'USB' stand for?",o:["Universal Serial Bus","Ultra Speed Buffer","Unified System Bridge","Universal System Bus"],a:0},
+{c:"Technology",q:"What year was Google founded?",o:["1996","1998","2000","2002"],a:1},
+{c:"Technology",q:"What does 'SSD' stand for?",o:["Solid State Drive","Super Speed Disk","System Storage Device","Serial Signal Drive"],a:0},
+{c:"Technology",q:"What programming language did Guido van Rossum create?",o:["Java","Ruby","Python","PHP"],a:2},
+{c:"Technology",q:"What does 'IoT' stand for?",o:["Internet of Things","Input of Technology","Integration of Tools","Interface of Terminals"],a:0},
+{c:"Technology",q:"What is the most popular search engine?",o:["Bing","Yahoo","DuckDuckGo","Google"],a:3},
+{c:"Technology",q:"What does 'VPN' stand for?",o:["Virtual Private Network","Visual Program Node","Variable Process Network","Virtual Public Network"],a:0},
+{c:"Technology",q:"What company makes the PlayStation?",o:["Microsoft","Nintendo","Sony","Sega"],a:2},
+{c:"Technology",q:"What does 'PDF' stand for?",o:["Portable Document Format","Print Document File","Program Data Format","Personal Document Folder"],a:0},
+{c:"Technology",q:"What is the binary number system based on?",o:["0 and 1","1 and 2","0 to 9","0 to 7"],a:0},
+{c:"Technology",q:"What does 'Wi-Fi' technically stand for?",o:["Wireless Fidelity","It's a brand name, not an acronym","Wide Frequency","Wireless Finder"],a:1},
+{c:"Technology",q:"Who invented the World Wide Web?",o:["Bill Gates","Steve Jobs","Tim Berners-Lee","Vint Cerf"],a:2},
+{c:"Technology",q:"What does 'CSS' stand for?",o:["Computer Style Sheets","Cascading Style Sheets","Creative Style System","Coded Style Sheets"],a:1},
+{c:"Technology",q:"What year was YouTube launched?",o:["2003","2004","2005","2006"],a:2},
+{c:"Technology",q:"What does 'API' stand for?",o:["Application Programming Interface","Automated Program Integration","Applied Process Interface","Application Process Integration"],a:0},
+{c:"Technology",q:"What is Linux?",o:["A web browser","An operating system","A programming language","A database"],a:1},
+{c:"Technology",q:"What does 'HTTPS' mean?",o:["HyperText Transfer Protocol Secure","High Transfer Technology Protocol","Hyper Tech Transfer System","Home Transfer Protocol Secure"],a:0},
+{c:"Technology",q:"What company created the first smartphone?",o:["Apple","Nokia","IBM","Motorola"],a:2},
+{c:"Technology",q:"What does 'SQL' stand for?",o:["Standard Query Language","Structured Query Language","System Query Logic","Sorted Question Language"],a:1},
+{c:"Technology",q:"What is blockchain primarily used for?",o:["Gaming","Social media","Decentralized record-keeping","Video streaming"],a:2},
+{c:"Technology",q:"What does 'GUI' stand for?",o:["General User Input","Graphical User Interface","Global Unified Integration","Graphics Utility Index"],a:1},
+{c:"Technology",q:"What is the most used programming language in 2024?",o:["Java","C++","Python","JavaScript"],a:3},
+{c:"Technology",q:"What does 'LAN' stand for?",o:["Large Area Network","Local Access Node","Local Area Network","Linked Application Network"],a:2},
+{c:"Technology",q:"What company created Java?",o:["Microsoft","Sun Microsystems","IBM","Google"],a:1},
+{c:"Technology",q:"What does 'BIOS' stand for?",o:["Basic Input Output System","Binary Integrated Operating System","Base Internal Operation Software","Boot Initialization Operating System"],a:0},
+{c:"Technology",q:"What year was the first email sent?",o:["1965","1971","1975","1980"],a:1},
+{c:"Technology",q:"What does 'RGB' stand for?",o:["Red Green Blue","Real Graphics Buffer","Rendered Graphic Bits","Rapid Giga Bytes"],a:0},
+
+// SPORTS (80)
+{c:"Sports",q:"How many players are on a soccer team on the field?",o:["9","10","11","12"],a:2},
+{c:"Sports",q:"What sport is played at Wimbledon?",o:["Golf","Cricket","Tennis","Rugby"],a:2},
+{c:"Sports",q:"How many points is a touchdown worth in American football?",o:["3","5","6","7"],a:2},
+{c:"Sports",q:"What country invented cricket?",o:["Australia","India","South Africa","England"],a:3},
+{c:"Sports",q:"How many rings are on the Olympic flag?",o:["3","4","5","6"],a:2},
+{c:"Sports",q:"What sport uses a shuttlecock?",o:["Tennis","Badminton","Squash","Table Tennis"],a:1},
+{c:"Sports",q:"How many holes are in a standard round of golf?",o:["9","12","16","18"],a:3},
+{c:"Sports",q:"What is the national sport of Japan?",o:["Judo","Karate","Sumo","Kendo"],a:2},
+{c:"Sports",q:"How long is a marathon in miles?",o:["20.2","22.2","24.2","26.2"],a:3},
+{c:"Sports",q:"What sport does Lionel Messi play?",o:["Basketball","Tennis","Soccer/Football","Cricket"],a:2},
+{c:"Sports",q:"How many players are on a basketball team on court?",o:["4","5","6","7"],a:1},
+{c:"Sports",q:"What country hosted the 2016 Summer Olympics?",o:["China","UK","Brazil","Japan"],a:2},
+{c:"Sports",q:"In which sport would you perform a slam dunk?",o:["Volleyball","Basketball","Tennis","Soccer"],a:1},
+{c:"Sports",q:"What sport is known as 'the beautiful game'?",o:["Cricket","Tennis","Football/Soccer","Rugby"],a:2},
+{c:"Sports",q:"How many sets does a man need to win in a Grand Slam tennis match?",o:["2","3","4","5"],a:1},
+{c:"Sports",q:"What is the highest score in a single frame of bowling?",o:["200","250","280","300"],a:3},
+{c:"Sports",q:"What sport uses the term 'home run'?",o:["Cricket","Baseball","Football","Rugby"],a:1},
+{c:"Sports",q:"How many quarters are in an NBA basketball game?",o:["2","3","4","5"],a:2},
+{c:"Sports",q:"What country won the first FIFA World Cup in 1930?",o:["Brazil","Argentina","Uruguay","Italy"],a:2},
+{c:"Sports",q:"What martial art originated in Korea?",o:["Karate","Judo","Taekwondo","Kung Fu"],a:2},
+{c:"Sports",q:"How many players are on a baseball team on the field?",o:["8","9","10","11"],a:1},
+{c:"Sports",q:"What is the diameter of a basketball hoop in inches?",o:["16","18","20","22"],a:1},
+{c:"Sports",q:"What sport do the All Blacks play?",o:["Cricket","Soccer","Rugby","Australian Football"],a:2},
+{c:"Sports",q:"How many periods are in an ice hockey game?",o:["2","3","4","5"],a:1},
+{c:"Sports",q:"What does FIFA stand for?",o:["Federation of International Football","International Football Federation","Federation Internationale de Football Association","Federal International Football Authority"],a:2},
+{c:"Sports",q:"What sport is played on the largest field?",o:["Soccer","Cricket","Polo","Australian Football"],a:2},
+{c:"Sports",q:"Who has won the most Olympic gold medals?",o:["Usain Bolt","Carl Lewis","Michael Phelps","Mark Spitz"],a:2},
+{c:"Sports",q:"What is the only sport played on the Moon?",o:["Soccer","Baseball","Golf","Tennis"],a:2},
+{c:"Sports",q:"How many dimples does a typical golf ball have?",o:["236","336","436","536"],a:1},
+{c:"Sports",q:"What sport uses a puck?",o:["Field Hockey","Lacrosse","Ice Hockey","Curling"],a:2},
+
+// MUSIC & ARTS (80)
+{c:"Music & Arts",q:"How many strings does a standard guitar have?",o:["4","5","6","8"],a:2},
+{c:"Music & Arts",q:"Who painted the Sistine Chapel ceiling?",o:["Leonardo da Vinci","Raphael","Michelangelo","Donatello"],a:2},
+{c:"Music & Arts",q:"What musical key has no sharps or flats?",o:["D Major","G Major","C Major","F Major"],a:2},
+{c:"Music & Arts",q:"Who composed the 'Moonlight Sonata'?",o:["Mozart","Bach","Beethoven","Chopin"],a:2},
+{c:"Music & Arts",q:"How many notes are in a musical octave?",o:["6","7","8","12"],a:2},
+{c:"Music & Arts",q:"Who painted 'Starry Night'?",o:["Monet","Picasso","Van Gogh","Rembrandt"],a:2},
+{c:"Music & Arts",q:"What instrument has 88 keys?",o:["Organ","Harpsichord","Piano","Accordion"],a:2},
+{c:"Music & Arts",q:"Who sculpted 'David'?",o:["Bernini","Donatello","Rodin","Michelangelo"],a:3},
+{c:"Music & Arts",q:"What is the highest female singing voice?",o:["Alto","Mezzo-soprano","Soprano","Contralto"],a:2},
+{c:"Music & Arts",q:"Who composed 'The Four Seasons'?",o:["Bach","Handel","Vivaldi","Mozart"],a:2},
+{c:"Music & Arts",q:"What art movement did Salvador Dali belong to?",o:["Cubism","Impressionism","Surrealism","Pop Art"],a:2},
+{c:"Music & Arts",q:"How many symphonies did Beethoven compose?",o:["5","7","9","12"],a:2},
+{c:"Music & Arts",q:"What instrument is Yo-Yo Ma famous for?",o:["Violin","Viola","Cello","Double Bass"],a:2},
+{c:"Music & Arts",q:"Who painted 'The Persistence of Memory' (melting clocks)?",o:["Picasso","Magritte","Dali","Miro"],a:2},
+{c:"Music & Arts",q:"What does 'forte' mean in music?",o:["Slow","Fast","Loud","Soft"],a:2},
+{c:"Music & Arts",q:"Who composed 'Swan Lake'?",o:["Prokofiev","Stravinsky","Tchaikovsky","Rachmaninoff"],a:2},
+{c:"Music & Arts",q:"What is the lowest male singing voice?",o:["Tenor","Baritone","Bass","Countertenor"],a:2},
+{c:"Music & Arts",q:"Who painted 'The Scream'?",o:["Van Gogh","Munch","Klimt","Schiele"],a:1},
+{c:"Music & Arts",q:"What instrument family does the trumpet belong to?",o:["Woodwind","String","Brass","Percussion"],a:2},
+{c:"Music & Arts",q:"Who was known as the 'King of Pop'?",o:["Elvis Presley","Prince","Michael Jackson","Freddie Mercury"],a:2},
+{c:"Music & Arts",q:"What musical term means 'gradually getting louder'?",o:["Diminuendo","Crescendo","Sforzando","Pianissimo"],a:1},
+{c:"Music & Arts",q:"Who painted 'Girl with a Pearl Earring'?",o:["Rembrandt","Vermeer","Rubens","Hals"],a:1},
+{c:"Music & Arts",q:"What does 'allegro' mean in music?",o:["Slow","Moderate","Fast","Very slow"],a:2},
+{c:"Music & Arts",q:"Who composed 'The Magic Flute'?",o:["Beethoven","Handel","Verdi","Mozart"],a:3},
+{c:"Music & Arts",q:"What art style did Claude Monet help create?",o:["Realism","Romanticism","Impressionism","Expressionism"],a:2},
+{c:"Music & Arts",q:"How many strings does a violin have?",o:["3","4","5","6"],a:1},
+{c:"Music & Arts",q:"Who composed 'Bohemian Rhapsody'?",o:["Elton John","David Bowie","Freddie Mercury/Queen","Mick Jagger"],a:2},
+{c:"Music & Arts",q:"What is a fresco?",o:["A type of sculpture","Painting on wet plaster","A ceramic technique","A type of mosaic"],a:1},
+{c:"Music & Arts",q:"Who is known as the 'Father of Music'?",o:["Beethoven","Mozart","Bach","Handel"],a:2},
+{c:"Music & Arts",q:"What movement did Andy Warhol lead?",o:["Surrealism","Abstract Expressionism","Pop Art","Minimalism"],a:2},
+
+// FOOD & COOKING (60)
+{c:"Food",q:"What vitamin is found abundantly in oranges?",o:["Vitamin A","Vitamin B","Vitamin C","Vitamin D"],a:2},
+{c:"Food",q:"What country is sushi from?",o:["China","Korea","Thailand","Japan"],a:3},
+{c:"Food",q:"What grain is bread typically made from?",o:["Rice","Corn","Wheat","Barley"],a:2},
+{c:"Food",q:"What is the main ingredient in guacamole?",o:["Tomato","Pepper","Lime","Avocado"],a:3},
+{c:"Food",q:"What country is pizza originally from?",o:["Greece","Italy","France","Spain"],a:1},
+{c:"Food",q:"How many teaspoons are in a tablespoon?",o:["2","3","4","5"],a:1},
+{c:"Food",q:"What nut is used to make marzipan?",o:["Walnut","Cashew","Almond","Pistachio"],a:2},
+{c:"Food",q:"What country is curry originally associated with?",o:["Thailand","Japan","India","China"],a:2},
+{c:"Food",q:"What is tofu made from?",o:["Rice","Soybeans","Wheat","Corn"],a:1},
+{c:"Food",q:"What gives chili peppers their heat?",o:["Piperine","Allicin","Capsaicin","Curcumin"],a:2},
+{c:"Food",q:"What type of pasta is shaped like bow ties?",o:["Penne","Fusilli","Farfalle","Rigatoni"],a:2},
+{c:"Food",q:"What is the most consumed fruit in the world?",o:["Apple","Banana","Orange","Mango"],a:1},
+{c:"Food",q:"What cheese is traditionally used on pizza?",o:["Cheddar","Gouda","Mozzarella","Parmesan"],a:2},
+{c:"Food",q:"What country is kimchi from?",o:["Japan","China","South Korea","Vietnam"],a:2},
+{c:"Food",q:"How many cups are in a quart?",o:["2","3","4","6"],a:2},
+{c:"Food",q:"What spice comes from the crocus flower?",o:["Turmeric","Paprika","Saffron","Cinnamon"],a:2},
+{c:"Food",q:"What is the world's most expensive spice by weight?",o:["Vanilla","Cardamom","Saffron","Cinnamon"],a:2},
+{c:"Food",q:"What fruit is dried to make raisins?",o:["Plum","Apricot","Grape","Fig"],a:2},
+{c:"Food",q:"What country is croissants originally from?",o:["France","Austria","Belgium","Italy"],a:1},
+{c:"Food",q:"What is the main ingredient in hummus?",o:["Lentils","Chickpeas","Black beans","Peas"],a:1},
+{c:"Food",q:"What does 'al dente' mean in cooking?",o:["Well done","Soft","Firm to the bite","Raw"],a:2},
+{c:"Food",q:"What bean is chocolate made from?",o:["Coffee bean","Vanilla bean","Cacao bean","Soybean"],a:2},
+{c:"Food",q:"What country is paella from?",o:["Mexico","Italy","Portugal","Spain"],a:3},
+{c:"Food",q:"What dairy product is butter made from?",o:["Milk","Cream","Yogurt","Cheese"],a:1},
+{c:"Food",q:"What is the most widely eaten food in the world?",o:["Bread","Rice","Potatoes","Corn"],a:1},
+{c:"Food",q:"What herb is in traditional pesto?",o:["Parsley","Cilantro","Basil","Oregano"],a:2},
+{c:"Food",q:"What is wasabi?",o:["A type of ginger","Japanese horseradish","Green chili paste","Fermented soybean"],a:1},
+{c:"Food",q:"How many ounces are in a cup?",o:["4","6","8","10"],a:2},
+{c:"Food",q:"What fruit is known as the 'king of fruits'?",o:["Mango","Pineapple","Durian","Jackfruit"],a:2},
+{c:"Food",q:"What country is borscht from?",o:["Russia","Poland","Ukraine","Hungary"],a:2},
+
+// NATURE & ANIMALS (100)
+{c:"Nature",q:"What is the fastest land animal?",o:["Lion","Gazelle","Cheetah","Horse"],a:2},
+{c:"Nature",q:"How many legs does a spider have?",o:["6","8","10","12"],a:1},
+{c:"Nature",q:"What is the largest land animal?",o:["Hippopotamus","Rhinoceros","African Elephant","Giraffe"],a:2},
+{c:"Nature",q:"What is a group of lions called?",o:["Pack","Herd","Pride","Flock"],a:2},
+{c:"Nature",q:"What animal is known for changing color?",o:["Gecko","Iguana","Chameleon","Salamander"],a:2},
+{c:"Nature",q:"How many hearts does an octopus have?",o:["1","2","3","4"],a:2},
+{c:"Nature",q:"What is the tallest animal?",o:["Elephant","Moose","Giraffe","Camel"],a:2},
+{c:"Nature",q:"What bird can fly backwards?",o:["Swift","Kingfisher","Hummingbird","Swallow"],a:2},
+{c:"Nature",q:"What is the largest type of bear?",o:["Grizzly","Kodiak","Polar Bear","Brown Bear"],a:2},
+{c:"Nature",q:"What animal has the longest lifespan?",o:["Elephant","Blue Whale","Giant Tortoise","Parrot"],a:2},
+{c:"Nature",q:"How many legs does a butterfly have?",o:["4","6","8","10"],a:1},
+{c:"Nature",q:"What is the only mammal that can fly?",o:["Flying Squirrel","Sugar Glider","Bat","Colugo"],a:2},
+{c:"Nature",q:"What is the smallest bird in the world?",o:["Finch","Wren","Bee Hummingbird","Sparrow"],a:2},
+{c:"Nature",q:"What animal produces pearls?",o:["Clam","Lobster","Oyster","Starfish"],a:2},
+{c:"Nature",q:"How many stomachs does a cow have?",o:["1","2","3","4"],a:3},
+{c:"Nature",q:"What is the fastest bird?",o:["Eagle","Falcon","Peregrine Falcon","Swift"],a:2},
+{c:"Nature",q:"What animal is known as 'man's best friend'?",o:["Cat","Horse","Dog","Parrot"],a:2},
+{c:"Nature",q:"What is the most venomous snake?",o:["King Cobra","Black Mamba","Inland Taipan","Rattlesnake"],a:2},
+{c:"Nature",q:"What animal sleeps the most (up to 22 hours)?",o:["Cat","Sloth","Koala","Armadillo"],a:2},
+{c:"Nature",q:"What is a baby kangaroo called?",o:["Cub","Pup","Joey","Kit"],a:2},
+{c:"Nature",q:"What is the largest fish in the sea?",o:["Great White Shark","Blue Whale","Whale Shark","Manta Ray"],a:2},
+{c:"Nature",q:"How many wings does a bee have?",o:["2","4","6","8"],a:1},
+{c:"Nature",q:"What animal is the symbol of peace?",o:["Eagle","Owl","Dove","Swan"],a:2},
+{c:"Nature",q:"What is the only continent without native snakes?",o:["Australia","Europe","Antarctica","Arctic"],a:2},
+{c:"Nature",q:"What animal can regenerate its limbs?",o:["Lizard","Starfish","Frog","Crab"],a:1},
+{c:"Nature",q:"What is a group of wolves called?",o:["Herd","Flock","Pack","Pod"],a:2},
+{c:"Nature",q:"What insect makes honey?",o:["Wasp","Ant","Bee","Butterfly"],a:2},
+{c:"Nature",q:"How many teeth does an adult cat have?",o:["20","26","30","36"],a:2},
+{c:"Nature",q:"What is the largest species of penguin?",o:["King Penguin","Gentoo Penguin","Emperor Penguin","Macaroni Penguin"],a:2},
+{c:"Nature",q:"What animal is a Komodo dragon?",o:["Snake","Crocodile","Lizard","Dinosaur"],a:2},
+{c:"Nature",q:"What tree produces acorns?",o:["Pine","Maple","Oak","Birch"],a:2},
+{c:"Nature",q:"How long is an elephant's pregnancy (approx)?",o:["12 months","16 months","19 months","22 months"],a:3},
+{c:"Nature",q:"What is the national animal of Australia?",o:["Koala","Platypus","Kangaroo","Emu"],a:2},
+{c:"Nature",q:"What color is a polar bear's skin?",o:["White","Pink","Black","Brown"],a:2},
+{c:"Nature",q:"What is the fastest marine animal?",o:["Dolphin","Tuna","Sailfish","Swordfish"],a:2},
+{c:"Nature",q:"How many eyes does a bee have?",o:["2","3","4","5"],a:3},
+{c:"Nature",q:"What bird has the largest wingspan?",o:["Bald Eagle","Condor","Albatross","Pelican"],a:2},
+{c:"Nature",q:"What animal is known for its black and white stripes?",o:["Panda","Skunk","Zebra","Badger"],a:2},
+{c:"Nature",q:"What is a female deer called?",o:["Cow","Mare","Doe","Hen"],a:2},
+{c:"Nature",q:"What is the loudest animal on Earth?",o:["Elephant","Lion","Blue Whale","Howler Monkey"],a:2},
+
+// MORE SCIENCE (50)
+{c:"Science",q:"What is the chemical formula for glucose?",o:["C6H12O6","C2H5OH","CH4","CO2"],a:0},
+{c:"Science",q:"What type of bond shares electrons?",o:["Ionic","Covalent","Metallic","Hydrogen"],a:1},
+{c:"Science",q:"What organ is responsible for detoxification?",o:["Kidney","Heart","Liver","Spleen"],a:2},
+{c:"Science",q:"What is the unit of frequency?",o:["Watt","Hertz","Pascal","Ohm"],a:1},
+{c:"Science",q:"What color does litmus paper turn in acid?",o:["Blue","Green","Red","Yellow"],a:2},
+{c:"Science",q:"What is the largest cell in the human body?",o:["Red blood cell","Nerve cell","Ovum (egg cell)","White blood cell"],a:2},
+{c:"Science",q:"What element is represented by 'He'?",o:["Hydrogen","Hafnium","Helium","Holmium"],a:2},
+{c:"Science",q:"What is the process of cell death called?",o:["Mitosis","Meiosis","Apoptosis","Osmosis"],a:2},
+{c:"Science",q:"What planet has the shortest day?",o:["Mercury","Earth","Jupiter","Saturn"],a:2},
+{c:"Science",q:"What is the unit of electric current?",o:["Volt","Watt","Ampere","Ohm"],a:2},
+{c:"Science",q:"What type of galaxy is the Milky Way?",o:["Elliptical","Irregular","Spiral","Lenticular"],a:2},
+{c:"Science",q:"What mineral is the main component of bones?",o:["Iron","Calcium phosphate","Sodium","Magnesium"],a:1},
+{c:"Science",q:"What is the charge of an electron?",o:["Positive","Negative","Neutral","Variable"],a:1},
+{c:"Science",q:"What pigment makes plants green?",o:["Carotene","Melanin","Chlorophyll","Xanthophyll"],a:2},
+{c:"Science",q:"What is the terminal velocity of a skydiver (approx mph)?",o:["80","120","160","200"],a:1},
+{c:"Science",q:"What is the study of the mind called?",o:["Sociology","Philosophy","Psychology","Neurology"],a:2},
+{c:"Science",q:"What is the chemical symbol for tin?",o:["Ti","Tn","Sn","Si"],a:2},
+{c:"Science",q:"What is the name of the largest moon of Saturn?",o:["Europa","Ganymede","Titan","Callisto"],a:2},
+{c:"Science",q:"What type of energy is stored in food?",o:["Kinetic","Thermal","Chemical","Nuclear"],a:2},
+{c:"Science",q:"What is the study of fossils called?",o:["Archaeology","Paleontology","Geology","Anthropology"],a:1},
+{c:"Science",q:"What is the boiling point of ethanol in Celsius?",o:["68","78","88","98"],a:1},
+{c:"Science",q:"What is dry ice made of?",o:["Frozen water","Frozen nitrogen","Frozen carbon dioxide","Frozen oxygen"],a:2},
+{c:"Science",q:"What force opposes motion between surfaces?",o:["Gravity","Tension","Friction","Magnetism"],a:2},
+{c:"Science",q:"What blood vessels carry blood away from the heart?",o:["Veins","Capillaries","Arteries","Venules"],a:2},
+{c:"Science",q:"What is the SI unit of pressure?",o:["Newton","Joule","Pascal","Bar"],a:2},
+{c:"Science",q:"What planet has the longest year?",o:["Jupiter","Saturn","Uranus","Neptune"],a:3},
+{c:"Science",q:"What is the most reactive group of metals?",o:["Transition metals","Noble metals","Alkali metals","Alkaline earth metals"],a:2},
+{c:"Science",q:"What is the human body's largest artery?",o:["Carotid","Femoral","Aorta","Pulmonary"],a:2},
+{c:"Science",q:"What phenomenon explains why the sky is blue?",o:["Reflection","Refraction","Rayleigh scattering","Diffraction"],a:2},
+{c:"Science",q:"What is the chemical formula for methane?",o:["CO2","CH4","C2H6","NH3"],a:1},
+{c:"Science",q:"What type of rock is marble?",o:["Igneous","Sedimentary","Metamorphic","Volcanic"],a:2},
+{c:"Science",q:"What is the average human body temperature in Fahrenheit?",o:["96.6","97.6","98.6","99.6"],a:2},
+{c:"Science",q:"What part of the eye controls the amount of light entering?",o:["Cornea","Retina","Iris","Lens"],a:2},
+{c:"Science",q:"What is the chemical symbol for tungsten?",o:["Tu","Tg","Wn","W"],a:3},
+{c:"Science",q:"What is the unit of luminous intensity?",o:["Lumen","Lux","Candela","Watt"],a:2},
+{c:"Science",q:"What gas is commonly used in balloons to make them float?",o:["Oxygen","Nitrogen","Helium","Carbon dioxide"],a:2},
+{c:"Science",q:"What structure in cells makes proteins?",o:["Mitochondria","Nucleus","Ribosome","Lysosome"],a:2},
+{c:"Science",q:"What is the escape velocity of Earth (approx km/s)?",o:["7.2","9.2","11.2","13.2"],a:2},
+{c:"Science",q:"What element is diamond made of?",o:["Silicon","Carbon","Boron","Nitrogen"],a:1},
+{c:"Science",q:"What vitamin is also known as ascorbic acid?",o:["Vitamin A","Vitamin B12","Vitamin C","Vitamin E"],a:2},
+{c:"Science",q:"What is the largest internal organ?",o:["Heart","Liver","Lung","Stomach"],a:1},
+{c:"Science",q:"What particle carries the electromagnetic force?",o:["Gluon","Graviton","Photon","W boson"],a:2},
+{c:"Science",q:"What is the study of classification of organisms?",o:["Ecology","Taxonomy","Genetics","Anatomy"],a:1},
+{c:"Science",q:"What is the Mohs scale used to measure?",o:["Earthquake intensity","Mineral hardness","Wind speed","Temperature"],a:1},
+{c:"Science",q:"What gas makes up about 21% of the atmosphere?",o:["Nitrogen","Carbon dioxide","Oxygen","Argon"],a:2},
+{c:"Science",q:"What is the name for animals that eat both plants and meat?",o:["Herbivore","Carnivore","Omnivore","Insectivore"],a:2},
+{c:"Science",q:"What is the lightest element?",o:["Helium","Lithium","Hydrogen","Carbon"],a:2},
+{c:"Science",q:"What is the study of volcanoes called?",o:["Seismology","Volcanology","Geology","Petrology"],a:1},
+{c:"Science",q:"What is the name of Mars's largest moon?",o:["Deimos","Europa","Phobos","Titan"],a:2},
+{c:"Science",q:"What hormone is known as the 'stress hormone'?",o:["Insulin","Serotonin","Cortisol","Dopamine"],a:2},
+
+// MORE HISTORY (50)
+{c:"History",q:"What year did the Hundred Years' War begin?",o:["1317","1337","1357","1377"],a:1},
+{c:"History",q:"Who was the first President of France?",o:["Napoleon","Louis-Napoleon Bonaparte","Charles de Gaulle","Adolphe Thiers"],a:1},
+{c:"History",q:"What year was the Suez Canal opened?",o:["1859","1864","1869","1874"],a:2},
+{c:"History",q:"Who was the first woman in space?",o:["Sally Ride","Mae Jemison","Valentina Tereshkova","Svetlana Savitskaya"],a:2},
+{c:"History",q:"What empire was Constantinople the capital of?",o:["Roman","Ottoman","Byzantine","Persian"],a:2},
+{c:"History",q:"What year did the Panama Canal open?",o:["1904","1910","1914","1920"],a:2},
+{c:"History",q:"Who was the first Tudor monarch of England?",o:["Henry VIII","Elizabeth I","Henry VII","Edward VI"],a:2},
+{c:"History",q:"What year was NATO founded?",o:["1945","1947","1949","1951"],a:2},
+{c:"History",q:"What civilization created the first writing system?",o:["Egyptian","Chinese","Sumerian","Indus Valley"],a:2},
+{c:"History",q:"Who was the last Emperor of Rome?",o:["Constantine","Nero","Romulus Augustulus","Julius Caesar"],a:2},
+{c:"History",q:"What year did the Bastille fall?",o:["1787","1789","1791","1793"],a:1},
+{c:"History",q:"Who discovered penicillin?",o:["Louis Pasteur","Alexander Fleming","Joseph Lister","Robert Koch"],a:1},
+{c:"History",q:"What ancient city had the Hanging Gardens?",o:["Athens","Rome","Babylon","Thebes"],a:2},
+{c:"History",q:"What year did Hawaii become a US state?",o:["1953","1955","1957","1959"],a:3},
+{c:"History",q:"Who was the first to circumnavigate the globe?",o:["Columbus","Magellan's expedition","Drake","Cook"],a:1},
+{c:"History",q:"What treaty ended the American Revolution?",o:["Treaty of Versailles","Treaty of Paris 1783","Treaty of Ghent","Jay Treaty"],a:1},
+{c:"History",q:"What year was the Eiffel Tower completed?",o:["1879","1884","1889","1894"],a:2},
+{c:"History",q:"Who invented the light bulb?",o:["Nikola Tesla","Alexander Graham Bell","Thomas Edison","James Watt"],a:2},
+{c:"History",q:"What year did the Chernobyl disaster occur?",o:["1984","1986","1988","1990"],a:1},
+{c:"History",q:"Who was Cleopatra's Roman lover?",o:["Augustus","Nero","Julius Caesar","Pompey"],a:2},
+{c:"History",q:"What war was the Battle of Gettysburg part of?",o:["Revolutionary War","War of 1812","American Civil War","Mexican-American War"],a:2},
+{c:"History",q:"What year was the Rosetta Stone discovered?",o:["1789","1799","1809","1819"],a:1},
+{c:"History",q:"Who founded the Ottoman Empire?",o:["Suleiman","Mehmed II","Osman I","Bayezid"],a:2},
+{c:"History",q:"What year did Nelson Mandela become President?",o:["1990","1992","1994","1996"],a:2},
+{c:"History",q:"What was the code name for the atomic bomb project?",o:["Operation Overlord","Manhattan Project","Operation Barbarossa","Trinity"],a:1},
+{c:"History",q:"What civilization built Angkor Wat?",o:["Thai","Vietnamese","Khmer","Burmese"],a:2},
+{c:"History",q:"What year was the Gutenberg Bible printed?",o:["1435","1445","1455","1465"],a:2},
+{c:"History",q:"Who was the first Emperor of Japan (legendary)?",o:["Hirohito","Meiji","Jimmu","Tokugawa"],a:2},
+{c:"History",q:"What year did the Mexican Revolution begin?",o:["1900","1905","1910","1915"],a:2},
+{c:"History",q:"What ancient people built Stonehenge?",o:["Romans","Celts","Neolithic Britons","Vikings"],a:2},
+{c:"History",q:"Who was assassinated on the Ides of March?",o:["Alexander the Great","Augustus","Nero","Julius Caesar"],a:3},
+{c:"History",q:"What year did the Wright brothers first fly?",o:["1899","1901","1903","1905"],a:2},
+{c:"History",q:"What empire did Ataturk found?",o:["Ottoman Empire","Republic of Turkey","Persian Empire","Byzantine Empire"],a:1},
+{c:"History",q:"What year was the first Olympic Games held (modern)?",o:["1892","1896","1900","1904"],a:1},
+{c:"History",q:"Who painted the ceiling of the Sistine Chapel?",o:["Raphael","Da Vinci","Michelangelo","Botticelli"],a:2},
+{c:"History",q:"What was the first country to grant women the right to vote?",o:["USA","UK","New Zealand","Finland"],a:2},
+{c:"History",q:"What year did the Black Death reach Europe?",o:["1327","1337","1347","1357"],a:2},
+{c:"History",q:"Who built the Taj Mahal?",o:["Akbar","Shah Jahan","Aurangzeb","Babur"],a:1},
+{c:"History",q:"What year was the US Constitution ratified?",o:["1776","1783","1787","1788"],a:3},
+{c:"History",q:"Who was the first female pharaoh?",o:["Cleopatra","Nefertiti","Hatshepsut","Nefertari"],a:2},
+{c:"History",q:"What year did the Rwandan genocide occur?",o:["1992","1993","1994","1995"],a:2},
+{c:"History",q:"What ancient library was the largest in the world?",o:["Library of Pergamum","Library of Alexandria","Library of Ashurbanipal","Library of Celsus"],a:1},
+{c:"History",q:"Who invented the steam engine?",o:["James Watt","Thomas Newcomen","George Stephenson","Robert Fulton"],a:0},
+{c:"History",q:"What year did the Spanish Civil War begin?",o:["1932","1934","1936","1938"],a:2},
+{c:"History",q:"Who was the Viking who discovered Greenland?",o:["Leif Erikson","Erik the Red","Ragnar Lothbrok","Harald Hardrada"],a:1},
+{c:"History",q:"What year was the Magna Carta first issued?",o:["1200","1210","1215","1220"],a:2},
+{c:"History",q:"What year did the Space Shuttle Challenger explode?",o:["1984","1985","1986","1987"],a:2},
+{c:"History",q:"Who was the last Queen of France?",o:["Marie de Medici","Marie Antoinette","Catherine de Medici","Josephine"],a:1},
+{c:"History",q:"What year was the transistor invented?",o:["1937","1942","1947","1952"],a:2},
+{c:"History",q:"What empire controlled the spice trade in the 1500s?",o:["Spanish","Dutch","Portuguese","British"],a:2},
+
+// MORE GEOGRAPHY (50)
+{c:"Geography",q:"What is the capital of New Zealand?",o:["Auckland","Christchurch","Wellington","Hamilton"],a:2},
+{c:"Geography",q:"What is the largest lake in the world by surface area?",o:["Lake Superior","Lake Victoria","Caspian Sea","Lake Baikal"],a:2},
+{c:"Geography",q:"What country has the most time zones?",o:["Russia","USA","China","France"],a:3},
+{c:"Geography",q:"What is the capital of Portugal?",o:["Porto","Lisbon","Faro","Coimbra"],a:1},
+{c:"Geography",q:"What is the highest mountain in Africa?",o:["Mount Kenya","Mount Stanley","Mount Kilimanjaro","Atlas Mountains"],a:2},
+{c:"Geography",q:"What strait connects the Mediterranean to the Atlantic?",o:["Strait of Hormuz","Strait of Malacca","Strait of Gibraltar","Bosphorus"],a:2},
+{c:"Geography",q:"What is the capital of Colombia?",o:["Medellin","Bogota","Cali","Cartagena"],a:1},
+{c:"Geography",q:"What is the second-longest river in Africa?",o:["Nile","Niger","Congo","Zambezi"],a:2},
+{c:"Geography",q:"What island country is off the southeast coast of Africa?",o:["Seychelles","Mauritius","Comoros","Madagascar"],a:3},
+{c:"Geography",q:"What is the capital of Austria?",o:["Salzburg","Innsbruck","Graz","Vienna"],a:3},
+{c:"Geography",q:"What country is the Sahara Desert mostly in?",o:["Libya","Egypt","Algeria","Sudan"],a:2},
+{c:"Geography",q:"What is the capital of Chile?",o:["Valparaiso","Concepcion","Santiago","Antofagasta"],a:2},
+{c:"Geography",q:"What is the world's largest coral reef system?",o:["Mesoamerican Reef","Great Barrier Reef","Red Sea Reef","New Caledonia Reef"],a:1},
+{c:"Geography",q:"What is the capital of Norway?",o:["Bergen","Stavanger","Trondheim","Oslo"],a:3},
+{c:"Geography",q:"What is the highest waterfall in North America?",o:["Niagara Falls","Yosemite Falls","Multnomah Falls","Shoshone Falls"],a:1},
+{c:"Geography",q:"What country is the Danube River's source in?",o:["Austria","Hungary","Romania","Germany"],a:3},
+{c:"Geography",q:"What is the capital of Vietnam?",o:["Ho Chi Minh City","Da Nang","Hue","Hanoi"],a:3},
+{c:"Geography",q:"What is the largest island in the Mediterranean?",o:["Sardinia","Corsica","Crete","Sicily"],a:3},
+{c:"Geography",q:"What is the capital of South Africa (executive)?",o:["Johannesburg","Cape Town","Pretoria","Durban"],a:2},
+{c:"Geography",q:"What river forms much of the US-Mexico border?",o:["Colorado","Mississippi","Rio Grande","Pecos"],a:2},
+{c:"Geography",q:"What is the capital of Denmark?",o:["Aarhus","Odense","Aalborg","Copenhagen"],a:3},
+{c:"Geography",q:"What is the driest inhabited continent?",o:["Africa","Europe","Asia","Australia"],a:3},
+{c:"Geography",q:"What is the capital of Cuba?",o:["Santiago","Trinidad","Varadero","Havana"],a:3},
+{c:"Geography",q:"What country has the most volcanoes?",o:["Japan","Iceland","Indonesia","Philippines"],a:2},
+{c:"Geography",q:"What is the capital of Czech Republic?",o:["Brno","Ostrava","Pilsen","Prague"],a:3},
+{c:"Geography",q:"What is the largest peninsula in the world?",o:["Indian","Scandinavian","Iberian","Arabian"],a:3},
+{c:"Geography",q:"What is the capital of Morocco?",o:["Casablanca","Marrakech","Fez","Rabat"],a:3},
+{c:"Geography",q:"What ocean is the Bermuda Triangle in?",o:["Pacific","Indian","Arctic","Atlantic"],a:3},
+{c:"Geography",q:"What is the capital of Finland?",o:["Turku","Tampere","Espoo","Helsinki"],a:3},
+{c:"Geography",q:"What is the largest archipelago in the world?",o:["Philippines","Japan","Indonesia","Maldives"],a:2},
+{c:"Geography",q:"What is the capital of Iran?",o:["Isfahan","Shiraz","Tabriz","Tehran"],a:3},
+{c:"Geography",q:"What mountain range runs through South America?",o:["Rockies","Himalayas","Alps","Andes"],a:3},
+{c:"Geography",q:"What is the capital of Hungary?",o:["Debrecen","Szeged","Pecs","Budapest"],a:3},
+{c:"Geography",q:"What sea is between Italy and Croatia?",o:["Tyrrhenian","Ionian","Adriatic","Aegean"],a:2},
+{c:"Geography",q:"What is the capital of the Philippines?",o:["Cebu","Davao","Quezon City","Manila"],a:3},
+{c:"Geography",q:"What is the hottest place on Earth (recorded)?",o:["Sahara","Death Valley","Lut Desert","Flaming Mountains"],a:1},
+{c:"Geography",q:"What is the capital of Ukraine?",o:["Lviv","Odessa","Kharkiv","Kyiv"],a:3},
+{c:"Geography",q:"What is the smallest US state by area?",o:["Delaware","Connecticut","Hawaii","Rhode Island"],a:3},
+{c:"Geography",q:"What is the capital of Belgium?",o:["Antwerp","Ghent","Bruges","Brussels"],a:3},
+{c:"Geography",q:"What is the longest wall in the world?",o:["Hadrian's Wall","Berlin Wall","Great Wall of China","Western Wall"],a:2},
+{c:"Geography",q:"What is the capital of Indonesia?",o:["Surabaya","Bali","Jakarta","Bandung"],a:2},
+{c:"Geography",q:"What country is Mount Fuji in?",o:["China","South Korea","Japan","Nepal"],a:2},
+{c:"Geography",q:"What is the capital of Romania?",o:["Cluj","Timisoara","Iasi","Bucharest"],a:3},
+{c:"Geography",q:"What is the world's longest canal?",o:["Suez Canal","Panama Canal","Grand Canal of China","Erie Canal"],a:2},
+{c:"Geography",q:"What is the capital of Ireland?",o:["Cork","Galway","Limerick","Dublin"],a:3},
+{c:"Geography",q:"What is the most visited country in the world?",o:["USA","Spain","France","Italy"],a:2},
+{c:"Geography",q:"What is the capital of Singapore?",o:["It has none","Jurong","Singapore","Changi"],a:2},
+{c:"Geography",q:"What is the northernmost capital in the world?",o:["Helsinki","Oslo","Reykjavik","Stockholm"],a:2},
+{c:"Geography",q:"What is the capital of Pakistan?",o:["Karachi","Lahore","Islamabad","Peshawar"],a:2},
+{c:"Geography",q:"What is the largest bay in the world?",o:["Hudson Bay","Bay of Bengal","Bay of Biscay","Chesapeake Bay"],a:1},
+
+// MORE MATH (50)
+{c:"Math",q:"What is the derivative of x^2?",o:["x","2x","x^2","2"],a:1},
+{c:"Math",q:"What is 13 x 13?",o:["156","163","169","172"],a:2},
+{c:"Math",q:"What is the integral of 1/x?",o:["x","1/x^2","ln|x| + C","e^x"],a:2},
+{c:"Math",q:"What is the sum of interior angles of a pentagon?",o:["360","450","540","630"],a:2},
+{c:"Math",q:"What is 2^16?",o:["32768","65536","131072","16384"],a:1},
+{c:"Math",q:"What is the square root of 225?",o:["13","14","15","16"],a:2},
+{c:"Math",q:"What is 37 x 3?",o:["101","107","111","114"],a:2},
+{c:"Math",q:"How many edges does a tetrahedron have?",o:["4","5","6","8"],a:2},
+{c:"Math",q:"What is 1000 in Roman numerals?",o:["C","D","L","M"],a:3},
+{c:"Math",q:"What is sin(90 degrees)?",o:["0","0.5","1","-1"],a:2},
+{c:"Math",q:"What is 11^2?",o:["111","121","131","141"],a:1},
+{c:"Math",q:"What is the area of a triangle with base 10 and height 6?",o:["16","30","60","36"],a:1},
+{c:"Math",q:"What is cos(0)?",o:["0","0.5","1","-1"],a:2},
+{c:"Math",q:"What is 3^5?",o:["125","243","729","81"],a:1},
+{c:"Math",q:"How many diagonals does a hexagon have?",o:["6","7","8","9"],a:3},
+{c:"Math",q:"What is the LCM of 8 and 12?",o:["16","20","24","48"],a:2},
+{c:"Math",q:"What is 1/3 + 1/6?",o:["1/2","1/3","2/9","1/9"],a:0},
+{c:"Math",q:"What is the 10th Fibonacci number?",o:["34","55","89","144"],a:1},
+{c:"Math",q:"What is tan(45 degrees)?",o:["0","0.5","1","undefined"],a:2},
+{c:"Math",q:"What is 17 x 17?",o:["279","289","299","309"],a:1},
+{c:"Math",q:"What is the volume of a cube with side 5?",o:["25","75","100","125"],a:3},
+{c:"Math",q:"What is the square root of 196?",o:["12","13","14","15"],a:2},
+{c:"Math",q:"What is 0! (zero factorial)?",o:["0","1","undefined","infinity"],a:1},
+{c:"Math",q:"What is the perimeter of a circle called?",o:["Diameter","Radius","Circumference","Area"],a:2},
+{c:"Math",q:"What is 8^3?",o:["256","384","512","648"],a:2},
+{c:"Math",q:"How many sides does an octagon have?",o:["6","7","8","9"],a:2},
+{c:"Math",q:"What is the median of 3, 7, 9, 12, 15?",o:["7","9","10","12"],a:1},
+{c:"Math",q:"What is pi times 2?",o:["3.14","6.28","9.42","12.56"],a:1},
+{c:"Math",q:"What is 19 x 5?",o:["85","90","95","100"],a:2},
+{c:"Math",q:"What is the mode of: 2, 3, 3, 5, 7, 7, 7, 9?",o:["3","5","7","9"],a:2},
+{c:"Math",q:"What is the surface area formula for a cube (side s)?",o:["4s^2","6s^2","8s^2","s^3"],a:1},
+{c:"Math",q:"What is the GCD of 24 and 36?",o:["4","6","8","12"],a:3},
+{c:"Math",q:"What is 144 divided by 12?",o:["10","11","12","13"],a:2},
+{c:"Math",q:"What is the slope of a horizontal line?",o:["1","0","undefined","infinity"],a:1},
+{c:"Math",q:"What is 5! / 3!?",o:["10","20","30","60"],a:1},
+{c:"Math",q:"What type of angle is exactly 180 degrees?",o:["Right","Obtuse","Straight","Reflex"],a:2},
+{c:"Math",q:"What is the sum: 1 + 2 + 3 + ... + 100?",o:["4950","5000","5050","5100"],a:2},
+{c:"Math",q:"What is 7^2 + 24^2?",o:["576","600","625","650"],a:2},
+{c:"Math",q:"What is the reciprocal of 4?",o:["0.2","0.25","0.4","4"],a:1},
+{c:"Math",q:"What is the name for a polygon with 12 sides?",o:["Decagon","Hendecagon","Dodecagon","Tridecagon"],a:2},
+{c:"Math",q:"What is the range of the set {3, 7, 7, 2, 9}?",o:["5","6","7","9"],a:2},
+{c:"Math",q:"What is 2.5 x 4?",o:["8","10","12","14"],a:1},
+{c:"Math",q:"What is the supplement of a 60 degree angle?",o:["30","90","120","150"],a:2},
+{c:"Math",q:"What is log base 2 of 64?",o:["4","5","6","8"],a:2},
+{c:"Math",q:"What is the probability of flipping heads on a fair coin?",o:["0.25","0.5","0.75","1"],a:1},
+{c:"Math",q:"What is 16^(1/2)?",o:["2","4","8","16"],a:1},
+{c:"Math",q:"What is the area of a circle with radius 5?",o:["25 Pi","50 Pi","75 Pi","100 Pi"],a:0},
+{c:"Math",q:"What is the complement of a 35 degree angle?",o:["45","55","65","145"],a:1},
+{c:"Math",q:"How many faces does an icosahedron have?",o:["10","12","16","20"],a:3},
+{c:"Math",q:"What is the next prime after 23?",o:["25","27","29","31"],a:2},
+
+// MORE ENGLISH (50)
+{c:"English",q:"Who wrote 'War and Peace'?",o:["Dostoevsky","Tolstoy","Chekhov","Turgenev"],a:1},
+{c:"English",q:"What does 'ambiguous' mean?",o:["Clear","Having multiple meanings","Angry","Simple"],a:1},
+{c:"English",q:"What is the past participle of 'swim'?",o:["Swam","Swum","Swimmed","Swimming"],a:1},
+{c:"English",q:"Who wrote 'The Canterbury Tales'?",o:["Shakespeare","Milton","Chaucer","Spenser"],a:2},
+{c:"English",q:"What is a homophone?",o:["Words spelled the same","Words that sound the same but differ in meaning","Words with opposite meanings","Words with similar meanings"],a:1},
+{c:"English",q:"What does 'pragmatic' mean?",o:["Theoretical","Emotional","Practical and realistic","Artistic"],a:2},
+{c:"English",q:"Who wrote 'Don Quixote'?",o:["Cervantes","Lorca","Borges","Marquez"],a:0},
+{c:"English",q:"What is a dangling modifier?",o:["A misplaced describing phrase","An incomplete sentence","A run-on sentence","A double negative"],a:0},
+{c:"English",q:"What does 'lethargic' mean?",o:["Energetic","Sluggish and drowsy","Angry","Joyful"],a:1},
+{c:"English",q:"Who wrote 'Jane Eyre'?",o:["Jane Austen","Emily Bronte","Charlotte Bronte","Virginia Woolf"],a:2},
+{c:"English",q:"What is a haiku?",o:["A 14-line poem","A 3-line Japanese poem","A rhyming couplet","A narrative poem"],a:1},
+{c:"English",q:"What does 'verbose' mean?",o:["Brief","Using too many words","Poetic","Unclear"],a:1},
+{c:"English",q:"Who wrote 'The Raven'?",o:["Walt Whitman","Emily Dickinson","Edgar Allan Poe","Robert Frost"],a:2},
+{c:"English",q:"What is an ellipsis (...) used for?",o:["Ending a sentence","Indicating omitted text or a pause","Showing excitement","Asking a question"],a:1},
+{c:"English",q:"What does 'stoic' mean?",o:["Emotional","Enduring pain without showing feelings","Wealthy","Intelligent"],a:1},
+{c:"English",q:"Who wrote 'Wuthering Heights'?",o:["Charlotte Bronte","Emily Bronte","Jane Austen","George Eliot"],a:1},
+{c:"English",q:"What is the Oxford comma?",o:["A comma before 'and' in a list","A semicolon","A British spelling rule","A type of quotation mark"],a:0},
+{c:"English",q:"What does 'conundrum' mean?",o:["A solution","A difficult problem","A celebration","A simple task"],a:1},
+{c:"English",q:"Who wrote 'Crime and Punishment'?",o:["Tolstoy","Dostoevsky","Gogol","Pushkin"],a:1},
+{c:"English",q:"What is the subjunctive mood used for?",o:["Statements of fact","Wishes, demands, or hypotheticals","Questions","Commands"],a:1},
+{c:"English",q:"What does 'eloquent' mean?",o:["Quiet","Fluent and persuasive in speaking","Rude","Confused"],a:1},
+{c:"English",q:"Who wrote 'Catch-22'?",o:["Kurt Vonnegut","Joseph Heller","Norman Mailer","Ken Kesey"],a:1},
+{c:"English",q:"What literary period did Charles Dickens belong to?",o:["Romantic","Victorian","Modernist","Elizabethan"],a:1},
+{c:"English",q:"What does 'juxtaposition' mean?",o:["Agreement","Placing things side by side for contrast","Repetition","A type of rhyme"],a:1},
+{c:"English",q:"Who wrote 'The Picture of Dorian Gray'?",o:["Charles Dickens","Oscar Wilde","Thomas Hardy","Rudyard Kipling"],a:1},
+{c:"English",q:"What is a split infinitive?",o:["Breaking 'to + verb' with a word","A verb with two meanings","An incomplete verb","A passive verb"],a:0},
+{c:"English",q:"What does 'cacophony' mean?",o:["Beautiful music","A harsh mixture of sounds","Silence","Rhythm"],a:1},
+{c:"English",q:"Who wrote 'One Hundred Years of Solitude'?",o:["Borges","Neruda","Garcia Marquez","Allende"],a:2},
+{c:"English",q:"What is a soliloquy?",o:["A conversation","Speaking one's thoughts aloud alone","A type of poem","A debate"],a:1},
+{c:"English",q:"What does 'paradox' mean?",o:["A simple truth","A seemingly contradictory statement that may be true","An exaggeration","A type of metaphor"],a:1},
+{c:"English",q:"Who wrote 'Invisible Man'?",o:["H.G. Wells","Ralph Ellison","James Baldwin","Richard Wright"],a:1},
+{c:"English",q:"What is an unreliable narrator?",o:["A third-person narrator","A narrator whose credibility is compromised","A silent narrator","An omniscient narrator"],a:1},
+{c:"English",q:"What does 'antithesis' mean?",o:["Agreement","The exact opposite","A comparison","An exaggeration"],a:1},
+{c:"English",q:"Who wrote 'The Iliad'?",o:["Virgil","Sophocles","Homer","Euripides"],a:2},
+{c:"English",q:"What is synecdoche?",o:["A part representing the whole","A word imitating a sound","An extreme exaggeration","A type of irony"],a:0},
+{c:"English",q:"What does 'melancholy' mean?",o:["Joyful","A deep sadness","Angry","Energetic"],a:1},
+{c:"English",q:"Who wrote 'Slaughterhouse-Five'?",o:["Joseph Heller","Norman Mailer","Kurt Vonnegut","Thomas Pynchon"],a:2},
+{c:"English",q:"What is iambic pentameter?",o:["10 syllables per line in unstressed/stressed pattern","A type of rhyme scheme","A sonnet form","Free verse"],a:0},
+{c:"English",q:"What does 'esoteric' mean?",o:["Common","Understood by a small number of people","Loud","Boring"],a:1},
+{c:"English",q:"Who wrote 'Beloved'?",o:["Alice Walker","Maya Angelou","Toni Morrison","Zora Neale Hurston"],a:2},
+{c:"English",q:"What is foreshadowing?",o:["A flashback technique","Hinting at future events","Exaggeration","Repetition for emphasis"],a:1},
+{c:"English",q:"What does 'resilient' mean?",o:["Fragile","Able to recover quickly","Slow","Rigid"],a:1},
+{c:"English",q:"Who wrote 'The Old Man and the Sea'?",o:["Fitzgerald","Faulkner","Hemingway","Steinbeck"],a:2},
+{c:"English",q:"What is a bildungsroman?",o:["A horror novel","A coming-of-age story","A love story","A mystery"],a:1},
+{c:"English",q:"What does 'facetious' mean?",o:["Serious","Treating serious issues with inappropriate humor","Angry","Sad"],a:1},
+{c:"English",q:"Who wrote 'Macbeth'?",o:["Marlowe","Jonson","Shakespeare","Milton"],a:2},
+{c:"English",q:"What is dramatic irony?",o:["When the audience knows something characters don't","A funny coincidence","A tragic ending","A plot twist"],a:0},
+{c:"English",q:"What does 'altruistic' mean?",o:["Selfish","Selflessly concerned for others","Wealthy","Powerful"],a:1},
+{c:"English",q:"Who wrote 'Les Miserables'?",o:["Alexandre Dumas","Emile Zola","Victor Hugo","Gustave Flaubert"],a:2},
+{c:"English",q:"What is a malapropism?",o:["Using a wrong word that sounds similar","A type of metaphor","An incomplete sentence","A rhetorical question"],a:0},
+
+// MORE TECHNOLOGY (50)
+{c:"Technology",q:"What does 'SaaS' stand for?",o:["Software as a Service","System as a Solution","Secure as a Service","Storage as a System"],a:0},
+{c:"Technology",q:"What year was Bitcoin created?",o:["2007","2008","2009","2010"],a:2},
+{c:"Technology",q:"What does 'DNS' stand for?",o:["Digital Network System","Domain Name System","Data Network Server","Direct Name Service"],a:1},
+{c:"Technology",q:"What company developed the first microprocessor?",o:["AMD","IBM","Intel","Motorola"],a:2},
+{c:"Technology",q:"What does 'OOP' stand for?",o:["Open Online Platform","Object Oriented Programming","Optimal Operation Process","Output Operation Protocol"],a:1},
+{c:"Technology",q:"What year was Bluetooth invented?",o:["1994","1998","2001","2004"],a:0},
+{c:"Technology",q:"What does 'FTP' stand for?",o:["File Transfer Protocol","Fast Transfer Process","File Transport Program","Final Transfer Protocol"],a:0},
+{c:"Technology",q:"Who created the C programming language?",o:["Bjarne Stroustrup","Dennis Ritchie","Ken Thompson","James Gosling"],a:1},
+{c:"Technology",q:"What does 'IP' stand for in networking?",o:["Internet Provider","Internet Protocol","Internal Process","Input Protocol"],a:1},
+{c:"Technology",q:"What year was the first website created?",o:["1989","1991","1993","1995"],a:1},
+{c:"Technology",q:"What does 'GPU' stand for?",o:["General Processing Unit","Graphics Processing Unit","Global Program Utility","Graphical Protocol Unit"],a:1},
+{c:"Technology",q:"What company created the first personal computer?",o:["Apple","IBM","HP","Dell"],a:1},
+{c:"Technology",q:"What does 'TCP' stand for?",o:["Transfer Control Protocol","Transmission Control Protocol","Technical Computer Process","Total Communication Protocol"],a:1},
+{c:"Technology",q:"What programming language was created by Sun Microsystems?",o:["C++","Python","Java","Ruby"],a:2},
+{c:"Technology",q:"What does 'SMTP' stand for?",o:["Simple Mail Transfer Protocol","Secure Mail Transport Protocol","System Message Transfer Process","Standard Mail Technology Protocol"],a:0},
+{c:"Technology",q:"What year was Instagram launched?",o:["2008","2009","2010","2011"],a:2},
+{c:"Technology",q:"What does 'NFC' stand for?",o:["Near Field Communication","Network File Control","New Frequency Channel","Node Forwarding Connection"],a:0},
+{c:"Technology",q:"Who co-founded Google?",o:["Jeff Bezos and Tim Cook","Larry Page and Sergey Brin","Bill Gates and Paul Allen","Steve Jobs and Steve Wozniak"],a:1},
+{c:"Technology",q:"What does 'AJAX' stand for?",o:["Asynchronous JavaScript and XML","Advanced Java and XML","Automated JSON and XHTML","Applied JavaScript and XSLT"],a:0},
+{c:"Technology",q:"What year was Twitter launched?",o:["2004","2005","2006","2007"],a:2},
+{c:"Technology",q:"What does 'CAPTCHA' help prevent?",o:["Viruses","Automated bots","Data loss","Hacking"],a:1},
+{c:"Technology",q:"What is the most popular version control system?",o:["SVN","Mercurial","Git","CVS"],a:2},
+{c:"Technology",q:"What does 'SSH' stand for?",o:["Secure Shell","Safe System Host","Secure System Hub","Standard Shell Handler"],a:0},
+{c:"Technology",q:"What company makes the Xbox?",o:["Sony","Nintendo","Microsoft","Sega"],a:2},
+{c:"Technology",q:"What does 'REST' stand for in web APIs?",o:["Representational State Transfer","Remote Execution Standard Technology","Responsive System Transfer","Resource State Technology"],a:0},
+{c:"Technology",q:"What year was Netflix founded?",o:["1995","1997","1999","2001"],a:1},
+{c:"Technology",q:"What does 'DHCP' stand for?",o:["Dynamic Host Configuration Protocol","Direct Host Control Protocol","Data Handling Control Process","Digital Host Communication Protocol"],a:0},
+{c:"Technology",q:"What is the name of Apple's virtual assistant?",o:["Alexa","Cortana","Siri","Bixby"],a:2},
+{c:"Technology",q:"What does 'SDK' stand for?",o:["Software Development Kit","System Design Kit","Source Data Kit","Secure Development Key"],a:0},
+{c:"Technology",q:"What year was the first iPhone with Face ID?",o:["2015","2016","2017","2018"],a:2},
+{c:"Technology",q:"What does 'CLI' stand for?",o:["Common Language Interface","Command Line Interface","Computer Logic Integration","Central Linked Infrastructure"],a:1},
+{c:"Technology",q:"Who created Linux?",o:["Richard Stallman","Dennis Ritchie","Linus Torvalds","Ken Thompson"],a:2},
+{c:"Technology",q:"What does 'JSON' stand for?",o:["JavaScript Object Notation","Java System Object Network","Joint Standard Object Naming","JavaScript Online Notation"],a:0},
+{c:"Technology",q:"What year was Amazon founded?",o:["1992","1994","1996","1998"],a:1},
+{c:"Technology",q:"What does 'CDN' stand for?",o:["Content Delivery Network","Central Data Node","Computer Distribution Network","Core Digital Network"],a:0},
+{c:"Technology",q:"What is the name of Google's mobile OS?",o:["iOS","Windows Mobile","Android","Tizen"],a:2},
+{c:"Technology",q:"What does 'OLED' stand for?",o:["Organic Light Emitting Diode","Optimal Light Energy Display","Open LED","Output Light Emission Device"],a:0},
+{c:"Technology",q:"What company developed TypeScript?",o:["Google","Facebook","Microsoft","Oracle"],a:2},
+{c:"Technology",q:"What does 'CORS' stand for?",o:["Cross-Origin Resource Sharing","Central Online Resource System","Common Origin Request Service","Cross-Object Reference Standard"],a:0},
+{c:"Technology",q:"What year was Spotify launched?",o:["2006","2008","2010","2012"],a:1},
+{c:"Technology",q:"What does 'CI/CD' stand for?",o:["Continuous Integration/Continuous Deployment","Computer Interface/Control Device","Central Intelligence/Core Data","Common Integration/Constant Delivery"],a:0},
+{c:"Technology",q:"What is the primary language of iOS development?",o:["Java","Kotlin","Swift","Objective-C"],a:2},
+{c:"Technology",q:"What does 'YAML' stand for?",o:["Yet Another Markup Language","YAML Ain't Markup Language","Your Advanced Markup Language","Yottabyte Application Markup Language"],a:1},
+{c:"Technology",q:"What year was the first Android phone released?",o:["2006","2007","2008","2009"],a:2},
+{c:"Technology",q:"What does 'HTTPS' use for encryption?",o:["SSH","SSL/TLS","AES only","RSA only"],a:1},
+{c:"Technology",q:"Who invented email?",o:["Tim Berners-Lee","Vint Cerf","Ray Tomlinson","Steve Wozniak"],a:2},
+{c:"Technology",q:"What does 'DOM' stand for?",o:["Document Object Model","Data Output Manager","Digital Object Mapping","Device Operation Mode"],a:0},
+{c:"Technology",q:"What year was WhatsApp founded?",o:["2007","2009","2011","2013"],a:1},
+{c:"Technology",q:"What does 'IDE' stand for?",o:["Integrated Development Environment","Internal Data Engine","Internet Development Editor","Intelligent Design Engine"],a:0},
+{c:"Technology",q:"What company developed React?",o:["Google","Microsoft","Facebook/Meta","Amazon"],a:2},
+
+// MORE SPORTS (50)
+{c:"Sports",q:"What country invented baseball?",o:["England","USA","Japan","Cuba"],a:1},
+{c:"Sports",q:"How many players are on a volleyball team on court?",o:["4","5","6","7"],a:2},
+{c:"Sports",q:"What is the highest belt in karate?",o:["Red","Brown","Black","White"],a:2},
+{c:"Sports",q:"What sport is the Tour de France?",o:["Running","Swimming","Cycling","Skiing"],a:2},
+{c:"Sports",q:"How many minutes is a standard soccer match?",o:["60","80","90","120"],a:2},
+{c:"Sports",q:"What country has won the most FIFA World Cups?",o:["Germany","Argentina","Italy","Brazil"],a:3},
+{c:"Sports",q:"What is the scoring system in tennis?",o:["1,2,3,4","0,15,30,40","5,10,15,20","10,20,30,40"],a:1},
+{c:"Sports",q:"What sport uses a wicket?",o:["Baseball","Croquet","Cricket","Lacrosse"],a:2},
+{c:"Sports",q:"How many players are on an American football team on field?",o:["9","10","11","12"],a:2},
+{c:"Sports",q:"What is the diameter of a soccer ball in cm (approx)?",o:["18","20","22","24"],a:2},
+{c:"Sports",q:"What sport is Serena Williams known for?",o:["Golf","Gymnastics","Tennis","Swimming"],a:2},
+{c:"Sports",q:"How many points is a three-pointer in basketball?",o:["1","2","3","4"],a:2},
+{c:"Sports",q:"What country hosted the 2022 FIFA World Cup?",o:["Russia","Japan","Qatar","Saudi Arabia"],a:2},
+{c:"Sports",q:"What is the length of an Olympic swimming pool in meters?",o:["25","50","75","100"],a:1},
+{c:"Sports",q:"What sport does Tiger Woods play?",o:["Tennis","Cricket","Golf","Polo"],a:2},
+{c:"Sports",q:"How many innings are in a standard baseball game?",o:["7","8","9","10"],a:2},
+{c:"Sports",q:"What country is table tennis most popular in?",o:["Japan","South Korea","China","Germany"],a:2},
+{c:"Sports",q:"What sport is the Stanley Cup awarded for?",o:["Basketball","Baseball","Ice Hockey","Football"],a:2},
+{c:"Sports",q:"How many weight classes are in Olympic boxing?",o:["8","10","13","15"],a:2},
+{c:"Sports",q:"What sport is played at Augusta National?",o:["Tennis","Golf","Polo","Cricket"],a:1},
+{c:"Sports",q:"How long is a rugby match in minutes?",o:["60","70","80","90"],a:2},
+{c:"Sports",q:"What country did the sport of judo originate from?",o:["China","Korea","Japan","Thailand"],a:2},
+{c:"Sports",q:"How many laps is the Indianapolis 500?",o:["100","200","300","500"],a:1},
+{c:"Sports",q:"What sport uses the term 'love' for zero?",o:["Badminton","Tennis","Squash","Table Tennis"],a:1},
+{c:"Sports",q:"How many players are on a cricket team?",o:["9","10","11","12"],a:2},
+{c:"Sports",q:"What country won the 2014 FIFA World Cup?",o:["Brazil","Argentina","Germany","Spain"],a:2},
+{c:"Sports",q:"What is the highest score in gymnastics?",o:["8","9","10","12"],a:2},
+{c:"Sports",q:"What sport uses a velodrome?",o:["Running","Cycling","Skating","Horse racing"],a:1},
+{c:"Sports",q:"How many substitutes are allowed in a FIFA soccer match?",o:["3","4","5","6"],a:2},
+{c:"Sports",q:"What sport is the Super Bowl?",o:["Basketball","Baseball","Ice Hockey","American Football"],a:3},
+{c:"Sports",q:"How many events are in a decathlon?",o:["5","7","10","12"],a:2},
+{c:"Sports",q:"What country did the sport of fencing originate from?",o:["France","Italy","Spain","Germany"],a:2},
+{c:"Sports",q:"How many players are on a water polo team in the pool?",o:["5","6","7","8"],a:2},
+{c:"Sports",q:"What sport does Usain Bolt compete in?",o:["Swimming","Cycling","Sprinting/Track","Long Jump"],a:2},
+{c:"Sports",q:"How many sets are in a standard volleyball match?",o:["3","4","5","6"],a:2},
+{c:"Sports",q:"What sport uses a foil, epee, and sabre?",o:["Archery","Fencing","Javelin","Polo"],a:1},
+{c:"Sports",q:"What is the width of a soccer goal in meters?",o:["5.5","6.5","7.32","8"],a:2},
+{c:"Sports",q:"How many Grand Slam tournaments are there in tennis?",o:["3","4","5","6"],a:1},
+{c:"Sports",q:"What country did handball originate from?",o:["Germany","Denmark","Sweden","Norway"],a:1},
+{c:"Sports",q:"How many players are on a rugby union team?",o:["11","13","15","17"],a:2},
+{c:"Sports",q:"What sport is the Ryder Cup associated with?",o:["Tennis","Golf","Sailing","Polo"],a:1},
+{c:"Sports",q:"How many lanes does an Olympic running track have?",o:["6","7","8","9"],a:2},
+{c:"Sports",q:"What country invented volleyball?",o:["Brazil","USA","Japan","Russia"],a:1},
+{c:"Sports",q:"How long is a standard boxing round in minutes?",o:["2","3","4","5"],a:1},
+{c:"Sports",q:"What sport does LeBron James play?",o:["Football","Basketball","Baseball","Tennis"],a:1},
+{c:"Sports",q:"How many points is a field goal worth in American football?",o:["1","2","3","6"],a:2},
+{c:"Sports",q:"What country won the first Cricket World Cup?",o:["Australia","England","India","West Indies"],a:3},
+{c:"Sports",q:"How long is an Olympic triathlon swim in meters?",o:["750","1000","1500","2000"],a:2},
+{c:"Sports",q:"What sport uses the term 'birdie'?",o:["Tennis","Badminton","Golf","Bowling"],a:2},
+{c:"Sports",q:"How many players are on a field hockey team?",o:["9","10","11","12"],a:2},
+
+// MORE MUSIC & ARTS (50)
+{c:"Music & Arts",q:"What instrument does a timpanist play?",o:["Cymbals","Snare drum","Kettledrums","Xylophone"],a:2},
+{c:"Music & Arts",q:"Who painted 'Water Lilies'?",o:["Renoir","Monet","Manet","Degas"],a:1},
+{c:"Music & Arts",q:"What is the time signature of a waltz?",o:["2/4","3/4","4/4","6/8"],a:1},
+{c:"Music & Arts",q:"Who composed 'Fur Elise'?",o:["Mozart","Chopin","Beethoven","Liszt"],a:2},
+{c:"Music & Arts",q:"What art style uses dots of color?",o:["Impressionism","Cubism","Pointillism","Fauvism"],a:2},
+{c:"Music & Arts",q:"How many keys does a standard piano have?",o:["76","82","88","92"],a:2},
+{c:"Music & Arts",q:"Who painted 'Guernica'?",o:["Dali","Miro","Picasso","Goya"],a:2},
+{c:"Music & Arts",q:"What does 'pianissimo' mean?",o:["Very loud","Moderately soft","Very soft","Moderately loud"],a:2},
+{c:"Music & Arts",q:"Who composed 'The Nutcracker'?",o:["Prokofiev","Stravinsky","Tchaikovsky","Rimsky-Korsakov"],a:2},
+{c:"Music & Arts",q:"What instrument family does the clarinet belong to?",o:["Brass","String","Woodwind","Percussion"],a:2},
+{c:"Music & Arts",q:"Who painted 'The Birth of Venus'?",o:["Raphael","Michelangelo","Titian","Botticelli"],a:3},
+{c:"Music & Arts",q:"What is a crescendo followed by a decrescendo called?",o:["Sforzando","Accent","Swell","Marcato"],a:2},
+{c:"Music & Arts",q:"Who composed 'Messiah'?",o:["Bach","Handel","Vivaldi","Haydn"],a:1},
+{c:"Music & Arts",q:"What genre did Louis Armstrong play?",o:["Rock","Blues","Jazz","Classical"],a:2},
+{c:"Music & Arts",q:"Who painted 'A Sunday on La Grande Jatte'?",o:["Monet","Renoir","Seurat","Cezanne"],a:2},
+{c:"Music & Arts",q:"What is the lowest brass instrument?",o:["Trumpet","French Horn","Trombone","Tuba"],a:3},
+{c:"Music & Arts",q:"Who composed 'Clair de Lune'?",o:["Ravel","Satie","Debussy","Faure"],a:2},
+{c:"Music & Arts",q:"What art movement came before Impressionism?",o:["Modernism","Realism","Baroque","Surrealism"],a:1},
+{c:"Music & Arts",q:"How many strings does a cello have?",o:["3","4","5","6"],a:1},
+{c:"Music & Arts",q:"Who painted 'The Kiss'?",o:["Munch","Schiele","Klimt","Modigliani"],a:2},
+{c:"Music & Arts",q:"What is a group of four musicians called?",o:["Trio","Quartet","Quintet","Ensemble"],a:1},
+{c:"Music & Arts",q:"Who composed 'Bolero'?",o:["Debussy","Satie","Ravel","Bizet"],a:2},
+{c:"Music & Arts",q:"What painting technique uses tiny dots?",o:["Impasto","Glazing","Stippling","Scumbling"],a:2},
+{c:"Music & Arts",q:"Who composed 'Ride of the Valkyries'?",o:["Beethoven","Brahms","Wagner","Strauss"],a:2},
+{c:"Music & Arts",q:"What does 'rubato' mean in music?",o:["Repeated","Flexible tempo","Very fast","Staccato"],a:1},
+{c:"Music & Arts",q:"Who created the 'Campbell's Soup Cans' artwork?",o:["Lichtenstein","Warhol","Hockney","Johns"],a:1},
+{c:"Music & Arts",q:"What instrument has the most strings in an orchestra?",o:["Violin","Viola","Cello","Harp"],a:3},
+{c:"Music & Arts",q:"Who painted 'American Gothic'?",o:["Norman Rockwell","Grant Wood","Edward Hopper","Andrew Wyeth"],a:1},
+{c:"Music & Arts",q:"What is syncopation?",o:["Playing in unison","Emphasis on unexpected beats","Playing very slowly","A type of harmony"],a:1},
+{c:"Music & Arts",q:"Who composed 'The Planets'?",o:["Holst","Elgar","Britten","Vaughan Williams"],a:0},
+{c:"Music & Arts",q:"What is chiaroscuro?",o:["A type of sculpture","Use of light and dark contrast","A musical term","A dance style"],a:1},
+{c:"Music & Arts",q:"Who painted 'Nighthawks'?",o:["Norman Rockwell","Grant Wood","Edward Hopper","Andrew Wyeth"],a:2},
+{c:"Music & Arts",q:"What does 'staccato' mean?",o:["Smooth and connected","Short and detached","Very loud","Gradually slower"],a:1},
+{c:"Music & Arts",q:"Who composed 'Rhapsody in Blue'?",o:["Copland","Bernstein","Gershwin","Porter"],a:2},
+{c:"Music & Arts",q:"What is a fresco painting done on?",o:["Canvas","Wood","Wet plaster","Glass"],a:2},
+{c:"Music & Arts",q:"Who composed 'Also Sprach Zarathustra'?",o:["Mahler","Bruckner","R. Strauss","Wagner"],a:2},
+{c:"Music & Arts",q:"What art technique creates depth on a flat surface?",o:["Shading","Perspective","Blending","Hatching"],a:1},
+{c:"Music & Arts",q:"Who composed 'Canon in D'?",o:["Bach","Handel","Pachelbel","Telemann"],a:2},
+{c:"Music & Arts",q:"What is gouache?",o:["A type of oil paint","Opaque watercolor","Acrylic paint","Ink wash"],a:1},
+{c:"Music & Arts",q:"Who composed 'Spring' from The Four Seasons?",o:["Bach","Handel","Vivaldi","Corelli"],a:2},
+
+// MORE FOOD (50)
+{c:"Food",q:"What country is pad thai from?",o:["Vietnam","China","Thailand","Malaysia"],a:2},
+{c:"Food",q:"What is the main ingredient in a traditional omelette?",o:["Flour","Milk","Eggs","Cheese"],a:2},
+{c:"Food",q:"What country is feta cheese from?",o:["Italy","France","Turkey","Greece"],a:3},
+{c:"Food",q:"What temperature does water boil at in Fahrenheit?",o:["180","200","212","220"],a:2},
+{c:"Food",q:"What spice is made from dried chili peppers?",o:["Cumin","Coriander","Paprika","Turmeric"],a:2},
+{c:"Food",q:"What country is couscous originally from?",o:["Egypt","North Africa/Morocco","Turkey","India"],a:1},
+{c:"Food",q:"What is tempeh made from?",o:["Rice","Wheat","Fermented soybeans","Lentils"],a:2},
+{c:"Food",q:"What country is brie cheese from?",o:["Italy","Switzerland","France","Netherlands"],a:2},
+{c:"Food",q:"What is the main ingredient in risotto?",o:["Pasta","Quinoa","Rice","Couscous"],a:2},
+{c:"Food",q:"What oil is most used in Mediterranean cooking?",o:["Coconut oil","Olive oil","Sunflower oil","Canola oil"],a:1},
+{c:"Food",q:"What country is ramen originally from?",o:["Japan","China","Korea","Vietnam"],a:1},
+{c:"Food",q:"What is naan?",o:["A rice dish","A flatbread","A curry","A dessert"],a:1},
+{c:"Food",q:"What nut is used to make pesto?",o:["Almond","Walnut","Pine nut","Cashew"],a:2},
+{c:"Food",q:"What country is baklava from?",o:["Greece","Turkey","Both claim it","Egypt"],a:2},
+{c:"Food",q:"What fruit is used to make wine?",o:["Apple","Grape","Plum","Cherry"],a:1},
+{c:"Food",q:"What is the hottest chili pepper (as of 2023)?",o:["Ghost Pepper","Trinidad Scorpion","Carolina Reaper","Habanero"],a:2},
+{c:"Food",q:"What country is pho from?",o:["Thailand","China","Japan","Vietnam"],a:3},
+{c:"Food",q:"What is the main ingredient in tahini?",o:["Chickpeas","Sesame seeds","Peanuts","Almonds"],a:1},
+{c:"Food",q:"How many grams are in a kilogram?",o:["100","500","1000","10000"],a:2},
+{c:"Food",q:"What country is tzatziki from?",o:["Turkey","Lebanon","Italy","Greece"],a:3},
+{c:"Food",q:"What is the most produced fruit in the world?",o:["Apple","Banana","Watermelon","Tomato"],a:3},
+{c:"Food",q:"What country is dim sum from?",o:["Japan","China","Thailand","Vietnam"],a:1},
+{c:"Food",q:"What type of acid gives lemons their sour taste?",o:["Acetic acid","Malic acid","Citric acid","Lactic acid"],a:2},
+{c:"Food",q:"What is ghee?",o:["A type of yogurt","Clarified butter","A spice blend","A type of flour"],a:1},
+{c:"Food",q:"What country is ceviche from?",o:["Mexico","Brazil","Peru","Spain"],a:2},
+{c:"Food",q:"What grain is sake made from?",o:["Wheat","Barley","Rice","Corn"],a:2},
+{c:"Food",q:"What is the most consumed meat globally?",o:["Beef","Chicken","Pork","Fish"],a:2},
+{c:"Food",q:"What country is pierogi from?",o:["Russia","Poland","Ukraine","Czech Republic"],a:1},
+{c:"Food",q:"What is the main spice in garam masala?",o:["Turmeric","It's a blend of many spices","Cumin only","Chili"],a:1},
+{c:"Food",q:"What fruit is used to make prunes?",o:["Date","Fig","Plum","Apricot"],a:2},
+{c:"Food",q:"What country is fondue from?",o:["France","Italy","Switzerland","Austria"],a:2},
+{c:"Food",q:"What vitamin do carrots provide abundantly?",o:["Vitamin C","Vitamin A","Vitamin K","Vitamin E"],a:1},
+{c:"Food",q:"What country is tagine from?",o:["Egypt","Tunisia","Morocco","Algeria"],a:2},
+{c:"Food",q:"What is polenta made from?",o:["Wheat","Rice","Cornmeal","Semolina"],a:2},
+{c:"Food",q:"What is the most expensive mushroom?",o:["Shiitake","Morel","Truffle","Chanterelle"],a:2},
+{c:"Food",q:"What country is arepas from?",o:["Mexico","Colombia/Venezuela","Brazil","Peru"],a:1},
+{c:"Food",q:"What type of milk is traditionally used in Thai curry?",o:["Soy milk","Almond milk","Coconut milk","Oat milk"],a:2},
+{c:"Food",q:"What is the main ingredient in miso soup?",o:["Soy sauce","Fermented soybean paste","Tofu","Seaweed"],a:1},
+{c:"Food",q:"What country is jerk chicken from?",o:["Cuba","Trinidad","Jamaica","Barbados"],a:2},
+{c:"Food",q:"What is the most popular pizza topping worldwide?",o:["Pepperoni","Mushroom","Ham","Sausage"],a:0},
+{c:"Food",q:"What country is moussaka from?",o:["Turkey","Greece","Lebanon","Egypt"],a:1},
+{c:"Food",q:"What is za'atar?",o:["A chili paste","A herb and spice blend","A type of bread","A fermented drink"],a:1},
+{c:"Food",q:"What country is injera bread from?",o:["India","Morocco","Ethiopia","Egypt"],a:2},
+{c:"Food",q:"What cheese has holes in it?",o:["Gouda","Cheddar","Swiss/Emmental","Brie"],a:2},
+{c:"Food",q:"What is the most consumed beverage after water?",o:["Coffee","Beer","Juice","Tea"],a:3},
+{c:"Food",q:"What country is goulash from?",o:["Germany","Austria","Hungary","Czech Republic"],a:2},
+{c:"Food",q:"What is the main ingredient in falafel?",o:["Lentils","Chickpeas","Fava beans","Both chickpeas and fava beans"],a:3},
+{c:"Food",q:"What country is Peking duck from?",o:["Japan","Vietnam","China","Thailand"],a:2},
+{c:"Food",q:"What herb is most associated with Italian cooking?",o:["Cilantro","Basil","Dill","Mint"],a:1},
+{c:"Food",q:"What country is churros from?",o:["Mexico","Portugal","Spain","Both Spain and Portugal"],a:3},
+
+// MORE NATURE (54)
+{c:"Nature",q:"What is the fastest bird in level flight?",o:["Peregrine Falcon","Swift","Eagle","Hawk"],a:1},
+{c:"Nature",q:"How many legs does a lobster have?",o:["6","8","10","12"],a:2},
+{c:"Nature",q:"What is the largest reptile?",o:["Komodo Dragon","Anaconda","Saltwater Crocodile","Leatherback Turtle"],a:2},
+{c:"Nature",q:"What animal has the longest migration?",o:["Monarch Butterfly","Gray Whale","Arctic Tern","Wildebeest"],a:2},
+{c:"Nature",q:"How many teeth does an adult dog have?",o:["28","32","38","42"],a:3},
+{c:"Nature",q:"What is the only bird that can swim but not fly?",o:["Ostrich","Kiwi","Penguin","Emu"],a:2},
+{c:"Nature",q:"What is the world's smallest mammal by weight?",o:["Pygmy Shrew","Bumblebee Bat","Mouse Lemur","Hamster"],a:1},
+{c:"Nature",q:"What animal can hold its breath the longest?",o:["Whale","Crocodile","Cuvier's Beaked Whale","Sea Turtle"],a:2},
+{c:"Nature",q:"What is the largest living organism on Earth?",o:["Blue Whale","Giant Sequoia","Honey Fungus","Great Barrier Reef"],a:2},
+{c:"Nature",q:"How many species of bees exist (approx)?",o:["2,000","10,000","20,000","50,000"],a:2},
+{c:"Nature",q:"What is the only mammal born with horns?",o:["Rhino","Deer","Giraffe","Goat"],a:2},
+{c:"Nature",q:"What animal has blue blood?",o:["Octopus","Lobster","Horseshoe Crab","All of these"],a:3},
+{c:"Nature",q:"How fast can a cheetah run (approx mph)?",o:["50","60","70","80"],a:2},
+{c:"Nature",q:"What is the largest species of ray?",o:["Stingray","Eagle Ray","Manta Ray","Electric Ray"],a:2},
+{c:"Nature",q:"What animal sleeps standing up?",o:["Cow","Horse","Giraffe","Elephant"],a:1},
+{c:"Nature",q:"What is the most venomous jellyfish?",o:["Lion's Mane","Moon Jellyfish","Box Jellyfish","Portuguese Man o' War"],a:2},
+{c:"Nature",q:"How many species of sharks exist (approx)?",o:["100","250","500","1000"],a:2},
+{c:"Nature",q:"What is a group of fish called?",o:["Flock","Herd","School","Pack"],a:2},
+{c:"Nature",q:"What bird can mimic human speech?",o:["Crow","Parrot","Mynah","All of these"],a:3},
+{c:"Nature",q:"What is the slowest animal on Earth?",o:["Snail","Sloth","Tortoise","Koala"],a:0},
+{c:"Nature",q:"How long can a camel go without water?",o:["3 days","7 days","15 days","30 days"],a:2},
+{c:"Nature",q:"What is the largest cat species?",o:["Lion","Liger","Tiger","Jaguar"],a:2},
+{c:"Nature",q:"What is a baby owl called?",o:["Chick","Owlet","Pup","Kit"],a:1},
+{c:"Nature",q:"What animal has the best sense of smell?",o:["Dog","Bear","Elephant","Shark"],a:1},
+{c:"Nature",q:"What is the most common bird in the world?",o:["Sparrow","Pigeon","Chicken","Crow"],a:2},
+{c:"Nature",q:"How many arms does a starfish typically have?",o:["4","5","6","8"],a:1},
+{c:"Nature",q:"What is the largest amphibian?",o:["Cane Toad","Goliath Frog","Chinese Giant Salamander","Japanese Giant Salamander"],a:2},
+{c:"Nature",q:"What animal can turn its head 270 degrees?",o:["Chameleon","Owl","Hawk","Parrot"],a:1},
+{c:"Nature",q:"What is a group of crows called?",o:["Flock","Murder","Parliament","Colony"],a:1},
+{c:"Nature",q:"What is the fastest land snake?",o:["King Cobra","Mamba","Black Mamba","Sidewinder"],a:2},
+{c:"Nature",q:"How many teeth does an adult shark have (approx)?",o:["50-100","100-200","200-300","300+"],a:3},
+{c:"Nature",q:"What is the only continent with wild tigers?",o:["Africa","South America","Asia","Australia"],a:2},
+{c:"Nature",q:"What tree can live the longest?",o:["Oak","Redwood","Bristlecone Pine","Baobab"],a:2},
+{c:"Nature",q:"What is the largest flower in the world?",o:["Sunflower","Titan Arum","Rafflesia","Victoria Water Lily"],a:2},
+{c:"Nature",q:"How far can an eagle see?",o:["1 mile","2 miles","3 miles","5 miles"],a:1},
+{c:"Nature",q:"What animal produces the loudest sound?",o:["Elephant","Blue Whale","Sperm Whale","Howler Monkey"],a:2},
+{c:"Nature",q:"What is the deepest diving mammal?",o:["Blue Whale","Elephant Seal","Cuvier's Beaked Whale","Sperm Whale"],a:2},
+{c:"Nature",q:"How many legs does a centipede typically have?",o:["Exactly 100","30-354","50","1000"],a:1},
+{c:"Nature",q:"What animal has the thickest fur?",o:["Polar Bear","Chinchilla","Sea Otter","Arctic Fox"],a:2},
+{c:"Nature",q:"What is the most intelligent invertebrate?",o:["Ant","Spider","Octopus","Bee"],a:2},
+{c:"Nature",q:"What is the world's most poisonous frog?",o:["Red-eyed Tree Frog","Golden Poison Frog","Blue Poison Dart Frog","Tomato Frog"],a:1},
+{c:"Nature",q:"How many species of penguins exist?",o:["8","12","18","25"],a:2},
+{c:"Nature",q:"What is the lifespan of a mayfly?",o:["24 hours","1 week","1 month","1 year"],a:0},
+{c:"Nature",q:"What animal has the most legs?",o:["Centipede","Millipede","Spider","Crab"],a:1},
+{c:"Nature",q:"What is the largest spider in the world?",o:["Tarantula","Goliath Birdeater","Huntsman Spider","Brazilian Wandering Spider"],a:1},
+{c:"Nature",q:"What bird is the symbol of the United States?",o:["Red-tailed Hawk","Golden Eagle","Bald Eagle","Peregrine Falcon"],a:2},
+{c:"Nature",q:"How long can a crocodile hold its breath?",o:["15 minutes","30 minutes","1 hour","2 hours"],a:2},
+{c:"Nature",q:"What is the fastest growing plant?",o:["Kudzu","Bamboo","Giant Kelp","Ivy"],a:1},
+{c:"Nature",q:"What is a group of elephants called?",o:["Flock","Herd","Pack","Parade"],a:1},
+{c:"Nature",q:"What animal is immune to most snake venom?",o:["Hedgehog","Honey Badger","Mongoose","All of these"],a:3},
+{c:"Nature",q:"What insect has the longest lifespan?",o:["Ant Queen","Cicada","Termite Queen","Beetle"],a:2},
+{c:"Nature",q:"What ocean creature has the most arms?",o:["Octopus","Squid","Starfish","Basket Star"],a:3},
+{c:"Nature",q:"What animal can survive being frozen?",o:["Polar Bear","Wood Frog","Arctic Fox","Penguin"],a:1},
+{c:"Nature",q:"What is the heaviest insect?",o:["Atlas Moth","Goliath Beetle","Giant Weta","Hercules Beetle"],a:2},
+{c:"Science",q:"What is the chemical formula for ammonia?",o:["NH3","NO2","N2O","N2H4"],a:0},
+{c:"Science",q:"What organ is the appendix attached to?",o:["Stomach","Small intestine","Large intestine","Liver"],a:2},
+{c:"History",q:"What year was the Statue of Liberty dedicated?",o:["1876","1882","1886","1890"],a:2},
+{c:"History",q:"Who was the youngest US President?",o:["JFK","Theodore Roosevelt","Bill Clinton","Obama"],a:1},
+{c:"Geography",q:"What is the capital of Iceland?",o:["Oslo","Helsinki","Reykjavik","Copenhagen"],a:2},
+{c:"Geography",q:"What is the longest river in South America?",o:["Parana","Orinoco","Amazon","Sao Francisco"],a:2},
+{c:"Math",q:"What is 99 x 99?",o:["9801","9901","9809","9909"],a:0},
+{c:"Math",q:"What is the square root of 400?",o:["18","19","20","21"],a:2},
+{c:"English",q:"Who wrote 'Animal Farm'?",o:["Aldous Huxley","George Orwell","H.G. Wells","Kafka"],a:1},
+{c:"Technology",q:"What does 'RAM' physically look like?",o:["A spinning disk","A small circuit board stick","A laser disc","A chip on the CPU"],a:1},
+];
+
+// ============== QUIZ STATE ==============
+let selectedCategories = new Set();
+let quizQuestions = [];
+let currentIndex = 0;
+let score = 0;
+let answered = false;
+let selectedOption = -1;
+let userAnswers = [];
+
+// ============== CATEGORIES ==============
+const categoryIcons = {
+    "Science": "fa-flask",
+    "History": "fa-landmark",
+    "Geography": "fa-globe-americas",
+    "Math": "fa-calculator",
+    "English": "fa-book",
+    "Technology": "fa-laptop-code",
+    "Sports": "fa-futbol",
+    "Music & Arts": "fa-palette",
+    "Food": "fa-utensils",
+    "Nature": "fa-leaf"
+};
+
+function initCategories() {
+    const grid = document.getElementById('categoryGrid');
+    const cats = [...new Set(allQuestions.map(q => q.c))];
+    grid.innerHTML = '';
+    cats.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'category-chip';
+        chip.innerHTML = `<i class="fas ${categoryIcons[cat] || 'fa-circle'}"></i> ${cat}`;
+        chip.onclick = () => {
+            chip.classList.toggle('selected');
+            if (selectedCategories.has(cat)) selectedCategories.delete(cat);
+            else selectedCategories.add(cat);
+            updateAvailableCount();
+        };
+        grid.appendChild(chip);
+    });
+    updateAvailableCount();
+}
+
+function updateAvailableCount() {
+    const count = allQuestions.filter(q => selectedCategories.has(q.c)).length;
+    document.getElementById('availableCount').textContent = count + ' questions available';
+    const input = document.getElementById('questionCount');
+    input.max = count;
+    const val = parseInt(input.value) || 10;
+    if (val > count) input.value = Math.max(count, 10);
+    if (val < 10) input.value = 10;
+    const disabled = count < 10;
+    document.getElementById('startBtn').disabled = disabled;
+    document.getElementById('printBtn').disabled = disabled;
+    document.getElementById('pdfBtn').disabled = disabled;
+}
+
+// Enforce min 10 on input
+document.getElementById('questionCount').addEventListener('change', function() {
+    let v = parseInt(this.value) || 10;
+    if (v < 10) v = 10;
+    const pool = allQuestions.filter(q => selectedCategories.has(q.c)).length;
+    if (v > pool) v = pool;
+    if (v < 10) v = 10;
+    this.value = v;
+});
+
+// ============== SHUFFLE ==============
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+// ============== START QUIZ ==============
+function startQuiz() {
+    const pool = allQuestions.filter(q => selectedCategories.has(q.c));
+    const count = Math.min(Math.max(parseInt(document.getElementById('questionCount').value) || 10, 10), pool.length);
+    if (count < 10 || pool.length < 10) { alert('Select categories with at least 10 questions.'); return; }
+
+    quizQuestions = shuffle(pool).slice(0, count);
+    currentIndex = 0;
+    score = 0;
+    userAnswers = [];
+
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+    document.getElementById('resultsScreen').style.display = 'none';
+
+    showQuestion();
+}
+
+// ============== SHOW QUESTION ==============
+function showQuestion() {
+    answered = false;
+    selectedOption = -1;
+    const q = quizQuestions[currentIndex];
+    const total = quizQuestions.length;
+
+    document.getElementById('progressBar').style.width = ((currentIndex / total) * 100) + '%';
+    document.getElementById('questionCounter').textContent = `Question ${currentIndex + 1} of ${total}`;
+    document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('qNumber').textContent = `Question ${currentIndex + 1}`;
+    document.getElementById('qCategory').textContent = q.c;
+    document.getElementById('qText').textContent = q.q;
+
+    const letters = ['A', 'B', 'C', 'D'];
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+    q.o.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+        btn.onclick = () => selectAnswer(i);
+        container.appendChild(btn);
+    });
+
+    document.getElementById('confirmBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'none';
+}
+
+// ============== SELECT ANSWER (just highlight, don't confirm yet) ==============
+function selectAnswer(index) {
+    if (answered) return;
+    selectedOption = index;
+
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.classList.remove('selected'));
+    btns[index].classList.add('selected');
+
+    document.getElementById('confirmBtn').style.display = 'inline-flex';
+}
+
+// ============== CONFIRM ANSWER ==============
+function confirmAnswer() {
+    if (answered || selectedOption === -1) return;
+    answered = true;
+
+    const q = quizQuestions[currentIndex];
+    const btns = document.querySelectorAll('.option-btn');
+
+    btns.forEach(b => b.classList.add('disabled'));
+    btns[selectedOption].classList.remove('selected');
+    btns[q.a].classList.add('correct');
+
+    if (selectedOption === q.a) {
+        score++;
+    } else {
+        btns[selectedOption].classList.add('wrong');
+    }
+
+    userAnswers.push({ question: q, selected: selectedOption });
+    document.getElementById('scoreDisplay').textContent = score;
+    document.getElementById('confirmBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'inline-flex';
+    document.getElementById('nextBtn').textContent = currentIndex === quizQuestions.length - 1 ? 'See Results' : 'Next';
+}
+
+// ============== NEXT QUESTION ==============
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex >= quizQuestions.length) {
+        showResults();
+    } else {
+        showQuestion();
+    }
+}
+
+// ============== RESULTS ==============
+function showResults() {
+    document.getElementById('quizScreen').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'block';
+
+    const total = quizQuestions.length;
+    const pct = Math.round((score / total) * 100);
+    const wrong = total - score;
+
+    const circle = document.getElementById('scoreCircle');
+    circle.className = 'score-circle ' + (pct >= 80 ? 'score-great' : pct >= 50 ? 'score-good' : 'score-bad');
+    document.getElementById('scorePct').textContent = pct + '%';
+    document.getElementById('scoreLabel').textContent = score + ' / ' + total;
+    document.getElementById('rCorrect').textContent = score;
+    document.getElementById('rWrong').textContent = wrong;
+    document.getElementById('rPercent').textContent = pct + '%';
+
+    // Build review
+    const reviewList = document.getElementById('reviewList');
+    reviewList.innerHTML = '';
+    reviewList.classList.remove('show');
+    userAnswers.forEach((ua, i) => {
+        const correct = ua.selected === ua.question.a;
+        const div = document.createElement('div');
+        div.className = 'review-item ' + (correct ? 'was-correct' : 'was-wrong');
+        div.innerHTML = `
+            <div class="ri-q">${i + 1}. ${ua.question.q}</div>
+            <div class="ri-a">Correct: <strong>${ua.question.o[ua.question.a]}</strong></div>
+            ${!correct ? `<div class="ri-your">Your answer: ${ua.question.o[ua.selected]}</div>` : ''}
+        `;
+        reviewList.appendChild(div);
+    });
+}
+
+function toggleReview() {
+    document.getElementById('reviewList').classList.toggle('show');
+}
+
+// ============== RETRY / RESET ==============
+function retryQuiz() {
+    currentIndex = 0;
+    score = 0;
+    userAnswers = [];
+    document.getElementById('resultsScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+    quizQuestions = shuffle(quizQuestions);
+    showQuestion();
+}
+
+function resetQuiz() {
+    document.getElementById('setupScreen').style.display = 'block';
+    document.getElementById('quizScreen').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none';
+    initCategories();
+}
+
+// ============== PRINT / PDF ==============
+function buildPrintHTML() {
+    const pool = allQuestions.filter(q => selectedCategories.has(q.c));
+    const count = Math.min(Math.max(parseInt(document.getElementById('questionCount').value) || 10, 10), pool.length);
+    if (pool.length < 10) { alert('Select categories with at least 10 questions.'); return null; }
+
+    const questions = shuffle(pool).slice(0, count);
+    const letters = ['A', 'B', 'C', 'D'];
+    const cats = [...new Set(questions.map(q => q.c))].join(', ');
+    const date = new Date().toLocaleDateString();
+
+    let html = `<h1>Quiz</h1>`;
+    html += `<div class="print-meta">${count} Questions &bull; Categories: ${cats} &bull; ${date}</div>`;
+    html += `<div class="print-name-line">Name:<span></span> &nbsp;&nbsp;&nbsp; Score: _____ / ${count}</div>`;
+
+    questions.forEach((q, i) => {
+        html += `<div class="print-q">`;
+        html += `<div class="pq-text">${i + 1}. ${q.q}</div>`;
+        html += `<div class="pq-options">`;
+        q.o.forEach((opt, j) => {
+            html += `<div class="pq-opt"><span class="pq-circle"></span><span class="pq-letter">${letters[j]}.</span> ${opt}</div>`;
+        });
+        html += `</div></div>`;
+    });
+
+    html += `<div class="print-answer-key"><h2>Answer Key</h2>`;
+    html += `<div class="print-answers-grid">`;
+    questions.forEach((q, i) => {
+        html += `<div class="pa-item"><span class="pa-num">${i + 1}.</span> ${letters[q.a]}</div>`;
+    });
+    html += `</div></div>`;
+
+    return html;
+}
+
+function printQuiz() {
+    const html = buildPrintHTML();
+    if (!html) return;
+    document.getElementById('printContainer').innerHTML = html;
+    setTimeout(() => { window.print(); }, 100);
+}
+
+function downloadPDF() {
+    const html = buildPrintHTML();
+    if (!html) return;
+
+    const container = document.getElementById('printContainer');
+    container.innerHTML = html;
+    container.style.display = 'block';
+    container.style.background = 'white';
+    container.style.color = 'black';
+    container.style.padding = '20px';
+    container.style.maxWidth = '800px';
+    container.style.margin = '0 auto';
+
+    // Style for PDF rendering
+    container.querySelectorAll('.pq-text').forEach(el => el.style.color = 'black');
+    container.querySelectorAll('.print-meta').forEach(el => { el.style.color = '#666'; el.style.borderBottom = '2px solid #333'; el.style.paddingBottom = '10px'; el.style.textAlign = 'center'; el.style.fontSize = '12px'; el.style.marginBottom = '20px'; });
+    container.querySelectorAll('h1').forEach(el => { el.style.color = 'black'; el.style.textAlign = 'center'; el.style.fontSize = '22px'; });
+    container.querySelectorAll('h2').forEach(el => { el.style.color = 'black'; el.style.textAlign = 'center'; el.style.fontSize = '18px'; el.style.borderBottom = '2px solid #333'; el.style.paddingBottom = '8px'; });
+    container.querySelectorAll('.pq-options').forEach(el => { el.style.display = 'flex'; el.style.flexDirection = 'column'; el.style.gap = '3px'; el.style.fontSize = '12px'; });
+    container.querySelectorAll('.print-q').forEach(el => { el.style.marginBottom = '18px'; });
+    container.querySelectorAll('.pq-text').forEach(el => { el.style.fontWeight = '600'; el.style.fontSize = '13px'; el.style.marginBottom = '6px'; });
+    container.querySelectorAll('.pq-circle').forEach(el => { el.style.display = 'inline-block'; el.style.width = '12px'; el.style.height = '12px'; el.style.border = '1.5px solid #333'; el.style.borderRadius = '50%'; el.style.marginRight = '4px'; el.style.flexShrink = '0'; el.style.marginTop = '2px'; });
+    container.querySelectorAll('.pq-opt').forEach(el => { el.style.display = 'flex'; el.style.gap = '6px'; el.style.padding = '2px 0'; });
+    container.querySelectorAll('.pq-letter').forEach(el => { el.style.fontWeight = '600'; el.style.minWidth = '16px'; });
+    container.querySelectorAll('.print-answers-grid').forEach(el => { el.style.display = 'grid'; el.style.gridTemplateColumns = 'repeat(5, 1fr)'; el.style.gap = '4px 12px'; el.style.fontSize = '12px'; });
+    container.querySelectorAll('.pa-num').forEach(el => { el.style.fontWeight = '600'; el.style.minWidth = '28px'; });
+    container.querySelectorAll('.pa-item').forEach(el => { el.style.display = 'flex'; el.style.gap = '4px'; });
+    container.querySelectorAll('.print-name-line').forEach(el => { el.style.margin = '16px 0'; el.style.fontSize = '14px'; el.style.color = 'black'; });
+    container.querySelectorAll('.print-name-line span').forEach(el => { el.style.display = 'inline-block'; el.style.borderBottom = '1px solid #333'; el.style.width = '250px'; el.style.marginLeft = '8px'; });
+    container.querySelectorAll('.print-answer-key').forEach(el => { el.style.paddingTop = '30px'; el.style.marginTop = '30px'; el.style.borderTop = '2px dashed #999'; });
+
+    const count = container.querySelectorAll('.print-q').length;
+    html2pdf().set({
+        margin: [10, 10, 10, 10],
+        filename: `quiz-${count}q-${Date.now()}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    }).from(container).save().then(() => {
+        container.style.display = 'none';
+        container.innerHTML = '';
+    });
+}
+
+// ============== INIT ==============
+initCategories();
+</script>
+</body>
+</html>
