@@ -1271,6 +1271,72 @@ const allQuestions = [
 {c:"Technology",q:"What does 'RAM' physically look like?",o:["A spinning disk","A small circuit board stick","A laser disc","A chip on the CPU"],a:1},
 ];
 
+// ============== INDEXED DB ==============
+const DB_NAME = 'QuizMakerDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'quizState';
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function saveState() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put({
+            quizQuestions,
+            currentIndex,
+            score,
+            answered,
+            selectedOption,
+            userAnswers,
+            screen: currentScreen(),
+            selectedCategories: [...selectedCategories],
+            questionCount: document.getElementById('questionCount').value
+        }, 'current');
+        await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+    } catch(e) { /* silent fail */ }
+}
+
+async function loadState() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.get('current');
+        return new Promise((resolve) => {
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch(e) { return null; }
+}
+
+async function clearState() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete('current');
+    } catch(e) { /* silent */ }
+}
+
+function currentScreen() {
+    if (document.getElementById('quizScreen').style.display === 'block') return 'quiz';
+    if (document.getElementById('resultsScreen').style.display === 'block') return 'results';
+    return 'setup';
+}
+
 // ============== QUIZ STATE ==============
 let selectedCategories = new Set();
 let quizQuestions = [];
@@ -1300,13 +1366,14 @@ function initCategories() {
     grid.innerHTML = '';
     cats.forEach(cat => {
         const chip = document.createElement('div');
-        chip.className = 'category-chip';
+        chip.className = 'category-chip' + (selectedCategories.has(cat) ? ' selected' : '');
         chip.innerHTML = `<i class="fas ${categoryIcons[cat] || 'fa-circle'}"></i> ${cat}`;
         chip.onclick = () => {
             chip.classList.toggle('selected');
             if (selectedCategories.has(cat)) selectedCategories.delete(cat);
             else selectedCategories.add(cat);
             updateAvailableCount();
+            saveState();
         };
         grid.appendChild(chip);
     });
@@ -1335,6 +1402,7 @@ document.getElementById('questionCount').addEventListener('change', function() {
     if (v > pool) v = pool;
     if (v < 10) v = 10;
     this.value = v;
+    saveState();
 });
 
 // ============== SHUFFLE ==============
@@ -1363,6 +1431,7 @@ function startQuiz() {
     document.getElementById('resultsScreen').style.display = 'none';
 
     showQuestion();
+    saveState();
 }
 
 // ============== SHOW QUESTION ==============
@@ -1404,6 +1473,7 @@ function selectAnswer(index) {
     btns[index].classList.add('selected');
 
     document.getElementById('confirmBtn').style.display = 'inline-flex';
+    saveState();
 }
 
 // ============== CONFIRM ANSWER ==============
@@ -1429,6 +1499,7 @@ function confirmAnswer() {
     document.getElementById('confirmBtn').style.display = 'none';
     document.getElementById('nextBtn').style.display = 'inline-flex';
     document.getElementById('nextBtn').textContent = currentIndex === quizQuestions.length - 1 ? 'See Results' : 'Next';
+    saveState();
 }
 
 // ============== NEXT QUESTION ==============
@@ -1439,6 +1510,7 @@ function nextQuestion() {
     } else {
         showQuestion();
     }
+    saveState();
 }
 
 // ============== RESULTS ==============
@@ -1473,6 +1545,7 @@ function showResults() {
         `;
         reviewList.appendChild(div);
     });
+    saveState();
 }
 
 function toggleReview() {
@@ -1488,12 +1561,20 @@ function retryQuiz() {
     document.getElementById('quizScreen').style.display = 'block';
     quizQuestions = shuffle(quizQuestions);
     showQuestion();
+    saveState();
 }
 
 function resetQuiz() {
     document.getElementById('setupScreen').style.display = 'block';
     document.getElementById('quizScreen').style.display = 'none';
     document.getElementById('resultsScreen').style.display = 'none';
+    quizQuestions = [];
+    currentIndex = 0;
+    score = 0;
+    userAnswers = [];
+    answered = false;
+    selectedOption = -1;
+    clearState();
     initCategories();
 }
 
@@ -1584,7 +1665,67 @@ function downloadPDF() {
 }
 
 // ============== INIT ==============
-initCategories();
+async function init() {
+    const saved = await loadState();
+    if (saved && saved.screen === 'quiz' && saved.quizQuestions && saved.quizQuestions.length > 0) {
+        // Restore mid-quiz
+        quizQuestions = saved.quizQuestions;
+        currentIndex = saved.currentIndex;
+        score = saved.score;
+        answered = saved.answered;
+        selectedOption = saved.selectedOption;
+        userAnswers = saved.userAnswers || [];
+        selectedCategories = new Set(saved.selectedCategories || []);
+
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('quizScreen').style.display = 'block';
+        document.getElementById('resultsScreen').style.display = 'none';
+        showQuestion();
+
+        if (answered && userAnswers.length > currentIndex) {
+            // Already confirmed - show result
+            const ua = userAnswers[currentIndex];
+            const q = quizQuestions[currentIndex];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.classList.add('disabled'));
+            btns[q.a].classList.add('correct');
+            if (ua.selected !== q.a) btns[ua.selected].classList.add('wrong');
+            document.getElementById('confirmBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-flex';
+            document.getElementById('nextBtn').textContent = currentIndex === quizQuestions.length - 1 ? 'See Results' : 'Next';
+        } else if (!answered && selectedOption >= 0) {
+            // Selected but not confirmed - re-highlight
+            const btns = document.querySelectorAll('.option-btn');
+            btns[selectedOption].classList.add('selected');
+            document.getElementById('confirmBtn').style.display = 'inline-flex';
+        }
+
+    } else if (saved && saved.screen === 'results' && saved.quizQuestions && saved.quizQuestions.length > 0) {
+        // Restore results
+        quizQuestions = saved.quizQuestions;
+        currentIndex = saved.currentIndex;
+        score = saved.score;
+        userAnswers = saved.userAnswers || [];
+        selectedCategories = new Set(saved.selectedCategories || []);
+
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('quizScreen').style.display = 'none';
+        document.getElementById('resultsScreen').style.display = 'block';
+        showResults();
+
+    } else {
+        // Setup screen - restore categories and count if saved
+        if (saved && saved.selectedCategories && saved.selectedCategories.length > 0) {
+            selectedCategories = new Set(saved.selectedCategories);
+        }
+        initCategories();
+        if (saved && saved.questionCount) {
+            document.getElementById('questionCount').value = saved.questionCount;
+            updateAvailableCount();
+        }
+    }
+}
+init();
 </script>
 </body>
 </html>
