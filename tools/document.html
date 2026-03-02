@@ -859,29 +859,28 @@
 
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
-            // Build PDF content from page data (no position:fixed - html2canvas can't capture it)
+            // Build PDF content - gather all page content into one flowing div
             const pdfContainer = document.createElement('div');
-            pdfContainer.id = 'pdf-temp-container';
+            pdfContainer.style.cssText = `
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 16px; line-height: 1.6; color: #333;
+                background: white;
+            `;
 
+            let hasContent = false;
             pages.forEach((page) => {
                 const content = page.content || '';
                 const textContent = content.replace(/<[^>]*>/g, '').trim();
                 const hasImages = content.includes('<img');
                 if (textContent.length === 0 && !hasImages) return;
+                hasContent = true;
 
                 const pageDiv = document.createElement('div');
-                pageDiv.style.cssText = `
-                    width: 8.5in; min-height: 11in; padding: 1in;
-                    background: white; box-sizing: border-box;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    font-size: 16px; line-height: 1.6; color: #333;
-                    page-break-after: always;
-                `;
                 pageDiv.innerHTML = content;
                 pdfContainer.appendChild(pageDiv);
             });
 
-            if (pdfContainer.children.length === 0) {
+            if (!hasContent) {
                 document.getElementById('saveStatus').textContent = 'No content to save';
                 setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
                 return;
@@ -891,12 +890,11 @@
             await new Promise(resolve => setTimeout(resolve, 200));
 
             const opt = {
-                margin: 0,
+                margin: 10,
                 filename: currentDocumentName + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'] }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             try {
@@ -1272,12 +1270,11 @@
 
             const container = document.getElementById('documentContainer');
             const opt = {
-                margin: 0,
+                margin: 10,
                 filename: 'document.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(container).save().then(() => {

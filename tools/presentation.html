@@ -1163,7 +1163,7 @@
         function addSlide() {
             const slide = {
                 id: Date.now(),
-                content: '<h1 style="text-align: center; margin-top: 150px;">Click to add title</h1><p style="text-align: center; font-size: 24px; color: #666;">Click to add subtitle</p>',
+                content: '',
                 theme: 'white'
             };
             slides.push(slide);
@@ -1506,25 +1506,19 @@
             // Create a container for all slides
             const pdfContainer = document.createElement('div');
 
-            slides.forEach((slide, index) => {
+            slides.forEach((slide) => {
                 const slideDiv = document.createElement('div');
                 const theme = themes[slide.theme] || themes.white;
                 slideDiv.style.cssText = `
-                    width: 960px;
-                    height: 540px;
-                    background: ${theme.background};
-                    color: ${theme.color};
-                    padding: 40px;
-                    page-break-after: always;
-                    box-sizing: border-box;
+                    width: 960px; height: 540px;
+                    background: ${theme.background}; color: ${theme.color};
+                    padding: 40px; box-sizing: border-box;
                 `;
                 slideDiv.innerHTML = slide.content;
                 pdfContainer.appendChild(slideDiv);
             });
 
             document.body.appendChild(pdfContainer);
-
-            // Wait for rendering
             await new Promise(resolve => setTimeout(resolve, 100));
 
             const opt = {
@@ -1544,9 +1538,7 @@
                 }, 2000);
             } catch (error) {
                 console.error('PDF generation error:', error);
-                if (pdfContainer && pdfContainer.parentNode) {
-                    document.body.removeChild(pdfContainer);
-                }
+                if (pdfContainer.parentNode) document.body.removeChild(pdfContainer);
                 document.getElementById('saveStatus').textContent = 'PDF generation failed';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
