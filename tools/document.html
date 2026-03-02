@@ -835,17 +835,6 @@
 
         // Save and download as PDF
         async function saveToFile() {
-            document.getElementById('saveStatus').textContent = 'Generating PDF...';
-
-            // Save current page content first
-            const currentPage = pages.find(p => p.id === currentPageId);
-            if (currentPage) {
-                const currentEditor = document.getElementById(`editor-${currentPageId}`);
-                if (currentEditor) {
-                    currentPage.content = currentEditor.innerHTML;
-                }
-            }
-
             // Save all current editor contents to pages array
             pages.forEach(page => {
                 const editor = document.getElementById(`editor-${page.id}`);
@@ -854,108 +843,75 @@
                 }
             });
 
-            // Get the actual document container
-            const documentContainer = document.getElementById('documentContainer');
-
-            // Clone it to clean up for PDF
-            const clone = documentContainer.cloneNode(true);
-
-            // Remove contenteditable attributes and other interactive elements
-            const editors = clone.querySelectorAll('[contenteditable]');
-            editors.forEach(editor => {
-                editor.removeAttribute('contenteditable');
-                editor.removeAttribute('spellcheck');
-                editor.removeAttribute('oninput');
-                editor.removeAttribute('onfocus');
-            });
-
-            // Filter: find and remove empty pages from the clone
-            const clonePages = Array.from(clone.querySelectorAll('.page'));
-            clonePages.forEach(pageElement => {
-                const editor = pageElement.querySelector('.editor');
-                if (editor) {
-                    const textContent = (editor.textContent || editor.innerText || '').trim();
-                    const hasImages = editor.innerHTML.includes('<img');
-
-                    // Remove page if it's empty
-                    if (textContent.length === 0 && !hasImages) {
-                        pageElement.remove();
-                    }
-                }
-            });
-
-            console.log('Pages after filtering:', clone.querySelectorAll('.page').length);
-
-            // Create temp container
-            const tempContainer = document.createElement('div');
-            tempContainer.style.cssText = 'position: fixed; left: 0; top: 0; background: white; z-index: 9999;';
-            tempContainer.appendChild(clone);
-            document.body.appendChild(tempContainer);
-
-            // Wait for rendering
-            await new Promise(resolve => setTimeout(resolve, 100));
-
             // Always ask for document name with previous name as suggestion
             const name = prompt('Enter document name:', currentDocumentName);
-            if (name) {
-                currentDocumentName = name;
-                if (!currentDocumentId) {
-                    currentDocumentId = Date.now();
-                }
-            } else {
+            if (!name) {
                 document.getElementById('saveStatus').textContent = 'Save cancelled';
-                document.body.removeChild(tempContainer);
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
                 }, 2000);
                 return;
             }
+            currentDocumentName = name;
+            if (!currentDocumentId) {
+                currentDocumentId = Date.now();
+            }
 
-            // Generate PDF and download
+            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            // Build PDF content from page data (no position:fixed - html2canvas can't capture it)
+            const pdfContainer = document.createElement('div');
+            pdfContainer.id = 'pdf-temp-container';
+
+            pages.forEach((page) => {
+                const content = page.content || '';
+                const textContent = content.replace(/<[^>]*>/g, '').trim();
+                const hasImages = content.includes('<img');
+                if (textContent.length === 0 && !hasImages) return;
+
+                const pageDiv = document.createElement('div');
+                pageDiv.style.cssText = `
+                    width: 8.5in; min-height: 11in; padding: 1in;
+                    background: white; box-sizing: border-box;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-size: 16px; line-height: 1.6; color: #333;
+                    page-break-after: always;
+                `;
+                pageDiv.innerHTML = content;
+                pdfContainer.appendChild(pageDiv);
+            });
+
+            if (pdfContainer.children.length === 0) {
+                document.getElementById('saveStatus').textContent = 'No content to save';
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
+                return;
+            }
+
+            document.body.appendChild(pdfContainer);
+            await new Promise(resolve => setTimeout(resolve, 200));
+
             const opt = {
                 margin: 0,
                 filename: currentDocumentName + '.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true
-                },
-                jsPDF: {
-                    unit: 'in',
-                    format: 'letter',
-                    orientation: 'portrait'
-                }
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             try {
-                // Generate and download PDF
-                await html2pdf().set(opt).from(tempContainer).save();
-
-                // Remove temp container
-                document.body.removeChild(tempContainer);
-
+                await html2pdf().set(opt).from(pdfContainer).save();
                 hasUnsavedChanges = false;
                 document.getElementById('saveStatus').textContent = 'Downloaded ' + currentDocumentName + '.pdf';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
-
-                // Also save to localStorage for the menu system
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
                 saveToLocalStorage();
             } catch (error) {
                 console.error('PDF generation error:', error);
-
-                // Clean up temp container on error
-                if (tempContainer && tempContainer.parentNode) {
-                    document.body.removeChild(tempContainer);
-                }
-
                 document.getElementById('saveStatus').textContent = 'PDF generation failed';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
             }
+
+            if (pdfContainer.parentNode) document.body.removeChild(pdfContainer);
         }
 
         // Fallback: Save to localStorage
@@ -1311,106 +1267,25 @@
         }
 
         // Save document as PDF file
-        async function saveDocument() {
+        function saveDocument() {
             document.getElementById('saveStatus').textContent = 'Generating PDF...';
 
-            // Save all current editor contents first
-            pages.forEach(page => {
-                const editor = document.getElementById(`editor-${page.id}`);
-                if (editor) {
-                    page.content = editor.innerHTML;
-                }
-            });
-
-            // Create a clean container for PDF
-            const pdfContainer = document.createElement('div');
-            pdfContainer.style.cssText = 'position: fixed; left: 0; top: 0; background: white; z-index: 9999; width: 8.5in;';
-
-            // Add each page's content
-            pages.forEach((page, index) => {
-                const pageDiv = document.createElement('div');
-                pageDiv.style.cssText = `
-                    width: 8.5in;
-                    min-height: 11in;
-                    padding: 1in;
-                    background: white;
-                    box-sizing: border-box;
-                    page-break-after: always;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    font-size: 12pt;
-                    line-height: 1.6;
-                    color: #000;
-                `;
-
-                // Create content div
-                const contentDiv = document.createElement('div');
-                contentDiv.innerHTML = page.content || '';
-
-                // Style lists properly
-                contentDiv.querySelectorAll('ul, ol').forEach(list => {
-                    list.style.marginLeft = '20px';
-                    list.style.paddingLeft = '20px';
-                });
-
-                // Style images
-                contentDiv.querySelectorAll('img').forEach(img => {
-                    img.style.maxWidth = '100%';
-                    img.style.height = 'auto';
-                });
-
-                pageDiv.appendChild(contentDiv);
-                pdfContainer.appendChild(pageDiv);
-            });
-
-            document.body.appendChild(pdfContainer);
-
-            // Wait for images and content to render
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            // Ask for filename
-            const filename = prompt('Enter document name:', currentDocumentName || 'document');
-            if (!filename) {
-                document.body.removeChild(pdfContainer);
-                document.getElementById('saveStatus').textContent = 'Cancelled';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
-                return;
-            }
-
-            currentDocumentName = filename;
-
+            const container = document.getElementById('documentContainer');
             const opt = {
                 margin: 0,
-                filename: filename + '.pdf',
+                filename: 'document.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    letterRendering: true,
-                    logging: false
-                },
+                html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                pagebreak: { mode: 'css' }
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            try {
-                await html2pdf().set(opt).from(pdfContainer).save();
-                document.body.removeChild(pdfContainer);
+            html2pdf().set(opt).from(container).save().then(() => {
                 document.getElementById('saveStatus').textContent = 'PDF Downloaded!';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
                 }, 2000);
-            } catch (error) {
-                console.error('PDF error:', error);
-                if (pdfContainer.parentNode) {
-                    document.body.removeChild(pdfContainer);
-                }
-                document.getElementById('saveStatus').textContent = 'PDF failed';
-                setTimeout(() => {
-                    document.getElementById('saveStatus').textContent = 'Ready';
-                }, 2000);
-            }
+            });
         }
 
         // Print document
@@ -1420,11 +1295,19 @@
 
         // Go back to tools hub
         function goBack() {
+            autoSave();
             window.location.href = '../Tools.html';
         }
 
         // Auto-save to localStorage
         function autoSave() {
+            // Sync all editor contents to pages array first
+            pages.forEach(page => {
+                const editor = document.getElementById(`editor-${page.id}`);
+                if (editor) {
+                    page.content = editor.innerHTML;
+                }
+            });
             localStorage.setItem('documentContent', JSON.stringify(pages));
             document.getElementById('saveStatus').textContent = 'Auto-saved';
             setTimeout(() => {
@@ -1487,6 +1370,17 @@
             // Check if click is outside menu and not on the button
             if (!menu.contains(target) && !target.closest('.header-btn')) {
                 menu.classList.remove('open');
+            }
+        });
+
+        // Save before unload
+        window.addEventListener('beforeunload', () => {
+            autoSave();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                autoSave();
             }
         });
 

@@ -740,6 +740,14 @@
 
         // Save current spreadsheet
         function saveCurrentSpreadsheet() {
+            // Sync current cell value before saving
+            if (currentCell) {
+                const cell = document.getElementById(currentCell);
+                if (cell) {
+                    cellData[currentCell] = cell.value;
+                }
+            }
+
             // If first time saving, ask for name
             if (!currentSpreadsheetId) {
                 const name = prompt('Enter spreadsheet name:', currentSpreadsheetName);
@@ -1327,11 +1335,19 @@
 
         // Go back to tools hub
         function goBack() {
+            autoSave();
             window.location.href = '../Tools.html';
         }
 
         // Auto-save to localStorage
         function autoSave() {
+            // Sync current cell value before saving
+            if (currentCell) {
+                const cell = document.getElementById(currentCell);
+                if (cell) {
+                    cellData[currentCell] = cell.value;
+                }
+            }
             localStorage.setItem('spreadsheetData', JSON.stringify(cellData));
             localStorage.setItem('spreadsheetStyles', JSON.stringify(cellStyles));
         }
@@ -1440,6 +1456,17 @@
                         selectCell(nextCell);
                     }
                 }
+            }
+        });
+
+        // Save before unload
+        window.addEventListener('beforeunload', () => {
+            autoSave();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                autoSave();
             }
         });
 

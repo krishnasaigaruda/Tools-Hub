@@ -574,7 +574,10 @@
                 <i class="fas fa-print"></i> Print
             </button>
             <button class="header-btn" onclick="saveAsPDF()">
-                <i class="fas fa-file-pdf"></i> Export PDF
+                <i class="fas fa-file-pdf"></i> Export Page
+            </button>
+            <button class="header-btn" onclick="saveAllAsPDF()">
+                <i class="fas fa-file-pdf"></i> Export All
             </button>
         </div>
     </div>
@@ -1055,6 +1058,112 @@
                 }, 2000);
             } catch (error) {
                 console.error('PDF generation error:', error);
+                document.getElementById('saveStatus').textContent = 'PDF generation failed';
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            }
+        }
+
+        // Save ALL pages from current notebook as PDF
+        async function saveAllAsPDF() {
+            if (currentPageId) {
+                saveCurrentPage();
+            }
+
+            const notebook = notebooks.find(n => n.id === currentNotebookId);
+            if (!notebook) {
+                alert('Please select a notebook first');
+                return;
+            }
+
+            // Count total pages
+            let totalPages = 0;
+            notebook.sections.forEach(section => {
+                totalPages += section.pages.length;
+            });
+
+            if (totalPages === 0) {
+                alert('No pages to export in this notebook');
+                return;
+            }
+
+            const name = prompt('Enter PDF name:', notebook.name);
+            if (!name) return;
+
+            document.getElementById('saveStatus').textContent = 'Generating PDF...';
+
+            // Create container with all pages from all sections
+            const content = document.createElement('div');
+            // Add each section and its pages
+            notebook.sections.forEach((section) => {
+                if (section.pages.length > 0) {
+                    // Add section header
+                    const sectionHeader = document.createElement('div');
+                    sectionHeader.style.cssText = `
+                        padding: 40px;
+                        background: #7c3aed;
+                        color: white;
+                        font-family: 'Segoe UI', sans-serif;
+                        min-height: 150px;
+                        box-sizing: border-box;
+                        page-break-after: always;
+                    `;
+                    sectionHeader.innerHTML = `
+                        <p style="font-size: 14px; margin-bottom: 10px; opacity: 0.8;">${notebook.name}</p>
+                        <h1 style="font-size: 36px; margin: 0;">${section.name}</h1>
+                        <p style="font-size: 14px; margin-top: 10px; opacity: 0.8;">${section.pages.length} page(s)</p>
+                    `;
+                    content.appendChild(sectionHeader);
+
+                    // Add each page
+                    section.pages.forEach((page) => {
+                        const pageDiv = document.createElement('div');
+                        pageDiv.style.cssText = `
+                            padding: 40px;
+                            background: white;
+                            font-family: 'Segoe UI', sans-serif;
+                            min-height: 297mm;
+                            box-sizing: border-box;
+                            page-break-after: always;
+                        `;
+                        pageDiv.innerHTML = `
+                            <p style="font-size: 12px; color: #7c3aed; margin-bottom: 5px;">${section.name}</p>
+                            <h1 style="margin-bottom: 10px; color: #333; font-size: 28px;">${page.title}</h1>
+                            <p style="font-size: 12px; color: #999; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px;">${page.createdAt}</p>
+                            <div style="font-size: 15px; line-height: 1.6; color: #333;">${page.content || '<em>No content</em>'}</div>
+                        `;
+                        content.appendChild(pageDiv);
+                    });
+                }
+            });
+
+            document.body.appendChild(content);
+
+            // Wait for rendering
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const opt = {
+                margin: 0,
+                filename: name + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: 'css' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(content).save();
+                document.body.removeChild(content);
+                document.getElementById('saveStatus').textContent = `Downloaded ${name}.pdf (${totalPages} pages)`;
+                setTimeout(() => {
+                    document.getElementById('saveStatus').textContent = 'Ready';
+                }, 2000);
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                if (content && content.parentNode) {
+                    document.body.removeChild(content);
+                }
                 document.getElementById('saveStatus').textContent = 'PDF generation failed';
                 setTimeout(() => {
                     document.getElementById('saveStatus').textContent = 'Ready';
