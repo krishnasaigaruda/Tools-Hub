@@ -146,7 +146,7 @@
         }
 
         /* Learning & Education - Classic Green */
-        .quiz, .study-timer, .periodic-table, .typing-test {
+        .quiz, .periodic-table, .typing-test {
             background: #16a34a;
         }
 
@@ -277,7 +277,6 @@
         <h2 class="category-title">Learning & Education</h2>
         <div class="tools-grid">
             <button class="tool-btn quiz" onclick="openTool('quiz')"><span class="tool-icon"><i class="fas fa-question-circle"></i></span><span class="tool-name">Quiz Maker</span></button>
-            <button class="tool-btn study-timer" onclick="openTool('study-timer')"><span class="tool-icon"><i class="fas fa-book-reader"></i></span><span class="tool-name">Study Timer</span></button>
             <button class="tool-btn periodic-table" onclick="openTool('periodic-table')"><span class="tool-icon"><i class="fas fa-atom"></i></span><span class="tool-name">Periodic Table</span></button>
             <button class="tool-btn typing-test" onclick="openTool('typing-test')"><span class="tool-icon"><i class="fas fa-keyboard"></i></span><span class="tool-name">Typing Test</span></button>
         </div>
@@ -395,7 +394,8 @@
                 'alarm': 'tools/clock.html#alarm',
                 'world-clock': 'tools/clock.html#world-clock',
                 'timezone': 'tools/clock.html#timezone',
-                'quiz': 'tools/quiz.html'
+                'quiz': 'tools/quiz.html',
+                'periodic-table': 'tools/periodic-table.html'
             };
 
             if (availableTools[toolName]) {
