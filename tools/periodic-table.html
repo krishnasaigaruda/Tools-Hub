@@ -161,8 +161,16 @@
             text-align: center;
             color: #e2e8f0;
             min-height: 58px;
-            cursor: default;
+            cursor: pointer;
             border: 1px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .pointer-cell:hover {
+            transform: scale(1.15);
+            z-index: 10;
+            border-color: #14b8a6;
+            box-shadow: 0 0 16px rgba(20,184,166,0.4);
         }
         .pointer-cell .ptr-range { font-size: 0.55rem; opacity: 0.8; }
         .pointer-cell .ptr-symbol { font-size: 0.85rem; font-weight: 700; }
@@ -685,40 +693,90 @@
         const body = document.getElementById('detailBody');
         if (type === 'lanthanide') {
             body.innerHTML = `
-                <div class="detail-symbol-block cat-lanthanide" style="text-align:center;padding:24px;border-radius:12px;margin-bottom:20px;">
-                    <div class="big-number">57 - 71</div>
-                    <div class="big-symbol" style="font-size:2.5rem;">La - Lu</div>
-                    <div class="big-name">Lanthanides</div>
+                <div class="detail-top">
+                    <div class="detail-img-wrap">
+                        <img src="https://images-of-elements.com/neodymium.jpg" alt="Lanthanides" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'img-fallback\\'>La-Lu</span>';">
+                    </div>
+                    <div class="detail-symbol-block cat-lanthanide">
+                        <div class="big-number">57 - 71</div>
+                        <div class="big-symbol" style="font-size:2.2rem;">La - Lu</div>
+                        <div class="big-name">Lanthanides</div>
+                    </div>
                 </div>
                 <div class="detail-section">
                     <h3>Overview</h3>
-                    <p class="description-text">The Lanthanides are a series of 15 metallic elements from Lanthanum (La, 57) to Lutetium (Lu, 71). Often called "rare earth elements," they are actually not that rare in Earth's crust but are difficult to separate from each other due to their similar chemical properties. They are silvery-white metals that are soft, malleable, and highly reactive, tarnishing quickly in air.</p>
+                    <p class="description-text">These are often called "rare earth elements." They are silvery-white metals that are highly reactive and are used in lasers, magnets, and sunglasses. Despite the name, most lanthanides are not actually rare in Earth's crust but are difficult to separate from each other.</p>
                 </div>
                 <div class="detail-section">
-                    <h3>Key Uses</h3>
-                    <p class="description-text">Lanthanides are critical to modern technology. Neodymium creates the strongest permanent magnets used in headphones, hard drives, wind turbines, and electric vehicle motors. Cerium is used in catalytic converters and self-cleaning ovens. Europium provides the red color in TV and phone screens. Erbium amplifies signals in fiber optic cables. Gadolinium is used as an MRI contrast agent. Lanthanum is found in camera lenses and hybrid car batteries.</p>
-                    <ul class="uses-list" style="margin-top:12px;">
-                        <li>Super Magnets</li><li>Lasers</li><li>Camera Lenses</li><li>Catalysts</li><li>MRI Agents</li><li>Fiber Optics</li><li>LEDs</li><li>Nuclear</li>
-                    </ul>
+                    <h3>Properties</h3>
+                    <div class="detail-row">
+                        <span class="label">Atomic Numbers</span>
+                        <span class="value">57 - 71</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Symbols</span>
+                        <span class="value">La to Lu</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Category</span>
+                        <span class="value">Rare Earth Metals</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">State (Room Temp)</span>
+                        <span class="value"><span class="state-badge solid">Solid</span></span>
+                    </div>
+                    <div style="padding-top:10px;"><span class="label" style="color:#94a3b8;font-size:0.85rem;">Common Uses</span>
+                        <ul class="uses-list"><li>Super Magnets</li><li>Lasers</li><li>Camera Lenses</li><li>Catalysts</li><li>MRI Agents</li><li>Fiber Optics</li><li>LEDs</li><li>Nuclear</li></ul>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h3>About</h3>
+                    <p class="description-text">The Lanthanides are a series of 15 metallic elements from Lanthanum (La, 57) to Lutetium (Lu, 71). They are soft, malleable, and highly reactive, tarnishing quickly in air.</p>
+                    <p class="description-text" style="margin-top:10px;">Lanthanides are critical to modern technology. Neodymium creates the strongest permanent magnets used in headphones, hard drives, wind turbines, and electric vehicle motors. Cerium is used in catalytic converters and self-cleaning ovens. Europium provides the red color in TV and phone screens. Erbium amplifies signals in fiber optic cables. Gadolinium is used as an MRI contrast agent. Lanthanum is found in camera lenses and hybrid car batteries.</p>
                 </div>
             `;
         } else {
             body.innerHTML = `
-                <div class="detail-symbol-block cat-actinide" style="text-align:center;padding:24px;border-radius:12px;margin-bottom:20px;">
-                    <div class="big-number">89 - 103</div>
-                    <div class="big-symbol" style="font-size:2.5rem;">Ac - Lr</div>
-                    <div class="big-name">Actinides</div>
+                <div class="detail-top">
+                    <div class="detail-img-wrap">
+                        <img src="https://images-of-elements.com/uranium.jpg" alt="Actinides" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'img-fallback\\'>Ac-Lr</span>';">
+                    </div>
+                    <div class="detail-symbol-block cat-actinide">
+                        <div class="big-number">89 - 103</div>
+                        <div class="big-symbol" style="font-size:2.2rem;">Ac - Lr</div>
+                        <div class="big-name">Actinides</div>
+                    </div>
                 </div>
                 <div class="detail-section">
                     <h3>Overview</h3>
-                    <p class="description-text">The Actinides are a series of 15 metallic elements from Actinium (Ac, 89) to Lawrencium (Lr, 103). All elements in this series are radioactive. While some occur naturally, such as Uranium and Thorium, most are man-made (synthetic) and are produced in nuclear reactors or particle accelerators. The heavier actinides (from Neptunium onward) are called transuranium elements and do not exist in nature.</p>
+                    <p class="description-text">All elements in this series are <strong>radioactive</strong>. While some occur naturally (like Uranium and Thorium), most are man-made (synthetic) and are used in nuclear reactors and specialized medical equipment.</p>
                 </div>
                 <div class="detail-section">
-                    <h3>Key Uses</h3>
-                    <p class="description-text">Uranium is the primary fuel for nuclear power plants generating about 10% of the world's electricity. Plutonium powers spacecraft through radioisotope thermoelectric generators (RTGs) and was used in nuclear weapons. Thorium is being researched as a safer alternative nuclear fuel. Americium-241 is used in nearly all household smoke detectors. Actinium and its compounds are being studied for targeted cancer radiation therapy. Curium has powered instruments on Mars rovers.</p>
-                    <ul class="uses-list" style="margin-top:12px;">
-                        <li>Nuclear Power</li><li>Smoke Detectors</li><li>Spacecraft Power</li><li>Cancer Therapy</li><li>Weapons</li><li>Scientific Research</li>
-                    </ul>
+                    <h3>Properties</h3>
+                    <div class="detail-row">
+                        <span class="label">Atomic Numbers</span>
+                        <span class="value">89 - 103</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Symbols</span>
+                        <span class="value">Ac to Lr</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Category</span>
+                        <span class="value">Radioactive Metals</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">State (Room Temp)</span>
+                        <span class="value"><span class="state-badge solid">Solid</span></span>
+                    </div>
+                    <div style="padding-top:10px;"><span class="label" style="color:#94a3b8;font-size:0.85rem;">Common Uses</span>
+                        <ul class="uses-list"><li>Nuclear Power</li><li>Smoke Detectors</li><li>Spacecraft Power</li><li>Cancer Therapy</li><li>Weapons</li><li>Scientific Research</li></ul>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h3>About</h3>
+                    <p class="description-text">The Actinides are a series of 15 metallic elements from Actinium (Ac, 89) to Lawrencium (Lr, 103). The heavier actinides (from Neptunium onward) are called transuranium elements and do not exist in nature.</p>
+                    <p class="description-text" style="margin-top:10px;">Uranium is the primary fuel for nuclear power plants generating about 10% of the world's electricity. Plutonium powers spacecraft through radioisotope thermoelectric generators (RTGs) and was used in nuclear weapons. Thorium is being researched as a safer alternative nuclear fuel. Americium-241 is used in nearly all household smoke detectors. Curium has powered instruments on Mars rovers.</p>
                 </div>
             `;
         }
