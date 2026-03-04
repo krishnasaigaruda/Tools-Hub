@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percentage Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: #334155; color: #e2e8f0; }
+        .header h1 { font-size: 1.3rem; color: #f59e0b; font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 32px 24px;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            width: 380px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(245,158,11,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.15);
+        }
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f59e0b;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title i { font-size: 0.9rem; }
+        .card-desc {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .input-row label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            min-width: fit-content;
+        }
+        .input-row input {
+            flex: 1;
+            min-width: 80px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #f1f5f9;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-row input:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+        }
+        .input-row input::placeholder { color: #475569; }
+        .input-row .sym {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            border: none;
+            border-radius: 10px;
+            color: #0f172a;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-top: 4px;
+        }
+        .calc-btn:hover { background: linear-gradient(135deg, #f59e0b, #fbbf24); transform: translateY(-1px); }
+        .calc-btn:active { transform: scale(0.98); }
+
+        .result-box {
+            margin-top: 16px;
+            background: rgba(245,158,11,0.06);
+            border: 1px solid rgba(245,158,11,0.15);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+        .result-box.show { display: block; }
+        .result-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* History sidebar */
+        .history-section {
+            width: 320px;
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+        .history-section h3 {
+            font-size: 0.8rem;
+            color: #f59e0b;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .history-section h3 i { font-size: 0.85rem; }
+        .hist-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .hist-list::-webkit-scrollbar { width: 4px; }
+        .hist-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+        .hist-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #0f172a;
+            font-size: 0.8rem;
+        }
+        .hist-item .hi-q { color: #94a3b8; margin-bottom: 2px; }
+        .hist-item .hi-a {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+        .clear-hist {
+            margin-top: 10px;
+            padding: 8px;
+            background: none;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #64748b;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        .clear-hist:hover { color: #f87171; border-color: rgba(248,113,113,0.3); }
+
+        .no-hist {
+            color: #475569;
+            text-align: center;
+            font-size: 0.8rem;
+            padding: 24px 0;
+        }
+
+        @media (max-width: 860px) {
+            .main-content { flex-direction: column; align-items: center; }
+            .history-section { width: 380px; max-height: 300px; }
+        }
+        @media (max-width: 420px) {
+            .card, .history-section { width: 100%; }
+            .main-content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='../Tools.html'"><i class="fas fa-arrow-left"></i> Back</button>
+        <h1><i class="fas fa-percent"></i> Percentage Calculator</h1>
+    </div>
+
+    <div class="main-content">
+        <div style="display:flex;flex-direction:column;gap:24px;">
+            <!-- Card 1: X% of Y -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-calculator"></i> Percentage of a Number</div>
+                <div class="card-desc">What is X% of Y?</div>
+                <div class="input-row">
+                    <label>What is</label>
+                    <input type="number" id="c1x" placeholder="X">
+                    <span class="sym">%</span>
+                    <label>of</label>
+                    <input type="number" id="c1y" placeholder="Y">
+                    <span class="sym">?</span>
+                </div>
+                <button class="calc-btn" onclick="calc1()">Calculate</button>
+                <div class="result-box" id="r1">
+                    <div class="result-label">Result</div>
+                    <div class="result-value" id="r1v"></div>
+                </div>
+            </div>
+
+            <!-- Card 2: X is what % of Y -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Number as Percentage</div>
+                <div class="card-desc">X is what % of Y?</div>
+                <div class="input-row">
+                    <input type="number" id="c2x" placeholder="X">
+                    <label>is what % of</label>
+                    <input type="number" id="c2y" placeholder="Y">
+                    <span class="sym">?</span>
+                </div>
+                <button class="calc-btn" onclick="calc2()">Calculate</button>
+                <div class="result-box" id="r2">
+                    <div class="result-label">Result</div>
+                    <div class="result-value" id="r2v"></div>
+                </div>
+            </div>
+
+            <!-- Card 3: % change -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-arrow-trend-up"></i> Percentage Change</div>
+                <div class="card-desc">What is the % change from X to Y?</div>
+                <div class="input-row">
+                    <label>From</label>
+                    <input type="number" id="c3x" placeholder="X">
+                    <label>to</label>
+                    <input type="number" id="c3y" placeholder="Y">
+                </div>
+                <button class="calc-btn" onclick="calc3()">Calculate</button>
+                <div class="result-box" id="r3">
+                    <div class="result-label">Result</div>
+                    <div class="result-value" id="r3v"></div>
+                </div>
+            </div>
+
+            <!-- Card 4: Increase/Decrease by % -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-sliders"></i> Increase / Decrease by %</div>
+                <div class="card-desc">Increase or decrease a number by a percentage.</div>
+                <div class="input-row">
+                    <input type="number" id="c4x" placeholder="Number">
+                    <select id="c4dir" style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 12px;color:#f1f5f9;font-family:inherit;font-size:0.85rem;outline:none;cursor:pointer;">
+                        <option value="inc">+ Increase</option>
+                        <option value="dec">− Decrease</option>
+                    </select>
+                    <input type="number" id="c4p" placeholder="%" style="max-width:80px;">
+                    <span class="sym">%</span>
+                </div>
+                <button class="calc-btn" onclick="calc4()">Calculate</button>
+                <div class="result-box" id="r4">
+                    <div class="result-label">Result</div>
+                    <div class="result-value" id="r4v"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="history-section">
+            <h3><i class="fas fa-clock-rotate-left"></i> History</h3>
+            <div class="hist-list" id="histList"></div>
+            <button class="clear-hist" onclick="clearHist()">Clear History</button>
+        </div>
+    </div>
+
+    <script>
+    let history = [];
+
+    // IndexedDB
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('PctCalcDB', 1);
+            req.onupgradeneeded = e => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('history')) db.createObjectStore('history');
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+    async function dbLoad() {
+        try {
+            const db = await openDB();
+            const tx = db.transaction('history', 'readonly');
+            const req = tx.objectStore('history').get('pctHistory');
+            return new Promise(res => { req.onsuccess = () => res(req.result || []); req.onerror = () => res([]); });
+        } catch { return []; }
+    }
+    async function dbSave() {
+        try {
+            const db = await openDB();
+            const tx = db.transaction('history', 'readwrite');
+            tx.objectStore('history').put(history, 'pctHistory');
+        } catch {}
+    }
+
+    function fmt(n) {
+        return parseFloat(n.toPrecision(10)).toString();
+    }
+
+    function showResult(id, val) {
+        const box = document.getElementById(id);
+        box.classList.remove('show');
+        void box.offsetWidth;
+        box.classList.add('show');
+        document.getElementById(id + 'v').textContent = val;
+    }
+
+    function addHist(q, a) {
+        history.unshift({ q, a });
+        if (history.length > 40) history.pop();
+        dbSave();
+        renderHist();
+    }
+
+    function renderHist() {
+        const el = document.getElementById('histList');
+        if (history.length === 0) {
+            el.innerHTML = '<div class="no-hist">No calculations yet</div>';
+            return;
+        }
+        el.innerHTML = history.map(h => `
+            <div class="hist-item">
+                <div class="hi-q">${h.q}</div>
+                <div class="hi-a">${h.a}</div>
+            </div>
+        `).join('');
+    }
+
+    function clearHist() {
+        history = [];
+        dbSave();
+        renderHist();
+    }
+
+    function calc1() {
+        const x = parseFloat(document.getElementById('c1x').value);
+        const y = parseFloat(document.getElementById('c1y').value);
+        if (isNaN(x) || isNaN(y)) return;
+        const r = (x / 100) * y;
+        const res = fmt(r);
+        showResult('r1', res);
+        addHist(`${x}% of ${y}`, res);
+    }
+
+    function calc2() {
+        const x = parseFloat(document.getElementById('c2x').value);
+        const y = parseFloat(document.getElementById('c2y').value);
+        if (isNaN(x) || isNaN(y) || y === 0) return;
+        const r = (x / y) * 100;
+        const res = fmt(r) + '%';
+        showResult('r2', res);
+        addHist(`${x} is what % of ${y}`, res);
+    }
+
+    function calc3() {
+        const x = parseFloat(document.getElementById('c3x').value);
+        const y = parseFloat(document.getElementById('c3y').value);
+        if (isNaN(x) || isNaN(y) || x === 0) return;
+        const r = ((y - x) / Math.abs(x)) * 100;
+        const res = fmt(r) + '%';
+        const label = r >= 0 ? '↑ Increase' : '↓ Decrease';
+        showResult('r3', `${res} (${label})`);
+        addHist(`Change from ${x} to ${y}`, `${res} (${label})`);
+    }
+
+    function calc4() {
+        const x = parseFloat(document.getElementById('c4x').value);
+        const p = parseFloat(document.getElementById('c4p').value);
+        const dir = document.getElementById('c4dir').value;
+        if (isNaN(x) || isNaN(p)) return;
+        const r = dir === 'inc' ? x * (1 + p / 100) : x * (1 - p / 100);
+        const res = fmt(r);
+        const label = dir === 'inc' ? `${x} + ${p}%` : `${x} − ${p}%`;
+        showResult('r4', res);
+        addHist(label, res);
+    }
+
+    // Enter key triggers calc in focused card
+    document.querySelectorAll('.card input').forEach(inp => {
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                const card = inp.closest('.card');
+                card.querySelector('.calc-btn').click();
+            }
+        });
+    });
+
+    dbLoad().then(h => { history = h; renderHist(); });
+    </script>
+</body>
+</html>

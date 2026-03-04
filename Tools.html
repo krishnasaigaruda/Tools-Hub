@@ -152,7 +152,7 @@
 
         /* Math & Science - Classic Indigo */
         .basic-calc, .scientific-calc, .equation-solver, .graph-plotter, .matrix-calc,
-        .stats-calculator, .percentage-calc {
+        .stats-calculator, .percentage-calc, .conversion-calc {
             background: #4f46e5;
         }
 
@@ -286,6 +286,7 @@
             <button class="tool-btn basic-calc" onclick="openTool('calculator')"><span class="tool-icon"><i class="fas fa-calculator"></i></span><span class="tool-name">Calculator</span></button>
             <button class="tool-btn scientific-calc" onclick="openTool('scientific-calc')"><span class="tool-icon"><i class="fas fa-square-root-alt"></i></span><span class="tool-name">Scientific Calculator</span></button>
             <button class="tool-btn percentage-calc" onclick="openTool('percentage-calc')"><span class="tool-icon"><i class="fas fa-percent"></i></span><span class="tool-name">Percentage Calculator</span></button>
+            <button class="tool-btn conversion-calc" onclick="openTool('conversion-calc')"><span class="tool-icon"><i class="fas fa-right-left"></i></span><span class="tool-name">Conversion Calculator</span></button>
             <button class="tool-btn equation-solver" onclick="openTool('equation-solver')"><span class="tool-icon"><i class="fas fa-superscript"></i></span><span class="tool-name">Equation Solver</span></button>
             <button class="tool-btn graph-plotter" onclick="openTool('graph-plotter')"><span class="tool-icon"><i class="fas fa-chart-line"></i></span><span class="tool-name">Graph Plotter</span></button>
             <button class="tool-btn matrix-calc" onclick="openTool('matrix-calc')"><span class="tool-icon"><i class="fas fa-border-all"></i></span><span class="tool-name">Matrix Calculator</span></button>
@@ -396,7 +397,11 @@
                 'timezone': 'tools/clock.html#timezone',
                 'quiz': 'tools/quiz.html',
                 'periodic-table': 'tools/periodic-table.html',
-                'typing-test': 'tools/typing-test.html'
+                'typing-test': 'tools/typing-test.html',
+                'calculator': 'tools/calculator.html',
+                'scientific-calc': 'tools/scientific-calc.html',
+                'percentage-calc': 'tools/percentage-calc.html',
+                'conversion-calc': 'tools/conversion-calc.html'
             };
 
             if (availableTools[toolName]) {

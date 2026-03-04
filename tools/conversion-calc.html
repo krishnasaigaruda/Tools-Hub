@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversion Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #a78bfa;
+            --accent2: #c4b5fd;
+            --accent-dim: rgba(167,139,250,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 28px 24px;
+            gap: 24px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        /* Category tabs */
+        .sidebar {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .cat-btn {
+            padding: 10px 14px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cat-btn i { width: 16px; text-align: center; font-size: 0.85rem; }
+        .cat-btn:hover { background: var(--border); color: var(--text); }
+        .cat-btn.active {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--accent2);
+        }
+
+        /* Converter panel */
+        .converter {
+            width: 560px;
+            background: var(--panel);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(167,139,250,0.1);
+        }
+        .conv-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent2);
+            margin-bottom: 6px;
+        }
+        .conv-desc {
+            font-size: 0.78rem;
+            color: var(--dim);
+            margin-bottom: 24px;
+        }
+
+        /* Input area */
+        .input-section {
+            margin-bottom: 24px;
+        }
+        .input-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .input-group input, .input-group select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(167,139,250,0.1);
+        }
+        .input-group input { flex: 1; }
+        .input-group select {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            min-width: 130px;
+        }
+        .input-group input::placeholder { color: #475569; }
+
+        /* Fraction inputs */
+        .frac-input {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .frac-input input {
+            width: 70px;
+            text-align: center;
+        }
+        .frac-slash {
+            font-size: 1.5rem;
+            color: var(--dim);
+            font-weight: 300;
+        }
+
+        /* Repeating decimal input */
+        .rep-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .rep-input input { width: 100px; text-align: center; }
+        .rep-label {
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+
+        /* Convert button */
+        .convert-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            margin: 20px 0;
+        }
+        .convert-btn:hover { background: linear-gradient(135deg, #8b5cf6, #c4b5fd); transform: translateY(-1px); }
+        .convert-btn:active { transform: scale(0.98); }
+
+        /* Results */
+        .results {
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        .results.show { display: block; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .results-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+        }
+        .result-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .result-row:hover {
+            border-color: var(--accent);
+            background: rgba(167,139,250,0.03);
+        }
+        .result-row .rr-label {
+            font-size: 0.78rem;
+            color: var(--dim);
+            font-weight: 600;
+        }
+        .result-row .rr-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent2);
+        }
+        .result-row .rr-value .bar {
+            text-decoration: overline;
+            text-decoration-color: var(--accent);
+        }
+        .copy-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--accent);
+            color: #0f172a;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.25s;
+            pointer-events: none;
+        }
+        .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Ratio display */
+        .ratio-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent2);
+        }
+
+        @media (max-width: 860px) {
+            .main-wrap { flex-direction: column; align-items: center; }
+            .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .cat-btn { padding: 8px 12px; font-size: 0.75rem; }
+            .converter { width: 100%; }
+        }
+        @media (max-width: 420px) {
+            .converter { padding: 20px 16px; }
+            .input-group { flex-wrap: wrap; }
+            .input-group select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='../Tools.html'"><i class="fas fa-arrow-left"></i> Back</button>
+        <h1><i class="fas fa-right-left"></i> Conversion Calculator</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="sidebar">
+            <button class="cat-btn active" onclick="switchCat('number')" data-cat="number"><i class="fas fa-hashtag"></i> Number Forms</button>
+            <button class="cat-btn" onclick="switchCat('length')" data-cat="length"><i class="fas fa-ruler"></i> Length</button>
+            <button class="cat-btn" onclick="switchCat('weight')" data-cat="weight"><i class="fas fa-weight-hanging"></i> Weight</button>
+            <button class="cat-btn" onclick="switchCat('temperature')" data-cat="temperature"><i class="fas fa-temperature-half"></i> Temperature</button>
+            <button class="cat-btn" onclick="switchCat('area')" data-cat="area"><i class="fas fa-vector-square"></i> Area</button>
+            <button class="cat-btn" onclick="switchCat('volume')" data-cat="volume"><i class="fas fa-cube"></i> Volume</button>
+            <button class="cat-btn" onclick="switchCat('speed')" data-cat="speed"><i class="fas fa-gauge-high"></i> Speed</button>
+            <button class="cat-btn" onclick="switchCat('data')" data-cat="data"><i class="fas fa-hard-drive"></i> Data</button>
+            <button class="cat-btn" onclick="switchCat('time')" data-cat="time"><i class="fas fa-clock"></i> Time</button>
+            <button class="cat-btn" onclick="switchCat('angle')" data-cat="angle"><i class="fas fa-compass-drafting"></i> Angle</button>
+        </div>
+
+        <div class="converter" id="converter"></div>
+    </div>
+
+    <div class="copy-toast" id="copyToast">Copied!</div>
+
+    <script>
+    // ========== NUMBER FORMS ==========
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a; }
+
+    function decimalToFraction(d) {
+        if (Number.isInteger(d)) return { num: d, den: 1 };
+        const sign = d < 0 ? -1 : 1;
+        d = Math.abs(d);
+        const str = d.toString();
+        const dotIdx = str.indexOf('.');
+        if (dotIdx === -1) return { num: d * sign, den: 1 };
+        const decimals = str.length - dotIdx - 1;
+        let num = Math.round(d * Math.pow(10, decimals));
+        let den = Math.pow(10, decimals);
+        const g = gcd(num, den);
+        return { num: (num / g) * sign, den: den / g };
+    }
+
+    function repeatingToFraction(whole, nonRep, rep) {
+        // e.g. 0.1(6) = whole=0, nonRep="1", rep="6"
+        // Formula: x = (whole * 10^(a+b) + parseInt(nonRep+rep) - parseInt(nonRep || '0') * ... ) / (10^(a+b) - 10^a)
+        // where a = nonRep.length, b = rep.length
+        whole = parseInt(whole) || 0;
+        const sign = whole < 0 ? -1 : 1;
+        whole = Math.abs(whole);
+        const a = nonRep.length;
+        const b = rep.length;
+        if (b === 0) {
+            // No repeating part
+            const d = parseFloat(whole + '.' + nonRep);
+            return decimalToFraction(d * sign);
+        }
+        const bigNum = parseInt(nonRep + rep) || 0;
+        const smallNum = parseInt(nonRep) || 0;
+        const num = whole * (Math.pow(10, a + b) - Math.pow(10, a)) + bigNum - smallNum;
+        const den = Math.pow(10, a + b) - Math.pow(10, a);
+        const g = gcd(num, den);
+        return { num: (num / g) * sign, den: den / g };
+    }
+
+    function fractionToDecimal(num, den) {
+        if (den === 0) return { value: Infinity, display: 'Error', repeating: '' };
+        const sign = (num < 0) !== (den < 0) ? '-' : '';
+        num = Math.abs(num);
+        den = Math.abs(den);
+        const intPart = Math.floor(num / den);
+        let remainder = num % den;
+        if (remainder === 0) return { value: parseFloat(sign + intPart), display: sign + intPart, repeating: '' };
+
+        let decimals = '';
+        let repStart = '';
+        const remainders = {};
+        let pos = 0;
+
+        while (remainder !== 0) {
+            if (remainders[remainder] !== undefined) {
+                const rPos = remainders[remainder];
+                const nonRep = decimals.substring(0, rPos);
+                const rep = decimals.substring(rPos);
+                return {
+                    value: num / den * (sign === '-' ? -1 : 1),
+                    display: sign + intPart + '.' + nonRep,
+                    repeating: rep
+                };
+            }
+            remainders[remainder] = pos;
+            remainder *= 10;
+            decimals += Math.floor(remainder / den);
+            remainder = remainder % den;
+            pos++;
+            if (pos > 50) break; // safety
+        }
+        return { value: num / den * (sign === '-' ? -1 : 1), display: sign + intPart + '.' + decimals, repeating: '' };
+    }
+
+    function simplifyRatio(a, b) {
+        const g = gcd(Math.round(a), Math.round(b));
+        return [Math.round(a) / g, Math.round(b) / g];
+    }
+
+    // ========== UNIT CONVERSIONS ==========
+    const units = {
+        length: {
+            name: 'Length',
+            units: {
+                'm': 'Meter', 'km': 'Kilometer', 'cm': 'Centimeter', 'mm': 'Millimeter',
+                'mi': 'Mile', 'yd': 'Yard', 'ft': 'Foot', 'in': 'Inch',
+                'nm': 'Nautical Mile', 'μm': 'Micrometer'
+            },
+            toBase: { m:1, km:1000, cm:0.01, mm:0.001, mi:1609.344, yd:0.9144, ft:0.3048, in:0.0254, nm:1852, 'μm':0.000001 }
+        },
+        weight: {
+            name: 'Weight',
+            units: {
+                'kg': 'Kilogram', 'g': 'Gram', 'mg': 'Milligram', 'lb': 'Pound',
+                'oz': 'Ounce', 't': 'Metric Ton', 'st': 'Stone'
+            },
+            toBase: { kg:1, g:0.001, mg:0.000001, lb:0.453592, oz:0.0283495, t:1000, st:6.35029 }
+        },
+        area: {
+            name: 'Area',
+            units: {
+                'm²': 'Sq Meter', 'km²': 'Sq Kilometer', 'cm²': 'Sq Centimeter',
+                'ft²': 'Sq Foot', 'in²': 'Sq Inch', 'mi²': 'Sq Mile',
+                'ha': 'Hectare', 'ac': 'Acre'
+            },
+            toBase: { 'm²':1, 'km²':1e6, 'cm²':1e-4, 'ft²':0.092903, 'in²':0.00064516, 'mi²':2.59e6, ha:10000, ac:4046.86 }
+        },
+        volume: {
+            name: 'Volume',
+            units: {
+                'L': 'Liter', 'mL': 'Milliliter', 'm³': 'Cubic Meter',
+                'gal': 'US Gallon', 'qt': 'US Quart', 'pt': 'US Pint',
+                'cup': 'US Cup', 'fl oz': 'US Fl Oz', 'tbsp': 'Tablespoon', 'tsp': 'Teaspoon'
+            },
+            toBase: { L:1, mL:0.001, 'm³':1000, gal:3.78541, qt:0.946353, pt:0.473176, cup:0.236588, 'fl oz':0.0295735, tbsp:0.0147868, tsp:0.00492892 }
+        },
+        speed: {
+            name: 'Speed',
+            units: {
+                'm/s': 'Meter/sec', 'km/h': 'Km/hour', 'mph': 'Miles/hour',
+                'kn': 'Knot', 'ft/s': 'Feet/sec'
+            },
+            toBase: { 'm/s':1, 'km/h':0.277778, mph:0.44704, kn:0.514444, 'ft/s':0.3048 }
+        },
+        data: {
+            name: 'Data',
+            units: {
+                'B': 'Byte', 'KB': 'Kilobyte', 'MB': 'Megabyte', 'GB': 'Gigabyte',
+                'TB': 'Terabyte', 'PB': 'Petabyte', 'bit': 'Bit', 'Kbit': 'Kilobit', 'Mbit': 'Megabit'
+            },
+            toBase: { B:1, KB:1024, MB:1048576, GB:1073741824, TB:1099511627776, PB:1125899906842624, bit:0.125, Kbit:128, Mbit:131072 }
+        },
+        time: {
+            name: 'Time',
+            units: {
+                's': 'Second', 'ms': 'Millisecond', 'min': 'Minute', 'hr': 'Hour',
+                'day': 'Day', 'wk': 'Week', 'mo': 'Month (30d)', 'yr': 'Year (365d)'
+            },
+            toBase: { s:1, ms:0.001, min:60, hr:3600, day:86400, wk:604800, mo:2592000, yr:31536000 }
+        },
+        angle: {
+            name: 'Angle',
+            units: {
+                'deg': 'Degree', 'rad': 'Radian', 'grad': 'Gradian', 'turn': 'Turn', 'arcmin': 'Arcminute', 'arcsec': 'Arcsecond'
+            },
+            toBase: { deg:1, rad:57.2957795, grad:0.9, turn:360, arcmin:1/60, arcsec:1/3600 }
+        }
+    };
+
+    function convertUnit(val, fromUnit, toUnit, cat) {
+        if (cat === 'temperature') return convertTemp(val, fromUnit, toUnit);
+        const c = units[cat];
+        return val * c.toBase[fromUnit] / c.toBase[toUnit];
+    }
+
+    function convertTemp(val, from, to) {
+        // Convert to Celsius first
+        let c;
+        if (from === '°C') c = val;
+        else if (from === '°F') c = (val - 32) * 5/9;
+        else if (from === 'K') c = val - 273.15;
+        else c = (val - 491.67) * 5/9; // Rankine
+
+        if (to === '°C') return c;
+        if (to === '°F') return c * 9/5 + 32;
+        if (to === 'K') return c + 273.15;
+        return (c + 273.15) * 9/5; // Rankine
+    }
+
+    // ========== UI ==========
+    let currentCat = 'number';
+
+    function switchCat(cat) {
+        currentCat = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+        renderConverter();
+    }
+
+    function renderConverter() {
+        const el = document.getElementById('converter');
+        if (currentCat === 'number') {
+            renderNumberConverter(el);
+        } else if (currentCat === 'temperature') {
+            renderTempConverter(el);
+        } else {
+            renderUnitConverter(el);
+        }
+    }
+
+    function renderNumberConverter(el) {
+        el.innerHTML = `
+            <div class="conv-title">Number Form Converter</div>
+            <div class="conv-desc">Convert between fractions, decimals (including repeating), percentages, and ratios.</div>
+
+            <div class="input-section">
+                <div class="input-label">Input Type</div>
+                <div class="input-group" style="margin-bottom:12px;">
+                    <select id="numType" onchange="updateNumInput()" style="flex:1;">
+                        <option value="decimal">Decimal</option>
+                        <option value="fraction">Fraction</option>
+                        <option value="repeating">Repeating Decimal</option>
+                        <option value="percent">Percentage</option>
+                        <option value="ratio">Ratio</option>
+                        <option value="mixed">Mixed Number</option>
+                    </select>
+                </div>
+                <div id="numInputArea"></div>
+            </div>
+
+            <button class="convert-btn" onclick="convertNumber()"><i class="fas fa-arrows-rotate"></i> Convert</button>
+
+            <div class="results" id="numResults"></div>
+        `;
+        updateNumInput();
+    }
+
+    function updateNumInput() {
+        const type = document.getElementById('numType').value;
+        const area = document.getElementById('numInputArea');
+        switch (type) {
+            case 'decimal':
+                area.innerHTML = `<div class="input-group"><input type="text" id="decVal" placeholder="e.g. 0.75" inputmode="decimal"></div>`;
+                break;
+            case 'fraction':
+                area.innerHTML = `
+                    <div class="input-group">
+                        <div class="frac-input">
+                            <input type="number" id="fracNum" placeholder="Num">
+                            <span class="frac-slash">/</span>
+                            <input type="number" id="fracDen" placeholder="Den">
+                        </div>
+                    </div>`;
+                break;
+            case 'repeating':
+                area.innerHTML = `
+                    <div class="input-group" style="flex-wrap:wrap;gap:8px;">
+                        <div class="rep-input">
+                            <input type="number" id="repWhole" placeholder="0" style="width:60px;">
+                            <span class="frac-slash">.</span>
+                            <input type="text" id="repNon" placeholder="Non-rep" style="width:80px;" title="Non-repeating part">
+                            <input type="text" id="repBar" placeholder="Rep" style="width:80px;border-color:var(--accent);text-decoration:overline;" title="Repeating part (with bar)">
+                        </div>
+                    </div>
+                    <div style="font-size:0.7rem;color:var(--dim);margin-top:8px;">
+                        Example: 0.1<span style="text-decoration:overline">6</span> → whole=0, non-rep=1, rep=6
+                    </div>`;
+                break;
+            case 'percent':
+                area.innerHTML = `<div class="input-group"><input type="text" id="pctVal" placeholder="e.g. 75" inputmode="decimal"><span style="font-size:1.2rem;color:var(--dim);font-weight:700;">%</span></div>`;
+                break;
+            case 'ratio':
+                area.innerHTML = `
+                    <div class="input-group">
+                        <input type="number" id="ratA" placeholder="A" style="width:100px;text-align:center;">
+                        <span style="font-size:1.2rem;color:var(--dim);font-weight:700;">:</span>
+                        <input type="number" id="ratB" placeholder="B" style="width:100px;text-align:center;">
+                    </div>`;
+                break;
+            case 'mixed':
+                area.innerHTML = `
+                    <div class="input-group">
+                        <input type="number" id="mixWhole" placeholder="Whole" style="width:70px;text-align:center;">
+                        <div class="frac-input">
+                            <input type="number" id="mixNum" placeholder="Num">
+                            <span class="frac-slash">/</span>
+                            <input type="number" id="mixDen" placeholder="Den">
+                        </div>
+                    </div>`;
+                break;
+        }
+        // Enter key support
+        setTimeout(() => {
+            document.querySelectorAll('#numInputArea input').forEach(inp => {
+                inp.addEventListener('keydown', e => { if (e.key === 'Enter') convertNumber(); });
+            });
+        }, 0);
+    }
+
+    function convertNumber() {
+        const type = document.getElementById('numType').value;
+        let num, den;
+
+        switch (type) {
+            case 'decimal': {
+                const v = parseFloat(document.getElementById('decVal').value);
+                if (isNaN(v)) return;
+                const f = decimalToFraction(v);
+                num = f.num; den = f.den;
+                break;
+            }
+            case 'fraction': {
+                num = parseInt(document.getElementById('fracNum').value);
+                den = parseInt(document.getElementById('fracDen').value);
+                if (isNaN(num) || isNaN(den) || den === 0) return;
+                const g = gcd(Math.abs(num), Math.abs(den));
+                num /= g; den /= g;
+                if (den < 0) { num = -num; den = -den; }
+                break;
+            }
+            case 'repeating': {
+                const whole = document.getElementById('repWhole').value || '0';
+                const nonRep = document.getElementById('repNon').value || '';
+                const rep = document.getElementById('repBar').value || '';
+                if (!rep && !nonRep) return;
+                const f = repeatingToFraction(whole, nonRep, rep);
+                num = f.num; den = f.den;
+                break;
+            }
+            case 'percent': {
+                const v = parseFloat(document.getElementById('pctVal').value);
+                if (isNaN(v)) return;
+                const f = decimalToFraction(v / 100);
+                num = f.num; den = f.den;
+                break;
+            }
+            case 'ratio': {
+                const a = parseFloat(document.getElementById('ratA').value);
+                const b = parseFloat(document.getElementById('ratB').value);
+                if (isNaN(a) || isNaN(b) || b === 0) return;
+                const f = decimalToFraction(a / b);
+                num = f.num; den = f.den;
+                break;
+            }
+            case 'mixed': {
+                const w = parseInt(document.getElementById('mixWhole').value) || 0;
+                const n = parseInt(document.getElementById('mixNum').value);
+                const d = parseInt(document.getElementById('mixDen').value);
+                if (isNaN(n) || isNaN(d) || d === 0) return;
+                const sign = w < 0 ? -1 : 1;
+                num = Math.abs(w) * d + Math.abs(n);
+                num *= sign;
+                den = d;
+                const g = gcd(Math.abs(num), Math.abs(den));
+                num /= g; den /= g;
+                break;
+            }
+        }
+
+        showNumberResults(num, den);
+    }
+
+    function showNumberResults(num, den) {
+        const res = document.getElementById('numResults');
+        const dec = fractionToDecimal(num, den);
+        const pct = (num / den) * 100;
+        const pctFrac = decimalToFraction(pct);
+
+        // Simplified fraction
+        const g = gcd(Math.abs(num), Math.abs(den));
+        const sNum = num / g, sDen = den / g;
+
+        // Mixed number
+        let mixedStr = '';
+        if (Math.abs(sNum) > Math.abs(sDen) && sDen !== 1) {
+            const whole = Math.trunc(sNum / sDen);
+            const rem = Math.abs(sNum) % Math.abs(sDen);
+            if (rem !== 0) mixedStr = `${whole} ${rem}/${Math.abs(sDen)}`;
+        }
+
+        // Ratio
+        const [rA, rB] = simplifyRatio(Math.abs(sNum), Math.abs(sDen));
+
+        // Decimal display with repeating bar
+        let decDisplay;
+        if (dec.repeating) {
+            decDisplay = `${dec.display}<span class="bar">${dec.repeating}</span>`;
+        } else {
+            decDisplay = dec.display;
+        }
+
+        // Percentage display
+        const pctDec = fractionToDecimal(Math.round(pct * 1e10), 1e10);
+        let pctDisplay = parseFloat(pct.toPrecision(10)) + '%';
+
+        let html = `<div class="results-title">All Forms</div>`;
+
+        const rows = [
+            { label: 'Decimal', value: decDisplay, copy: dec.display + (dec.repeating || '') },
+            { label: 'Fraction', value: `${sNum}/${sDen}`, copy: `${sNum}/${sDen}` },
+        ];
+        if (mixedStr) rows.push({ label: 'Mixed Number', value: mixedStr, copy: mixedStr });
+        rows.push({ label: 'Percentage', value: pctDisplay, copy: pctDisplay });
+        rows.push({ label: 'Ratio', value: `${rA} : ${rB}`, copy: `${rA}:${rB}` });
+
+        if (dec.repeating) {
+            rows.push({ label: 'Repeating Decimal', value: `0.${dec.display.split('.')[1] || ''}(${dec.repeating})`, copy: `${dec.display}(${dec.repeating})` });
+        }
+
+        // Decimal approximation if repeating
+        if (dec.repeating) {
+            rows.push({ label: 'Approx. Decimal', value: parseFloat((num/den).toPrecision(10)).toString(), copy: parseFloat((num/den).toPrecision(10)).toString() });
+        }
+
+        html += rows.map(r => `
+            <div class="result-row" onclick="copyVal('${r.copy.replace(/'/g, "\\'")}')">
+                <span class="rr-label">${r.label}</span>
+                <span class="rr-value">${r.value}</span>
+            </div>
+        `).join('');
+
+        res.innerHTML = html;
+        res.classList.remove('show');
+        void res.offsetWidth;
+        res.classList.add('show');
+    }
+
+    // ========== UNIT CONVERTER UI ==========
+    function renderUnitConverter(el) {
+        const cat = units[currentCat];
+        const unitKeys = Object.keys(cat.units);
+        const options = unitKeys.map(k => `<option value="${k}">${cat.units[k]} (${k})</option>`).join('');
+        el.innerHTML = `
+            <div class="conv-title">${cat.name} Converter</div>
+            <div class="conv-desc">Convert between ${cat.name.toLowerCase()} units.</div>
+            <div class="input-section">
+                <div class="input-label">Value</div>
+                <div class="input-group">
+                    <input type="number" id="unitVal" placeholder="Enter value" step="any">
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:16px;">
+                <div style="flex:1;">
+                    <div class="input-label">From</div>
+                    <div class="input-group"><select id="unitFrom" style="flex:1;">${options}</select></div>
+                </div>
+                <div style="display:flex;align-items:flex-end;padding-bottom:4px;cursor:pointer;" onclick="swapUnits()">
+                    <i class="fas fa-arrows-rotate" style="color:var(--accent);font-size:1.1rem;"></i>
+                </div>
+                <div style="flex:1;">
+                    <div class="input-label">To</div>
+                    <div class="input-group"><select id="unitTo" style="flex:1;">${options}</select></div>
+                </div>
+            </div>
+            <button class="convert-btn" onclick="doUnitConvert()"><i class="fas fa-arrows-rotate"></i> Convert</button>
+            <div class="results" id="unitResults"></div>
+        `;
+        // Set different defaults
+        if (unitKeys.length > 1) document.getElementById('unitTo').selectedIndex = 1;
+        // Enter key
+        document.getElementById('unitVal').addEventListener('keydown', e => { if (e.key === 'Enter') doUnitConvert(); });
+        // Auto-convert on input
+        document.getElementById('unitVal').addEventListener('input', doUnitConvert);
+        document.getElementById('unitFrom').addEventListener('change', doUnitConvert);
+        document.getElementById('unitTo').addEventListener('change', doUnitConvert);
+    }
+
+    function renderTempConverter(el) {
+        const tempUnits = { '°C': 'Celsius', '°F': 'Fahrenheit', 'K': 'Kelvin', '°R': 'Rankine' };
+        const options = Object.entries(tempUnits).map(([k,v]) => `<option value="${k}">${v} (${k})</option>`).join('');
+        el.innerHTML = `
+            <div class="conv-title">Temperature Converter</div>
+            <div class="conv-desc">Convert between temperature scales.</div>
+            <div class="input-section">
+                <div class="input-label">Value</div>
+                <div class="input-group">
+                    <input type="number" id="unitVal" placeholder="Enter value" step="any">
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-bottom:16px;">
+                <div style="flex:1;">
+                    <div class="input-label">From</div>
+                    <div class="input-group"><select id="unitFrom" style="flex:1;">${options}</select></div>
+                </div>
+                <div style="display:flex;align-items:flex-end;padding-bottom:4px;cursor:pointer;" onclick="swapUnits()">
+                    <i class="fas fa-arrows-rotate" style="color:var(--accent);font-size:1.1rem;"></i>
+                </div>
+                <div style="flex:1;">
+                    <div class="input-label">To</div>
+                    <div class="input-group"><select id="unitTo" style="flex:1;">${options}</select></div>
+                </div>
+            </div>
+            <button class="convert-btn" onclick="doTempConvert()"><i class="fas fa-arrows-rotate"></i> Convert</button>
+            <div class="results" id="unitResults"></div>
+        `;
+        document.getElementById('unitTo').selectedIndex = 1;
+        document.getElementById('unitVal').addEventListener('keydown', e => { if (e.key === 'Enter') doTempConvert(); });
+        document.getElementById('unitVal').addEventListener('input', doTempConvert);
+        document.getElementById('unitFrom').addEventListener('change', doTempConvert);
+        document.getElementById('unitTo').addEventListener('change', doTempConvert);
+    }
+
+    function swapUnits() {
+        const f = document.getElementById('unitFrom');
+        const t = document.getElementById('unitTo');
+        const tmp = f.value;
+        f.value = t.value;
+        t.value = tmp;
+        // Re-trigger conversion
+        if (currentCat === 'temperature') doTempConvert();
+        else doUnitConvert();
+    }
+
+    function doUnitConvert() {
+        const val = parseFloat(document.getElementById('unitVal').value);
+        if (isNaN(val)) { document.getElementById('unitResults').classList.remove('show'); return; }
+        const from = document.getElementById('unitFrom').value;
+        const to = document.getElementById('unitTo').value;
+        const result = convertUnit(val, from, to, currentCat);
+        const cat = units[currentCat];
+
+        // Show result + all conversions
+        let html = `<div class="results-title">Result</div>`;
+        html += `<div class="result-row" onclick="copyVal('${parseFloat(result.toPrecision(10))}')">
+            <span class="rr-label">${cat.units[to]} (${to})</span>
+            <span class="rr-value">${formatResult(result)}</span>
+        </div>`;
+
+        // All conversions
+        html += `<div class="results-title" style="margin-top:16px;">All Conversions</div>`;
+        for (const [u, name] of Object.entries(cat.units)) {
+            if (u === from) continue;
+            const r = convertUnit(val, from, u, currentCat);
+            html += `<div class="result-row" onclick="copyVal('${parseFloat(r.toPrecision(10))}')">
+                <span class="rr-label">${name} (${u})</span>
+                <span class="rr-value">${formatResult(r)}</span>
+            </div>`;
+        }
+
+        const res = document.getElementById('unitResults');
+        res.innerHTML = html;
+        res.classList.remove('show');
+        void res.offsetWidth;
+        res.classList.add('show');
+    }
+
+    function doTempConvert() {
+        const val = parseFloat(document.getElementById('unitVal').value);
+        if (isNaN(val)) { document.getElementById('unitResults').classList.remove('show'); return; }
+        const from = document.getElementById('unitFrom').value;
+        const to = document.getElementById('unitTo').value;
+        const result = convertTemp(val, from, to);
+
+        const tempUnits = { '°C': 'Celsius', '°F': 'Fahrenheit', 'K': 'Kelvin', '°R': 'Rankine' };
+
+        let html = `<div class="results-title">Result</div>`;
+        html += `<div class="result-row" onclick="copyVal('${parseFloat(result.toPrecision(10))}')">
+            <span class="rr-label">${tempUnits[to]} (${to})</span>
+            <span class="rr-value">${formatResult(result)}</span>
+        </div>`;
+
+        html += `<div class="results-title" style="margin-top:16px;">All Conversions</div>`;
+        for (const [u, name] of Object.entries(tempUnits)) {
+            if (u === from) continue;
+            const r = convertTemp(val, from, u);
+            html += `<div class="result-row" onclick="copyVal('${parseFloat(r.toPrecision(10))}')">
+                <span class="rr-label">${name} (${u})</span>
+                <span class="rr-value">${formatResult(r)}</span>
+            </div>`;
+        }
+
+        const res = document.getElementById('unitResults');
+        res.innerHTML = html;
+        res.classList.remove('show');
+        void res.offsetWidth;
+        res.classList.add('show');
+    }
+
+    function formatResult(n) {
+        if (Math.abs(n) > 1e12 || (Math.abs(n) < 1e-6 && n !== 0)) return n.toExponential(6);
+        return parseFloat(n.toPrecision(10)).toLocaleString('en-US', { maximumFractionDigits: 10 });
+    }
+
+    function copyVal(val) {
+        navigator.clipboard.writeText(val).then(() => {
+            const t = document.getElementById('copyToast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 1200);
+        });
+    }
+
+    // Init
+    renderConverter();
+    </script>
+</body>
+</html>
