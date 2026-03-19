@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Counter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: #475569;
+            border-bottom: 1px solid #64748b;
+            gap: 16px;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #e0e7ff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
+        .header h1 {
+            font-size: 1.3rem;
+            color: #fff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 i { font-size: 1.1rem; }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
+        }
+
+        /* Textarea Section */
+        .input-section {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .input-section label {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            display: block;
+            color: #94a3b8;
+        }
+        .textarea-wrap {
+            position: relative;
+        }
+        #textInput {
+            width: 100%;
+            min-height: 180px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 14px;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            line-height: 1.6;
+        }
+        #textInput:focus { border-color: #64748b; }
+        #textInput::placeholder { color: #475569; }
+
+        .realtime-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+        .realtime-bar span b { color: #94a3b8; }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #475569;
+            color: #fff;
+            font-size: 1rem;
+            padding: 12px 32px;
+        }
+        .btn-primary:hover { background: #64748b; transform: translateY(-1px); }
+        .btn-secondary {
+            background: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+        }
+        .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+        .btn-danger {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+
+        /* Stats Grid */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title i { color: #64748b; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .stat-card:hover { border-color: #475569; transform: translateY(-2px); }
+        .stat-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .label {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Limits Section */
+        .limits-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .limit-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .limit-row:last-child { margin-bottom: 0; }
+        .limit-label {
+            min-width: 150px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .limit-bar-wrap {
+            flex: 1;
+            height: 22px;
+            background: #0f172a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .limit-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+            min-width: 2px;
+        }
+        .limit-bar-fill.ok { background: linear-gradient(90deg, #22c55e, #4ade80); }
+        .limit-bar-fill.warn { background: linear-gradient(90deg, #eab308, #facc15); }
+        .limit-bar-fill.over { background: linear-gradient(90deg, #ef4444, #f87171); }
+        .limit-count {
+            min-width: 100px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* Frequency Table */
+        .freq-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .freq-table-wrap {
+            max-height: 350px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+        .freq-table-wrap::-webkit-scrollbar { width: 6px; }
+        .freq-table-wrap::-webkit-scrollbar-track { background: #0f172a; }
+        .freq-table-wrap::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        table.freq-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .freq-table th {
+            background: #0f172a;
+            padding: 10px 14px;
+            text-align: left;
+            color: #64748b;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        .freq-table td {
+            padding: 8px 14px;
+            border-top: 1px solid #1a2536;
+            color: #cbd5e1;
+        }
+        .freq-table tr:hover td { background: rgba(71,85,105,0.15); }
+        .freq-table .char-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        .freq-table .bar-cell {
+            width: 30%;
+        }
+        .freq-mini-bar {
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .freq-mini-bar-fill {
+            height: 100%;
+            background: #475569;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* Charts Row */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 800px) {
+            .charts-row { grid-template-columns: 1fr; }
+        }
+        .chart-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .chart-panel canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Density Section */
+        .density-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .density-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 18px;
+        }
+        .density-card .d-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .density-card .d-label {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
+
+        /* Results wrapper for PNG export */
+        #resultsSection { display: none; }
+        #resultsSection.visible { display: block; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 600px) {
+            .container { padding: 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .limit-label { min-width: 110px; font-size: 0.78rem; }
+        }
+
+        @media print {
+            .header, .input-section, .action-bar { display: none !important; }
+            body { background: #fff; color: #111; }
+            .stat-card, .freq-section, .chart-panel, .limits-section, .density-card {
+                background: #f8f8f8; border-color: #ddd; color: #111;
+            }
+            .stat-card .value, .density-card .d-value { color: #111; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <h1><i class="fas fa-text-width"></i> Character Counter</h1>
+</div>
+
+<div class="container">
+    <!-- Input -->
+    <div class="input-section">
+        <label><i class="fas fa-keyboard"></i> Enter or paste your text</label>
+        <div class="textarea-wrap">
+            <textarea id="textInput" placeholder="Type or paste your text here to analyze characters..."></textarea>
+        </div>
+        <div class="realtime-bar" id="realtimeBar">
+            <span><b id="rtChars">0</b> characters</span>
+            <span><b id="rtWords">0</b> words</span>
+            <span><b id="rtLines">1</b> lines</span>
+        </div>
+        <div class="input-actions">
+            <button class="btn btn-primary" onclick="analyze()"><i class="fas fa-magnifying-glass-chart"></i> Analyze</button>
+            <button class="btn btn-secondary" onclick="pasteText()"><i class="fas fa-paste"></i> Paste</button>
+            <button class="btn btn-secondary" onclick="loadSample()"><i class="fas fa-file-lines"></i> Sample Text</button>
+            <button class="btn btn-danger" onclick="clearAll()"><i class="fas fa-trash"></i> Clear</button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsSection">
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <button class="btn btn-secondary" onclick="copyResults()"><i class="fas fa-copy"></i> Copy Results</button>
+            <button class="btn btn-secondary" onclick="saveAsPNG()"><i class="fas fa-image"></i> Save as PNG</button>
+            <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+            <button class="btn btn-secondary" onclick="shareResults()"><i class="fas fa-share-nodes"></i> Share</button>
+        </div>
+
+        <div id="resultsContent">
+            <!-- Stats Grid -->
+            <div class="section-title"><i class="fas fa-chart-bar"></i> Character Statistics</div>
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <!-- Limits -->
+            <div class="limits-section">
+                <div class="section-title"><i class="fas fa-ruler-horizontal"></i> Platform Character Limits</div>
+                <div id="limitsContainer"></div>
+            </div>
+
+            <!-- Density -->
+            <div class="section-title"><i class="fas fa-compress"></i> Text Density</div>
+            <div class="density-grid" id="densityGrid"></div>
+
+            <!-- Charts -->
+            <div class="charts-row">
+                <div class="chart-panel">
+                    <div class="section-title"><i class="fas fa-chart-simple"></i> Letter Frequency (A-Z)</div>
+                    <canvas id="letterChart" height="300"></canvas>
+                </div>
+                <div class="chart-panel">
+                    <div class="section-title"><i class="fas fa-chart-pie"></i> Character Type Breakdown</div>
+                    <canvas id="typeChart" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Frequency Table -->
+            <div class="freq-section">
+                <div class="section-title"><i class="fas fa-table"></i> Character Frequency Table</div>
+                <div class="freq-table-wrap">
+                    <table class="freq-table">
+                        <thead>
+                            <tr><th>Char</th><th>Unicode</th><th>Count</th><th>Percentage</th><th class="bar-cell">Distribution</th></tr>
+                        </thead>
+                        <tbody id="freqTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const textInput = document.getElementById('textInput');
+const resultsSection = document.getElementById('resultsSection');
+
+// Real-time counts
+textInput.addEventListener('input', updateRealtime);
+
+function updateRealtime() {
+    const t = textInput.value;
+    document.getElementById('rtChars').textContent = t.length;
+    document.getElementById('rtWords').textContent = t.trim() === '' ? 0 : t.trim().split(/\s+/).length;
+    document.getElementById('rtLines').textContent = t === '' ? 1 : t.split('\n').length;
+}
+
+function pasteText() {
+    navigator.clipboard.readText().then(text => {
+        textInput.value = text;
+        updateRealtime();
+        toast('Text pasted from clipboard');
+    }).catch(() => toast('Cannot access clipboard'));
+}
+
+function loadSample() {
+    textInput.value = `The quick brown fox jumps over the lazy dog. This classic pangram contains every letter of the English alphabet at least once!
+
+"To be, or not to be, that is the question." - William Shakespeare (Hamlet, Act 3, Scene 1)
+
+In 2024, approximately 5.35 billion people used the internet worldwide. That's roughly 66% of the global population! The average person spends about 6 hours & 40 minutes online each day.
+
+Special characters matter too: @mentions, #hashtags, $prices (USD $99.99), percentages (85%), and mathematical expressions like 2 + 2 = 4 or E = mc^2 are common in modern text.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+
+Contact us at: info@example.com | Phone: +1 (555) 123-4567 | Visit: https://www.example.com`;
+    updateRealtime();
+    toast('Sample text loaded');
+}
+
+function clearAll() {
+    textInput.value = '';
+    resultsSection.classList.remove('visible');
+    updateRealtime();
+}
+
+function analyze() {
+    const text = textInput.value;
+    if (!text) { toast('Please enter some text first'); return; }
+    resultsSection.classList.add('visible');
+
+    const total = text.length;
+    const letters = (text.match(/[a-zA-Z]/g) || []).length;
+    const digits = (text.match(/[0-9]/g) || []).length;
+    const spaces = (text.match(/ /g) || []).length;
+    const punctuation = (text.match(/[.,;:!?'"()\-\[\]{}\/\\…–—]/g) || []).length;
+    const uppercase = (text.match(/[A-Z]/g) || []).length;
+    const lowercase = (text.match(/[a-z]/g) || []).length;
+    const special = total - letters - digits - spaces - punctuation;
+    const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    const lines = text.split('\n').length;
+    const sentences = (text.match(/[.!?]+(?=\s|$)/g) || []).length || (text.trim().length > 0 ? 1 : 0);
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length || (text.trim().length > 0 ? 1 : 0);
+
+    // Stats grid
+    const stats = [
+        { label: 'Total Chars', value: total, icon: '' },
+        { label: 'Letters', value: letters },
+        { label: 'Digits', value: digits },
+        { label: 'Spaces', value: spaces },
+        { label: 'Punctuation', value: punctuation },
+        { label: 'Special Chars', value: special < 0 ? 0 : special },
+        { label: 'Uppercase', value: uppercase },
+        { label: 'Lowercase', value: lowercase },
+        { label: 'Words', value: words },
+        { label: 'Lines', value: lines },
+        { label: 'Sentences', value: sentences },
+        { label: 'Paragraphs', value: paragraphs },
+    ];
+    document.getElementById('statsGrid').innerHTML = stats.map(s =>
+        `<div class="stat-card"><div class="value">${s.value.toLocaleString()}</div><div class="label">${s.label}</div></div>`
+    ).join('');
+
+    // Limits
+    const limits = [
+        { name: 'Twitter / X', max: 280 },
+        { name: 'SMS', max: 160 },
+        { name: 'Instagram Caption', max: 2200 },
+        { name: 'Facebook Post', max: 63206 },
+        { name: 'Meta Description', max: 160 },
+        { name: 'Title Tag', max: 60 },
+        { name: 'LinkedIn Post', max: 3000 },
+    ];
+    document.getElementById('limitsContainer').innerHTML = limits.map(l => {
+        const pct = Math.min((total / l.max) * 100, 100);
+        const cls = total <= l.max * 0.8 ? 'ok' : total <= l.max ? 'warn' : 'over';
+        return `<div class="limit-row">
+            <div class="limit-label">${l.name}</div>
+            <div class="limit-bar-wrap"><div class="limit-bar-fill ${cls}" style="width:${pct}%"></div></div>
+            <div class="limit-count">${total.toLocaleString()} / ${l.max.toLocaleString()}</div>
+        </div>`;
+    }).join('');
+
+    // Density
+    const cpw = words > 0 ? (total / words).toFixed(1) : '0';
+    const cps = sentences > 0 ? (total / sentences).toFixed(1) : '0';
+    const cpp = paragraphs > 0 ? (total / paragraphs).toFixed(1) : '0';
+    document.getElementById('densityGrid').innerHTML = [
+        { v: cpw, l: 'Characters per Word' },
+        { v: cps, l: 'Characters per Sentence' },
+        { v: cpp, l: 'Characters per Paragraph' },
+    ].map(d => `<div class="density-card"><div class="d-value">${d.v}</div><div class="d-label">${d.l}</div></div>`).join('');
+
+    // Character frequency
+    const freq = {};
+    for (const ch of text) freq[ch] = (freq[ch] || 0) + 1;
+    const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+    const maxFreq = sorted.length > 0 ? sorted[0][1] : 1;
+
+    document.getElementById('freqTableBody').innerHTML = sorted.map(([ch, count]) => {
+        const pct = ((count / total) * 100).toFixed(2);
+        const barW = ((count / maxFreq) * 100).toFixed(1);
+        let display = ch;
+        if (ch === ' ') display = '&#9251; (space)';
+        else if (ch === '\n') display = '&#8629; (newline)';
+        else if (ch === '\t') display = '&#8677; (tab)';
+        else if (ch === '\r') display = '(CR)';
+        return `<tr>
+            <td class="char-cell">${display}</td>
+            <td style="color:#64748b;font-family:'JetBrains Mono',monospace;font-size:0.8rem">U+${ch.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0')}</td>
+            <td style="font-family:'JetBrains Mono',monospace">${count}</td>
+            <td style="font-family:'JetBrains Mono',monospace">${pct}%</td>
+            <td class="bar-cell"><div class="freq-mini-bar"><div class="freq-mini-bar-fill" style="width:${barW}%"></div></div></td>
+        </tr>`;
+    }).join('');
+
+    // Letter frequency bar chart
+    drawLetterChart(text);
+
+    // Type breakdown donut
+    drawTypeChart(letters, digits, spaces, punctuation, special < 0 ? 0 : special);
+
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function drawLetterChart(text) {
+    const canvas = document.getElementById('letterChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const W = rect.width - 40;
+    const H = 300;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const counts = {};
+    for (let i = 65; i <= 90; i++) counts[String.fromCharCode(i)] = 0;
+    for (const ch of text) {
+        const u = ch.toUpperCase();
+        if (u >= 'A' && u <= 'Z') counts[u]++;
+    }
+    const labels = Object.keys(counts);
+    const values = Object.values(counts);
+    const maxVal = Math.max(...values, 1);
+
+    const padL = 35, padR = 10, padT = 10, padB = 30;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+    const barW = chartW / 26 - 3;
+
+    // Grid lines
+    ctx.strokeStyle = '#1a2536';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = padT + (chartH / 4) * i;
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px JetBrains Mono';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), padL - 5, y + 4);
+    }
+
+    // Bars
+    labels.forEach((l, i) => {
+        const x = padL + i * (chartW / 26) + 1.5;
+        const h = maxVal > 0 ? (values[i] / maxVal) * chartH : 0;
+        const y = padT + chartH - h;
+
+        const grad = ctx.createLinearGradient(x, y, x, padT + chartH);
+        grad.addColorStop(0, '#64748b');
+        grad.addColorStop(1, '#334155');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, h, [3, 3, 0, 0]);
+        ctx.fill();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px JetBrains Mono';
+        ctx.textAlign = 'center';
+        ctx.fillText(l, x + barW / 2, H - padB + 15);
+    });
+}
+
+function drawTypeChart(letters, digits, spaces, punctuation, special) {
+    const canvas = document.getElementById('typeChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const S = 280;
+    canvas.width = S * dpr;
+    canvas.height = S * dpr;
+    canvas.style.width = S + 'px';
+    canvas.style.height = S + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, S, S);
+
+    const data = [
+        { label: 'Letters', value: letters, color: '#64748b' },
+        { label: 'Digits', value: digits, color: '#22c55e' },
+        { label: 'Spaces', value: spaces, color: '#3b82f6' },
+        { label: 'Punctuation', value: punctuation, color: '#eab308' },
+        { label: 'Other', value: special, color: '#f97316' },
+    ].filter(d => d.value > 0);
+
+    const total = data.reduce((s, d) => s + d.value, 0);
+    if (total === 0) return;
+
+    const cx = S / 2, cy = 120, R = 90, r = 50;
+    let angle = -Math.PI / 2;
+
+    data.forEach(d => {
+        const sweep = (d.value / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, angle, angle + sweep);
+        ctx.arc(cx, cy, r, angle + sweep, angle, true);
+        ctx.closePath();
+        ctx.fillStyle = d.color;
+        ctx.fill();
+        angle += sweep;
+    });
+
+    // Center text
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 18px Outfit';
+    ctx.textAlign = 'center';
+    ctx.fillText(total.toLocaleString(), cx, cy - 2);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px Outfit';
+    ctx.fillText('total chars', cx, cy + 14);
+
+    // Legend
+    let ly = cy + R + 20;
+    const legendX = 20;
+    const colW = S / 2 - 10;
+    data.forEach((d, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const x = legendX + col * colW;
+        const y = ly + row * 22;
+        ctx.fillStyle = d.color;
+        ctx.beginPath();
+        ctx.roundRect(x, y, 12, 12, 2);
+        ctx.fill();
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '12px Outfit';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${d.label} (${((d.value / total) * 100).toFixed(1)}%)`, x + 18, y + 10);
+    });
+}
+
+function copyResults() {
+    const stats = document.getElementById('statsGrid');
+    const cards = stats.querySelectorAll('.stat-card');
+    let text = 'Character Analysis Results\n' + '='.repeat(30) + '\n';
+    cards.forEach(c => {
+        text += `${c.querySelector('.label').textContent}: ${c.querySelector('.value').textContent}\n`;
+    });
+    navigator.clipboard.writeText(text).then(() => toast('Results copied to clipboard'));
+}
+
+function saveAsPNG() {
+    const el = document.getElementById('resultsContent');
+    toast('Generating PNG...');
+    // Simple canvas-based capture using html2canvas-like approach
+    // We'll build a summary image on a canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 800, pad = 30;
+    const cards = document.querySelectorAll('#statsGrid .stat-card');
+    const rows = Math.ceil(cards.length / 4);
+    const H = 120 + rows * 70 + 60;
+    canvas.width = W;
+    canvas.height = H;
+
+    // BG
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    // Title
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 22px Outfit, sans-serif';
+    ctx.fillText('Character Counter - Analysis Results', pad, 40);
+    ctx.fillStyle = '#475569';
+    ctx.font = '13px Outfit, sans-serif';
+    ctx.fillText(new Date().toLocaleString(), pad, 60);
+
+    // Stats
+    let y = 90;
+    const cardW = (W - pad * 2 - 30) / 4;
+    cards.forEach((c, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        const x = pad + col * (cardW + 10);
+        const cy = y + row * 70;
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.roundRect(x, cy, cardW, 58, 8);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.querySelector('.value').textContent, x + cardW / 2, cy + 26);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px Outfit, sans-serif';
+        ctx.fillText(c.querySelector('.label').textContent, x + cardW / 2, cy + 46);
+        ctx.textAlign = 'left';
+    });
+
+    canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'character-analysis.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('PNG saved!');
+    });
+}
+
+function shareResults() {
+    const cards = document.querySelectorAll('#statsGrid .stat-card');
+    let text = 'Character Analysis:\n';
+    cards.forEach(c => {
+        text += `${c.querySelector('.label').textContent}: ${c.querySelector('.value').textContent}\n`;
+    });
+    if (navigator.share) {
+        navigator.share({ title: 'Character Counter Results', text });
+    } else {
+        navigator.clipboard.writeText(text).then(() => toast('Results copied for sharing'));
+    }
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Init
+updateRealtime();
+</script>
+</body>
+</html>
