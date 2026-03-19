@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Form Converter</title>
+    <title>Number Converter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -13,7 +13,6 @@
             --border: #334155;
             --accent: #d97706;
             --accent2: #fbbf24;
-            --accent-dim: rgba(217,119,6,0.08);
             --text: #e2e8f0;
             --muted: #94a3b8;
             --dim: #64748b;
@@ -41,71 +40,72 @@
 
         .main-wrap { flex: 1; display: flex; justify-content: center; padding: 40px 24px; align-items: flex-start; }
         .converter {
-            width: 560px; background: var(--panel); border-radius: 20px; padding: 28px;
+            width: 620px; background: var(--panel); border-radius: 20px; padding: 28px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(217,119,6,0.1);
         }
-        .conv-title { font-size: 1.1rem; font-weight: 700; color: var(--accent2); margin-bottom: 6px; }
-        .conv-desc { font-size: 0.78rem; color: var(--dim); margin-bottom: 24px; }
-        .input-label { font-size: 0.72rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
 
-        .input-section {
-            margin-bottom: 20px;
-            padding: 16px;
-            background: var(--bg);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            transition: border-color 0.2s;
+        .input-group {
+            display: flex; gap: 10px; align-items: center; margin-bottom: 16px;
         }
-        .input-section:focus-within {
-            border-color: var(--accent);
+        .input-group input {
+            flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px 16px; color: var(--text); font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem; font-weight: 600; outline: none; transition: border-color 0.2s;
         }
-        .input-section h3 {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: var(--muted);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .input-section h3 i { color: var(--accent); font-size: 0.85rem; }
+        .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
+        .input-group input::placeholder { color: #475569; }
 
-        .input-row {
-            display: flex; gap: 10px; align-items: center;
+        .select-row {
+            display: flex; gap: 10px; align-items: center; margin-bottom: 20px;
         }
-        .input-row input {
-            background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-            padding: 12px 16px; color: var(--text); font-family: 'JetBrains Mono', monospace;
-            font-size: 1rem; font-weight: 600; outline: none; transition: border-color 0.2s;
-            flex: 1;
+        .select-row select {
+            flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 12px 14px; color: var(--text); font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 600; outline: none; cursor: pointer;
+            transition: border-color 0.2s; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
         }
-        .input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
-        .input-row input::placeholder { color: #475569; }
-        .input-row .sep {
-            font-size: 1.4rem; color: var(--dim); font-weight: 700; min-width: 16px; text-align: center;
-        }
+        .select-row select:focus { border-color: var(--accent); }
 
-        .result-main {
+        .swap-btn {
+            width: 42px; height: 42px; border-radius: 50%; background: var(--accent);
+            border: none; color: #0f172a; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: transform 0.3s;
+        }
+        .swap-btn:hover { transform: rotate(180deg); }
+
+        .result-box {
             text-align: center; padding: 20px; background: var(--bg); border-radius: 14px;
-            border: 1px solid var(--border); margin-bottom: 20px; display: none;
+            border: 1px solid var(--border); margin-bottom: 20px;
         }
-        .result-main.show { display: block; animation: slideIn 0.3s ease; }
-        .result-main .value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--accent2); }
-        .result-main .label { font-size: 0.78rem; color: var(--dim); margin-top: 4px; }
-
-        .results-title { font-size: 0.72rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
-        .results-grid { display: none; }
-        .results-grid.show { display: block; animation: slideIn 0.3s ease; }
-        .result-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; background: var(--bg); border-radius: 10px;
-            margin-bottom: 8px; border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+        .result-value {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 700;
+            color: var(--accent2); word-break: break-all;
         }
-        .result-row:hover { border-color: var(--accent); background: rgba(217,119,6,0.03); }
-        .result-row .rr-label { font-size: 0.78rem; color: var(--dim); font-weight: 600; }
-        .result-row .rr-value { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: var(--accent2); }
+        .result-label { font-size: 0.78rem; color: var(--dim); margin-top: 6px; }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .grid-title {
+            font-size: 0.72rem; font-weight: 700; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
+        }
+        .conversions-grid {
+            display: grid; grid-template-columns: 1fr; gap: 6px;
+            max-height: 440px; overflow-y: auto;
+        }
+        .conv-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; background: var(--bg); border-radius: 10px;
+            border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+        }
+        .conv-item:hover { border-color: var(--accent); background: rgba(217,119,6,0.03); }
+        .conv-item.active { border-color: var(--accent); background: rgba(217,119,6,0.06); }
+        .conv-label { font-size: 0.78rem; color: var(--dim); font-weight: 600; }
+        .conv-val {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            font-weight: 700; color: var(--accent2); word-break: break-all; text-align: right; max-width: 70%;
+        }
 
         .copy-toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -114,180 +114,431 @@
         }
         .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        @media (max-width: 620px) { .converter { width: 100%; padding: 20px 16px; } }
+        @media (max-width: 660px) { .converter { width: 100%; padding: 20px 16px; } }
     </style>
 </head>
 <body>
     <div class="header">
         <button class="back-btn" onclick="window.location.href='../Tools.html'"><i class="fas fa-arrow-left"></i> Back</button>
-        <h1><i class="fas fa-hashtag"></i> Number Form Converter</h1>
+        <h1><i class="fas fa-hashtag"></i> Number Converter</h1>
     </div>
 
     <div class="main-wrap">
         <div class="converter">
-            <div class="conv-title">Number Form Converter</div>
-            <div class="conv-desc">Convert between decimal, fraction, percentage, and ratio. Enter a value in any field.</div>
-
-            <div class="input-section">
-                <h3><i class="fas fa-calculator"></i> Decimal</h3>
-                <div class="input-row">
-                    <input type="number" id="decInput" placeholder="e.g. 0.75" step="any" oninput="fromDecimal()">
-                </div>
+            <div class="input-group">
+                <input type="text" id="valueInput" placeholder="Enter a value..." spellcheck="false" autocomplete="off">
             </div>
 
-            <div class="input-section">
-                <h3><i class="fas fa-divide"></i> Fraction</h3>
-                <div class="input-row">
-                    <input type="number" id="fracNum" placeholder="Numerator" oninput="fromFraction()">
-                    <span class="sep">/</span>
-                    <input type="number" id="fracDen" placeholder="Denominator" oninput="fromFraction()">
-                </div>
+            <div class="select-row">
+                <select id="fromType"></select>
+                <button class="swap-btn" id="swapBtn"><i class="fas fa-right-left"></i></button>
+                <select id="toType"></select>
             </div>
 
-            <div class="input-section">
-                <h3><i class="fas fa-percent"></i> Percentage</h3>
-                <div class="input-row">
-                    <input type="number" id="pctInput" placeholder="e.g. 75" step="any" oninput="fromPercentage()">
-                    <span class="sep">%</span>
-                </div>
+            <div class="result-box">
+                <div class="result-value" id="resultValue">&mdash;</div>
+                <div class="result-label" id="resultLabel"></div>
             </div>
 
-            <div class="result-main" id="resultMain">
-                <div class="value" id="resultValue"></div>
-                <div class="label" id="resultLabel"></div>
-            </div>
-
-            <div class="results-title">All Forms</div>
-            <div class="results-grid" id="resultsGrid"></div>
+            <div class="grid-title">All Forms</div>
+            <div class="conversions-grid" id="conversionsGrid"></div>
         </div>
     </div>
 
     <div class="copy-toast" id="copyToast">Copied!</div>
 
     <script>
-    let updating = false;
+    const types = [
+        { id: 'decimal', name: 'Decimal', placeholder: 'e.g. 255' },
+        { id: 'binary', name: 'Binary (Base 2)', placeholder: 'e.g. 11111111' },
+        { id: 'octal', name: 'Octal (Base 8)', placeholder: 'e.g. 377' },
+        { id: 'hexadecimal', name: 'Hexadecimal (Base 16)', placeholder: 'e.g. FF' },
+        { id: 'fraction', name: 'Fraction', placeholder: 'e.g. 3/4' },
+        { id: 'percentage', name: 'Percentage', placeholder: 'e.g. 75%' },
+        { id: 'ratio', name: 'Ratio', placeholder: 'e.g. 3:4' },
+        { id: 'scientific', name: 'Scientific Notation', placeholder: 'e.g. 2.55e2' },
+        { id: 'base3', name: 'Base 3 (Ternary)', placeholder: 'e.g. 100110' },
+        { id: 'base5', name: 'Base 5 (Quinary)', placeholder: 'e.g. 2010' },
+        { id: 'base12', name: 'Base 12 (Duodecimal)', placeholder: 'e.g. 193' },
+        { id: 'base32', name: 'Base 32', placeholder: 'e.g. 7V' },
+        { id: 'base36', name: 'Base 36', placeholder: 'e.g. 73' },
+        { id: 'bcd', name: 'BCD (Binary-Coded Decimal)', placeholder: 'e.g. 0010 0101 0101' },
+        { id: 'ascii', name: 'ASCII Code(s)', placeholder: 'e.g. 65 (or for text)' },
+        { id: 'words', name: 'English Words', placeholder: 'e.g. two hundred fifty-five' },
+    ];
 
-    function gcd(a, b) {
-        a = Math.abs(Math.round(a));
-        b = Math.abs(Math.round(b));
-        while (b) { [a, b] = [b, a % b]; }
-        return a;
+    const fromType = document.getElementById('fromType');
+    const toType = document.getElementById('toType');
+    const valueInput = document.getElementById('valueInput');
+    const resultValue = document.getElementById('resultValue');
+    const resultLabel = document.getElementById('resultLabel');
+    const conversionsGrid = document.getElementById('conversionsGrid');
+
+    types.forEach((t, i) => {
+        fromType.add(new Option(t.name, t.id));
+        toType.add(new Option(t.name, t.id));
+    });
+    toType.value = 'binary';
+
+    // Update placeholder
+    function updatePlaceholder() {
+        const t = types.find(t => t.id === fromType.value);
+        if (t) valueInput.placeholder = t.placeholder;
+    }
+    fromType.addEventListener('change', () => { updatePlaceholder(); convert(); });
+    toType.addEventListener('change', convert);
+    valueInput.addEventListener('input', convert);
+    updatePlaceholder();
+
+    document.getElementById('swapBtn').addEventListener('click', () => {
+        const temp = fromType.value;
+        fromType.value = toType.value;
+        toType.value = temp;
+        updatePlaceholder();
+        convert();
+    });
+
+    // Parse input to a decimal number
+    function parseInput(value, type) {
+        value = value.trim();
+        if (!value) return null;
+
+        switch (type) {
+            case 'decimal': {
+                const n = parseFloat(value);
+                return isNaN(n) ? null : n;
+            }
+            case 'binary': {
+                value = value.replace(/[\s_]/g, '');
+                if (!/^[01]+(\.[01]+)?$/.test(value)) return null;
+                if (value.includes('.')) {
+                    const [int, frac] = value.split('.');
+                    return parseInt(int, 2) + parseInt(frac, 2) / Math.pow(2, frac.length);
+                }
+                return parseInt(value, 2);
+            }
+            case 'octal': {
+                value = value.replace(/[\s_]/g, '');
+                if (!/^[0-7]+$/.test(value)) return null;
+                return parseInt(value, 8);
+            }
+            case 'hexadecimal': {
+                value = value.replace(/^0x/i, '').replace(/[\s_]/g, '');
+                if (!/^[0-9a-fA-F]+$/.test(value)) return null;
+                return parseInt(value, 16);
+            }
+            case 'fraction': {
+                const m = value.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+                if (!m) {
+                    const n = parseFloat(value);
+                    return isNaN(n) ? null : n;
+                }
+                const den = parseFloat(m[2]);
+                if (den === 0) return null;
+                return parseFloat(m[1]) / den;
+            }
+            case 'percentage': {
+                value = value.replace(/%/g, '').trim();
+                const n = parseFloat(value);
+                return isNaN(n) ? null : n / 100;
+            }
+            case 'ratio': {
+                const m = value.match(/^(-?\d+(?:\.\d+)?)\s*:\s*(-?\d+(?:\.\d+)?)$/);
+                if (!m) return null;
+                const b = parseFloat(m[2]);
+                if (b === 0) return null;
+                return parseFloat(m[1]) / b;
+            }
+            case 'scientific': {
+                value = value.replace(/[×x]\s*10\s*\^\s*/i, 'e');
+                const n = parseFloat(value);
+                return isNaN(n) ? null : n;
+            }
+            case 'roman': {
+                return romanToDecimal(value.toUpperCase());
+            }
+            case 'base3': {
+                value = value.replace(/[\s_]/g, '');
+                if (!/^[0-2]+$/.test(value)) return null;
+                return parseInt(value, 3);
+            }
+            case 'base5': {
+                value = value.replace(/[\s_]/g, '');
+                if (!/^[0-4]+$/.test(value)) return null;
+                return parseInt(value, 5);
+            }
+            case 'base12': {
+                value = value.replace(/[\s_]/g, '').toUpperCase();
+                if (!/^[0-9AB]+$/.test(value)) return null;
+                return [...value].reduce((acc, c) => acc * 12 + '0123456789AB'.indexOf(c), 0);
+            }
+            case 'base32': {
+                value = value.replace(/[\s_]/g, '').toUpperCase();
+                if (!/^[0-9A-V]+$/.test(value)) return null;
+                return [...value].reduce((acc, c) => acc * 32 + '0123456789ABCDEFGHIJKLMNOPQRSTUV'.indexOf(c), 0);
+            }
+            case 'base36': {
+                value = value.replace(/[\s_]/g, '').toUpperCase();
+                if (!/^[0-9A-Z]+$/.test(value)) return null;
+                return parseInt(value, 36);
+            }
+            case 'bcd': {
+                value = value.replace(/[\s_]/g, '');
+                if (!/^[01]+$/.test(value)) return null;
+                // Pad to multiple of 4
+                while (value.length % 4 !== 0) value = '0' + value;
+                let result = '';
+                for (let i = 0; i < value.length; i += 4) {
+                    const d = parseInt(value.substring(i, i + 4), 2);
+                    if (d > 9) return null;
+                    result += d;
+                }
+                return parseInt(result);
+            }
+            case 'ascii': {
+                value = value.trim();
+                const nums = value.split(/[\s,]+/).filter(s => s);
+                if (nums.every(s => /^\d+$/.test(s))) {
+                    // Treat as a single number if only one
+                    if (nums.length === 1) return parseInt(nums[0]);
+                    return parseInt(nums[0]); // Use first for conversion
+                }
+                // Treat as character(s)
+                return value.charCodeAt(0);
+            }
+            case 'words': {
+                return wordsToNumber(value.toLowerCase());
+            }
+            default: return null;
+        }
     }
 
-    function decimalToFraction(d) {
+    // Format a decimal number to a given type
+    function formatOutput(num, type) {
+        if (num === null || isNaN(num)) return '—';
+
+        switch (type) {
+            case 'decimal':
+                return Number.isInteger(num) ? num.toString() : parseFloat(num.toPrecision(12)).toString();
+            case 'binary': {
+                if (!Number.isInteger(num) || num < 0) {
+                    if (num < 0) return '-' + formatOutput(-num, 'binary');
+                    // Float binary
+                    const int = Math.floor(num);
+                    let frac = num - int;
+                    let fracBin = '';
+                    for (let i = 0; i < 20 && frac > 0; i++) {
+                        frac *= 2;
+                        fracBin += Math.floor(frac);
+                        frac -= Math.floor(frac);
+                    }
+                    return (int >>> 0).toString(2) + (fracBin ? '.' + fracBin : '');
+                }
+                return num.toString(2);
+            }
+            case 'octal':
+                return Number.isInteger(num) && num >= 0 ? num.toString(8) : Math.round(num).toString(8);
+            case 'hexadecimal':
+                return Number.isInteger(num) && num >= 0 ? num.toString(16).toUpperCase() : Math.round(num).toString(16).toUpperCase();
+            case 'fraction': {
+                if (Number.isInteger(num)) return num + '/1';
+                const sign = num < 0 ? -1 : 1;
+                let abs = Math.abs(num);
+                const str = abs.toString();
+                const dot = str.indexOf('.');
+                if (dot === -1) return (num * sign) + '/1';
+                const dec = str.length - dot - 1;
+                let n = Math.round(abs * Math.pow(10, dec));
+                let d = Math.pow(10, dec);
+                const g = gcd(n, d);
+                return (sign * n / g) + '/' + (d / g);
+            }
+            case 'percentage':
+                return parseFloat((num * 100).toPrecision(10)) + '%';
+            case 'ratio': {
+                if (num === 0) return '0:1';
+                // Express as simplest integer ratio
+                const frac = decToFrac(num);
+                return Math.abs(frac.num) + ':' + frac.den;
+            }
+            case 'scientific': {
+                if (num === 0) return '0';
+                return num.toExponential(6).replace('e+', ' × 10^').replace('e-', ' × 10^-').replace('e', ' × 10^');
+            }
+            case 'roman':
+                return decimalToRoman(Math.round(num));
+            case 'base3':
+                return Number.isInteger(num) && num >= 0 ? num.toString(3) : (num >= 0 ? Math.round(num).toString(3) : '—');
+            case 'base5':
+                return Number.isInteger(num) && num >= 0 ? num.toString(5) : (num >= 0 ? Math.round(num).toString(5) : '—');
+            case 'base12': {
+                if (num < 0 || !Number.isInteger(num)) { num = Math.round(Math.abs(num)); }
+                if (num === 0) return '0';
+                let s = ''; let n = num;
+                while (n > 0) { s = '0123456789AB'[n % 12] + s; n = Math.floor(n / 12); }
+                return s;
+            }
+            case 'base32': {
+                if (num < 0) return '—';
+                let n = Math.round(num); if (n === 0) return '0';
+                let s = '';
+                while (n > 0) { s = '0123456789ABCDEFGHIJKLMNOPQRSTUV'[n % 32] + s; n = Math.floor(n / 32); }
+                return s;
+            }
+            case 'base36':
+                return Number.isInteger(num) && num >= 0 ? num.toString(36).toUpperCase() : (num >= 0 ? Math.round(num).toString(36).toUpperCase() : '—');
+            case 'bcd': {
+                if (num < 0 || !Number.isInteger(num)) num = Math.round(Math.abs(num));
+                const digits = num.toString().split('');
+                return digits.map(d => parseInt(d).toString(2).padStart(4, '0')).join(' ');
+            }
+            case 'ascii': {
+                const n = Math.round(num);
+                if (n >= 32 && n <= 126) return n + ' (' + String.fromCharCode(n) + ')';
+                if (n >= 0 && n <= 127) return n + ' (control)';
+                return n.toString();
+            }
+            case 'words':
+                return numberToWords(Math.round(num));
+            default: return '—';
+        }
+    }
+
+    // Helper: GCD
+    function gcd(a, b) { a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b)); while (b) { [a, b] = [b, a % b]; } return a || 1; }
+
+    // Helper: decimal to fraction
+    function decToFrac(d) {
         if (d === 0) return { num: 0, den: 1 };
         if (Number.isInteger(d)) return { num: d, den: 1 };
         const sign = d < 0 ? -1 : 1;
-        d = Math.abs(d);
-        const str = d.toString();
-        const dotIdx = str.indexOf('.');
-        if (dotIdx === -1) return { num: d * sign, den: 1 };
-        const decimals = str.length - dotIdx - 1;
-        let num = Math.round(d * Math.pow(10, decimals));
-        let den = Math.pow(10, decimals);
-        const g = gcd(num, den);
-        return { num: (num / g) * sign, den: den / g };
+        const abs = Math.abs(d);
+        const str = abs.toString();
+        const dot = str.indexOf('.');
+        if (dot === -1) return { num: d, den: 1 };
+        const dec = str.length - dot - 1;
+        let n = Math.round(abs * Math.pow(10, dec));
+        let dn = Math.pow(10, dec);
+        const g = gcd(n, dn);
+        return { num: (n / g) * sign, den: dn / g };
     }
 
-    function formatNum(n) {
-        return parseFloat(n.toPrecision(10));
+    // Roman numeral helpers
+    function decimalToRoman(num) {
+        if (num <= 0 || num > 3999 || !Number.isInteger(num)) return num <= 0 ? '—' : '>' + 3999;
+        const vals = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+        const syms = ['M','CM','D','CD','C','XC','L','XL','X','IX','V','IV','I'];
+        let result = '';
+        for (let i = 0; i < vals.length; i++) {
+            while (num >= vals[i]) { result += syms[i]; num -= vals[i]; }
+        }
+        return result;
     }
 
-    function showResults(num, den) {
-        const decimal = num / den;
-        const g = gcd(Math.abs(num), Math.abs(den));
-        const sNum = num / g;
-        const sDen = den / g;
-        const percentage = decimal * 100;
+    function romanToDecimal(s) {
+        const map = { I:1, V:5, X:10, L:50, C:100, D:500, M:1000 };
+        if (!/^[IVXLCDM]+$/.test(s)) return null;
+        let total = 0;
+        for (let i = 0; i < s.length; i++) {
+            const cur = map[s[i]];
+            const next = map[s[i + 1]] || 0;
+            total += cur < next ? -cur : cur;
+        }
+        return total;
+    }
 
-        // Ratio: simplify num:den
-        const rG = gcd(Math.abs(sNum), Math.abs(sDen));
-        const rA = Math.abs(sNum) / rG;
-        const rB = Math.abs(sDen) / rG;
+    // Number to English words
+    function numberToWords(n) {
+        if (n === 0) return 'zero';
+        if (n < 0) return 'negative ' + numberToWords(-n);
+        if (n > 999999999999) return n.toLocaleString('en-US');
 
-        // Mixed number
-        let mixedStr = '';
-        if (Math.abs(sNum) > Math.abs(sDen) && sDen !== 1) {
-            const whole = Math.trunc(sNum / sDen);
-            const rem = Math.abs(sNum) % Math.abs(sDen);
-            if (rem !== 0) mixedStr = `${whole} ${rem}/${Math.abs(sDen)}`;
+        const ones = ['','one','two','three','four','five','six','seven','eight','nine',
+                       'ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen',
+                       'seventeen','eighteen','nineteen'];
+        const tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+        const scales = ['','thousand','million','billion','trillion'];
+
+        function chunk(n) {
+            if (n === 0) return '';
+            if (n < 20) return ones[n];
+            if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? '-' + ones[n % 10] : '');
+            return ones[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' and ' + chunk(n % 100) : '');
         }
 
-        const mainRes = document.getElementById('resultMain');
-        document.getElementById('resultValue').textContent = formatNum(decimal);
-        document.getElementById('resultLabel').textContent = 'Decimal Value';
-        mainRes.classList.add('show');
+        let words = [];
+        let scaleIdx = 0;
+        while (n > 0) {
+            const rem = n % 1000;
+            if (rem > 0) {
+                const w = chunk(rem);
+                words.unshift(scales[scaleIdx] ? w + ' ' + scales[scaleIdx] : w);
+            }
+            n = Math.floor(n / 1000);
+            scaleIdx++;
+        }
+        return words.join(', ') || 'zero';
+    }
 
-        const rows = [
-            { label: 'Decimal', value: formatNum(decimal), copy: formatNum(decimal).toString() },
-            { label: 'Fraction (simplified)', value: `${sNum} / ${sDen}`, copy: `${sNum}/${sDen}` },
-            { label: 'Percentage', value: `${formatNum(percentage)}%`, copy: `${formatNum(percentage)}%` },
-            { label: 'Ratio', value: `${rA} : ${rB}`, copy: `${rA}:${rB}` }
-        ];
-        if (mixedStr) {
-            rows.splice(2, 0, { label: 'Mixed Number', value: mixedStr, copy: mixedStr });
+    // English words to number (basic)
+    function wordsToNumber(str) {
+        str = str.replace(/[,\-]/g, ' ').replace(/\s+/g, ' ').trim();
+        const ones = { zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9,
+            ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16,
+            seventeen:17, eighteen:18, nineteen:19 };
+        const tensMap = { twenty:20, thirty:30, forty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90 };
+        const scales = { hundred:100, thousand:1000, million:1e6, billion:1e9, trillion:1e12 };
+
+        const words = str.split(' ').filter(w => w && w !== 'and');
+        let current = 0, result = 0, neg = false;
+
+        for (const w of words) {
+            if (w === 'negative' || w === 'minus') { neg = true; continue; }
+            if (ones[w] !== undefined) { current += ones[w]; }
+            else if (tensMap[w] !== undefined) { current += tensMap[w]; }
+            else if (w === 'hundred') { current *= 100; }
+            else if (w === 'thousand') { current *= 1000; result += current; current = 0; }
+            else if (w === 'million') { current *= 1e6; result += current; current = 0; }
+            else if (w === 'billion') { current *= 1e9; result += current; current = 0; }
+            else if (w === 'trillion') { current *= 1e12; result += current; current = 0; }
+            else { return null; }
+        }
+        result += current;
+        return neg ? -result : (result || null);
+    }
+
+    // Main convert
+    function convert() {
+        const raw = valueInput.value;
+        const from = fromType.value;
+        const to = toType.value;
+
+        const num = parseInput(raw, from);
+
+        if (num === null) {
+            resultValue.textContent = '—';
+            resultLabel.textContent = '';
+            conversionsGrid.innerHTML = '';
+            return;
         }
 
-        const grid = document.getElementById('resultsGrid');
-        grid.innerHTML = rows.map(r => `
-            <div class="result-row" onclick="copyVal('${r.copy.replace(/'/g, "\\'")}')">
-                <span class="rr-label">${r.label}</span>
-                <span class="rr-value">${r.value}</span>
-            </div>
-        `).join('');
-        grid.classList.add('show');
-    }
+        const output = formatOutput(num, to);
+        const toName = types.find(t => t.id === to).name;
+        const fromName = types.find(t => t.id === from).name;
+        resultValue.textContent = output;
+        resultLabel.textContent = fromName + ' → ' + toName;
 
-    function hideResults() {
-        document.getElementById('resultMain').classList.remove('show');
-        document.getElementById('resultsGrid').classList.remove('show');
-    }
-
-    function fromDecimal() {
-        if (updating) return;
-        updating = true;
-        const val = parseFloat(document.getElementById('decInput').value);
-        if (isNaN(val)) { updating = false; hideResults(); return; }
-
-        const frac = decimalToFraction(val);
-        document.getElementById('fracNum').value = frac.num;
-        document.getElementById('fracDen').value = frac.den;
-        document.getElementById('pctInput').value = formatNum(val * 100);
-
-        showResults(frac.num, frac.den);
-        updating = false;
-    }
-
-    function fromFraction() {
-        if (updating) return;
-        updating = true;
-        const num = parseFloat(document.getElementById('fracNum').value);
-        const den = parseFloat(document.getElementById('fracDen').value);
-        if (isNaN(num) || isNaN(den) || den === 0) { updating = false; hideResults(); return; }
-
-        const decimal = num / den;
-        document.getElementById('decInput').value = formatNum(decimal);
-        document.getElementById('pctInput').value = formatNum(decimal * 100);
-
-        const g = gcd(Math.abs(num), Math.abs(den));
-        showResults(num / g, den / g);
-        updating = false;
-    }
-
-    function fromPercentage() {
-        if (updating) return;
-        updating = true;
-        const pct = parseFloat(document.getElementById('pctInput').value);
-        if (isNaN(pct)) { updating = false; hideResults(); return; }
-
-        const decimal = pct / 100;
-        document.getElementById('decInput').value = formatNum(decimal);
-        const frac = decimalToFraction(decimal);
-        document.getElementById('fracNum').value = frac.num;
-        document.getElementById('fracDen').value = frac.den;
-
-        showResults(frac.num, frac.den);
-        updating = false;
+        // All conversions
+        let html = '';
+        types.forEach(t => {
+            const val = formatOutput(num, t.id);
+            const isActive = t.id === to;
+            html += `<div class="conv-item${isActive ? ' active' : ''}" onclick="copyVal(\`${val.replace(/`/g, '')}\`)">
+                <span class="conv-label">${t.name}</span>
+                <span class="conv-val">${val}</span>
+            </div>`;
+        });
+        conversionsGrid.innerHTML = html;
     }
 
     function copyVal(val) {
@@ -297,6 +548,8 @@
             setTimeout(() => t.classList.remove('show'), 1200);
         });
     }
+
+    convert();
     </script>
 </body>
 </html>

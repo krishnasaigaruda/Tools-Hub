@@ -269,9 +269,25 @@
             object-fit: cover;
         }
         .detail-img-wrap .img-fallback {
-            font-size: 3.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+        }
+        .detail-img-wrap .img-fallback .fb-sym {
+            font-size: 3rem;
             font-weight: 800;
+            opacity: 0.5;
+        }
+        .detail-img-wrap .img-fallback .fb-label {
+            font-size: 0.65rem;
             opacity: 0.3;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
         .detail-symbol-block {
             text-align: center;
@@ -632,11 +648,19 @@
         const stateLabel = el.state.charAt(0).toUpperCase() + el.state.slice(1);
         const catBg = catClass[el.cat] || 'cat-unknown';
 
-        const imgUrl = `https://images-of-elements.com/${el.name.toLowerCase()}.jpg`;
+        const elNameLower = el.name.toLowerCase();
+        const padNum = String(el.num).padStart(3, '0');
+        const imgSources = [
+            `https://images-of-elements.com/${elNameLower}.jpg`,
+            `https://periodictable.com/Samples/${padNum}.1/s7s.JPG`,
+            `https://periodictable.com/Samples/${padNum}.2/s7s.JPG`,
+            `https://periodictable.com/Samples/${padNum}.3/s7s.JPG`
+        ];
         body.innerHTML = `
             <div class="detail-top">
                 <div class="detail-img-wrap">
-                    <img src="${imgUrl}" alt="${el.name}" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\\'img-fallback\\'>${el.sym}</span>';">
+                    <img src="${imgSources[0]}" alt="${el.name}" loading="lazy" data-sources='${JSON.stringify(imgSources)}' data-idx="0"
+                         onerror="let s=JSON.parse(this.dataset.sources);let i=parseInt(this.dataset.idx)+1;if(i<s.length){this.dataset.idx=i;this.src=s[i];}else{this.onerror=null;this.parentElement.innerHTML='<div class=\\'img-fallback\\'><span class=\\'fb-sym\\'>${el.sym}</span><span class=\\'fb-label\\'>No photo</span></div>';}">
                 </div>
                 <div class="detail-symbol-block ${catBg}">
                     <div class="big-number">${el.z}</div>
