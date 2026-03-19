@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary / Base Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #10b981;
+            --accent2: #34d399;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+            --bit-on: #10b981;
+            --bit-off: #1e293b;
+            --header-bg: #1f2937;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex; align-items: center; padding: 14px 24px;
+            background: var(--header-bg); border-bottom: 1px solid var(--border); gap: 16px;
+        }
+        .back-btn {
+            background: none; border: 1px solid #475569; color: var(--muted);
+            padding: 8px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.2s; font-family: inherit;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+        .header h1 i { margin-right: 8px; }
+
+        .main-wrap {
+            flex: 1; padding: 30px 24px; max-width: 1100px; width: 100%; margin: 0 auto;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: var(--panel); border-radius: 16px; padding: 24px;
+            margin-bottom: 24px; border: 1px solid var(--border);
+        }
+        .input-row {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        }
+        .input-row input {
+            flex: 1; min-width: 200px; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px 16px; color: var(--text);
+            font-family: 'JetBrains Mono', monospace; font-size: 1.15rem;
+            font-weight: 600; outline: none; transition: border-color 0.2s;
+        }
+        .input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+        .input-row input::placeholder { color: #475569; }
+        .input-row select {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px 36px 14px 14px; color: var(--text); font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem; font-weight: 600; outline: none; cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+        .input-row select:focus { border-color: var(--accent); }
+        .action-btns {
+            display: flex; gap: 8px; margin-top: 12px;
+        }
+        .action-btn {
+            background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit;
+            font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .action-btn:hover { background: var(--border); color: var(--text); }
+        .action-btn.accent { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+        .action-btn.accent:hover { background: var(--accent2); }
+
+        /* Conversion Grid */
+        .conv-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .conv-card {
+            background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+            padding: 18px; position: relative; transition: border-color 0.2s;
+        }
+        .conv-card:hover { border-color: var(--accent); }
+        .conv-card .label {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--dim); font-weight: 700; margin-bottom: 8px;
+        }
+        .conv-card .value {
+            font-family: 'JetBrains Mono', monospace; font-size: 1rem;
+            font-weight: 600; color: var(--text); word-break: break-all;
+            overflow-wrap: break-word;
+            line-height: 1.6; min-height: 1.6em;
+            max-height: 120px; overflow-y: auto;
+        }
+        .conv-card .value .prefix {
+            color: var(--dim); font-weight: 400;
+        }
+        .conv-card .value .bit-group {
+            margin-right: 6px;
+        }
+        .conv-card .copy-btn {
+            position: absolute; top: 14px; right: 14px; background: none;
+            border: 1px solid var(--border); color: var(--dim); width: 30px; height: 30px;
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 0.75rem; transition: all 0.2s;
+        }
+        .conv-card .copy-btn:hover { background: var(--border); color: var(--text); }
+        .conv-card .copy-btn.copied { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+        .conv-card .sub-info {
+            font-size: 0.7rem; color: var(--dim); margin-top: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* IEEE 754 card */
+        .ieee-breakdown {
+            display: flex; gap: 2px; margin-top: 8px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; flex-wrap: wrap;
+        }
+        .ieee-breakdown .ieee-bit {
+            width: 18px; height: 22px; display: flex; align-items: center;
+            justify-content: center; border-radius: 3px; font-weight: 600;
+        }
+        .ieee-sign { background: #ef4444; color: white; }
+        .ieee-exp { background: #3b82f6; color: white; }
+        .ieee-man { background: #8b5cf6; color: white; }
+        .ieee-labels {
+            display: flex; gap: 12px; margin-top: 6px; font-size: 0.65rem; color: var(--dim);
+        }
+        .ieee-labels span { display: flex; align-items: center; gap: 4px; }
+        .ieee-labels .dot { width: 8px; height: 8px; border-radius: 2px; }
+
+        /* Bit Visualization */
+        .bit-viz-section {
+            background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+            padding: 24px; margin-bottom: 24px;
+        }
+        .bit-viz-section h3 {
+            font-size: 0.9rem; color: var(--accent); margin-bottom: 16px;
+            font-weight: 700; display: flex; align-items: center; gap: 8px;
+        }
+        .bit-width-selector {
+            display: flex; gap: 6px; margin-bottom: 16px;
+        }
+        .bit-width-btn {
+            background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+            padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
+            font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+        }
+        .bit-width-btn.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+        .bit-width-btn:hover:not(.active) { background: var(--border); color: var(--text); }
+
+        .bit-positions {
+            display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px;
+            justify-content: flex-start;
+        }
+        .bit-pos-label {
+            width: 36px; text-align: center; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.55rem; color: var(--dim); font-weight: 500;
+        }
+        .bit-row {
+            display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-start;
+        }
+        .bit-cell {
+            width: 36px; height: 36px; border-radius: 6px; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+            font-weight: 700; transition: all 0.15s; user-select: none;
+            border: 1px solid var(--border);
+        }
+        .bit-cell.on { background: var(--bit-on); color: #0f172a; border-color: var(--accent2); }
+        .bit-cell.off { background: var(--bit-off); color: var(--dim); border-color: var(--border); }
+        .bit-cell:hover { transform: scale(1.1); }
+        .bit-separator {
+            width: 6px; display: flex; align-items: center; justify-content: center;
+        }
+        .bit-separator-label {
+            width: 6px;
+        }
+
+        /* Quick Reference */
+        .ref-section {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .ref-card {
+            background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+            padding: 20px;
+        }
+        .ref-card h3 {
+            font-size: 0.85rem; color: var(--accent); margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .ref-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .ref-table th, .ref-table td {
+            padding: 4px 8px; text-align: center; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem; border-bottom: 1px solid var(--border);
+        }
+        .ref-table th {
+            color: var(--dim); font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif; font-size: 0.65rem;
+        }
+        .ref-table td { color: var(--muted); }
+        .ref-table td:first-child { color: var(--accent); font-weight: 600; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #0f172a; padding: 10px 24px;
+            border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+        }
+        .toast.show { opacity: 1; }
+
+        @media (max-width: 700px) {
+            .conv-grid { grid-template-columns: 1fr; }
+            .ref-section { grid-template-columns: 1fr; }
+            .main-wrap { padding: 16px; }
+            .bit-cell { width: 28px; height: 28px; font-size: 0.7rem; }
+            .bit-pos-label { width: 28px; font-size: 0.5rem; }
+            .bit-separator, .bit-separator-label { width: 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        <h1><i class="fas fa-microchip"></i> Binary / Base Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-row">
+                <select id="baseSelect" onchange="onBaseChange()">
+                    <option value="2">Binary</option>
+                    <option value="10" selected>Decimal</option>
+                    <option value="8">Octal</option>
+                    <option value="16">Hexadecimal</option>
+                    <option value="text">Text / Letters</option>
+                </select>
+                <input type="text" id="mainInput" placeholder="Enter a number..." oninput="onInput()" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="action-btns">
+                <button class="action-btn" onclick="clearAll()"><i class="fas fa-trash"></i> Clear</button>
+                <button class="action-btn" onclick="swapEndianness()"><i class="fas fa-right-left"></i> Swap Endianness</button>
+            </div>
+        </div>
+
+        <!-- Live Conversion Display -->
+        <div class="conv-grid">
+            <div class="conv-card">
+                <div class="label">Binary</div>
+                <div class="value" id="valBinary">-</div>
+                <button class="copy-btn" onclick="copyVal('valBinary', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">Decimal</div>
+                <div class="value" id="valDecimal">-</div>
+                <button class="copy-btn" onclick="copyVal('valDecimal', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">Octal</div>
+                <div class="value" id="valOctal">-</div>
+                <button class="copy-btn" onclick="copyVal('valOctal', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">Hexadecimal</div>
+                <div class="value" id="valHex">-</div>
+                <button class="copy-btn" onclick="copyVal('valHex', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">ASCII</div>
+                <div class="value" id="valAscii">-</div>
+                <button class="copy-btn" onclick="copyVal('valAscii', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">BCD (Binary Coded Decimal)</div>
+                <div class="value" id="valBcd">-</div>
+                <button class="copy-btn" onclick="copyVal('valBcd', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">Signed (Two's Complement)</div>
+                <div class="value" id="valSigned">-</div>
+                <div class="sub-info" id="valSignedInfo"></div>
+                <button class="copy-btn" onclick="copyVal('valSigned', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+            <div class="conv-card">
+                <div class="label">IEEE 754 Float (32-bit)</div>
+                <div class="value" id="valIeee">-</div>
+                <div id="ieeeBreakdown"></div>
+                <button class="copy-btn" onclick="copyVal('valIeee', this)" title="Copy"><i class="fas fa-copy"></i></button>
+            </div>
+        </div>
+
+        <!-- Bit Visualization -->
+        <div class="bit-viz-section">
+            <h3><i class="fas fa-th"></i> Bit Visualization</h3>
+            <div class="bit-width-selector">
+                <button class="bit-width-btn active" onclick="setBitWidth(8)">8-bit</button>
+                <button class="bit-width-btn" onclick="setBitWidth(16)">16-bit</button>
+                <button class="bit-width-btn" onclick="setBitWidth(32)">32-bit</button>
+            </div>
+            <div class="bit-positions" id="bitPositions"></div>
+            <div class="bit-row" id="bitRow"></div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div class="ref-section">
+            <div class="ref-card">
+                <h3><i class="fas fa-bolt"></i> Powers of 2</h3>
+                <table class="ref-table">
+                    <thead><tr><th>Power</th><th>Value</th><th>Hex</th></tr></thead>
+                    <tbody id="powersTable"></tbody>
+                </table>
+            </div>
+            <div class="ref-card">
+                <h3><i class="fas fa-hashtag"></i> Hex-Binary Reference</h3>
+                <table class="ref-table">
+                    <thead><tr><th>Hex</th><th>Dec</th><th>Binary</th></tr></thead>
+                    <tbody id="hexRefTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script>
+        let currentValue = 0n;
+        let bitWidth = 8;
+
+        // Build reference tables
+        function buildReferences() {
+            const pt = document.getElementById('powersTable');
+            let html = '';
+            for (let i = 0; i <= 15; i++) {
+                html += `<tr><td>2<sup>${i}</sup></td><td>${(1 << i).toLocaleString()}</td><td>0x${(1 << i).toString(16).toUpperCase()}</td></tr>`;
+            }
+            pt.innerHTML = html;
+
+            const ht = document.getElementById('hexRefTable');
+            html = '';
+            for (let i = 0; i <= 15; i++) {
+                html += `<tr><td>${i.toString(16).toUpperCase()}</td><td>${i}</td><td>${i.toString(2).padStart(4, '0')}</td></tr>`;
+            }
+            ht.innerHTML = html;
+        }
+
+        let textMode = false;
+        let textInput = '';
+
+        function getPlaceholder(base) {
+            if (base === 'text') return 'e.g. Hello World';
+            switch (parseInt(base)) {
+                case 2: return 'e.g. 10110101';
+                case 8: return 'e.g. 755';
+                case 10: return 'e.g. 255';
+                case 16: return 'e.g. FF';
+                default: return 'Enter a number...';
+            }
+        }
+
+        function onBaseChange() {
+            const sel = document.getElementById('baseSelect');
+            textMode = sel.value === 'text';
+            document.getElementById('mainInput').placeholder = getPlaceholder(sel.value);
+            onInput();
+        }
+
+        function validateInput(str, base) {
+            if (!str) return false;
+            if (base === 'text') return str.length > 0;
+            const patterns = {
+                2: /^[01]+$/,
+                8: /^[0-7]+$/,
+                10: /^[0-9]+$/,
+                16: /^[0-9a-fA-F]+$/
+            };
+            return patterns[base] && patterns[base].test(str);
+        }
+
+        function textToBinaryStr(str) {
+            return str.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+        }
+
+        function textToHexStr(str) {
+            return str.split('').map(c => c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')).join(' ');
+        }
+
+        function textToDecStr(str) {
+            return str.split('').map(c => c.charCodeAt(0)).join(' ');
+        }
+
+        function textToOctStr(str) {
+            return str.split('').map(c => c.charCodeAt(0).toString(8).padStart(3, '0')).join(' ');
+        }
+
+        function onInput() {
+            const input = document.getElementById('mainInput').value;
+            let base = document.getElementById('baseSelect').value;
+
+            if (!input.trim()) {
+                currentValue = 0n;
+                textInput = '';
+                clearDisplay();
+                renderBits();
+                return;
+            }
+
+            if (base === 'text') {
+                textInput = input;
+                updateTextDisplay(input);
+                currentValue = BigInt(input.charCodeAt(0));
+                renderBits();
+                return;
+            }
+
+            const cleanInput = input.trim();
+            if (!validateInput(cleanInput, parseInt(base))) {
+                markInvalid();
+                return;
+            }
+
+            try {
+                currentValue = BigInt(parseInt(cleanInput, parseInt(base)));
+                if (currentValue < 0n) currentValue = 0n;
+                textInput = '';
+                updateDisplay();
+                renderBits();
+            } catch {
+                markInvalid();
+            }
+        }
+
+        function updateTextDisplay(text) {
+            document.getElementById('mainInput').classList.remove('invalid');
+            const cards = document.querySelectorAll('.conv-card .value');
+            const labels = document.querySelectorAll('.conv-card .label');
+            if (cards.length >= 8) {
+                // Binary
+                cards[0].innerHTML = textToBinaryStr(text);
+                // Decimal
+                cards[1].textContent = textToDecStr(text);
+                // Octal
+                cards[2].innerHTML = '<span class="prefix">0o </span>' + textToOctStr(text);
+                // Hex
+                cards[3].innerHTML = '<span class="prefix">0x </span>' + textToHexStr(text);
+                // ASCII
+                cards[4].textContent = text;
+                // BCD
+                cards[5].textContent = textToDecStr(text).split(' ').map(n => parseInt(n).toString(2).padStart(8, '0')).join(' ');
+                // Signed
+                cards[6].textContent = text.split('').map(c => c.charCodeAt(0)).join(', ');
+                // IEEE 754
+                cards[7].textContent = 'N/A for text';
+            }
+        }
+
+        function clearDisplay() {
+            ['valBinary','valDecimal','valOctal','valHex','valAscii','valBcd','valSigned','valIeee'].forEach(id => {
+                document.getElementById(id).textContent = '-';
+            });
+            document.getElementById('valSignedInfo').textContent = '';
+            document.getElementById('ieeeBreakdown').innerHTML = '';
+        }
+
+        function markInvalid() {
+            ['valBinary','valDecimal','valOctal','valHex','valAscii','valBcd','valSigned','valIeee'].forEach(id => {
+                document.getElementById(id).innerHTML = '<span style="color:#ef4444">Invalid input</span>';
+            });
+            document.getElementById('valSignedInfo').textContent = '';
+            document.getElementById('ieeeBreakdown').innerHTML = '';
+        }
+
+        function formatBinaryGrouped(val) {
+            let bin = val.toString(2);
+            // Pad to multiple of 4
+            while (bin.length % 4 !== 0) bin = '0' + bin;
+            let groups = [];
+            for (let i = 0; i < bin.length; i += 4) {
+                groups.push(bin.substring(i, i + 4));
+            }
+            return groups.map(g => `<span class="bit-group">${g}</span>`).join(' ');
+        }
+
+        function formatDecimal(val) {
+            return val.toLocaleString('en-US');
+        }
+
+        function toBcd(decStr) {
+            let bcd = '';
+            for (let ch of decStr) {
+                bcd += parseInt(ch).toString(2).padStart(4, '0') + ' ';
+            }
+            return bcd.trim();
+        }
+
+        function twosComplement(val, bits) {
+            const max = 1n << BigInt(bits);
+            const half = max / 2n;
+            if (val >= half) {
+                return Number(val - max);
+            }
+            return Number(val);
+        }
+
+        function toIeee754(num) {
+            const buf = new ArrayBuffer(4);
+            const view = new DataView(buf);
+            view.setFloat32(0, num);
+            const intVal = view.getUint32(0);
+            return intVal.toString(2).padStart(32, '0');
+        }
+
+        function ieee754ToFloat(bits32) {
+            const buf = new ArrayBuffer(4);
+            const view = new DataView(buf);
+            view.setUint32(0, parseInt(bits32, 2));
+            return view.getFloat32(0);
+        }
+
+        function updateDisplay() {
+            const n = Number(currentValue);
+
+            // Binary
+            document.getElementById('valBinary').innerHTML = formatBinaryGrouped(currentValue);
+
+            // Decimal
+            document.getElementById('valDecimal').innerHTML = formatDecimal(n);
+
+            // Octal
+            document.getElementById('valOctal').innerHTML = `<span class="prefix">0o</span>${currentValue.toString(8)}`;
+
+            // Hex
+            document.getElementById('valHex').innerHTML = `<span class="prefix">0x</span>${currentValue.toString(16).toUpperCase()}`;
+
+            // ASCII
+            if (n >= 32 && n <= 126) {
+                document.getElementById('valAscii').innerHTML = `'${String.fromCharCode(n)}' <span class="prefix">(char ${n})</span>`;
+            } else if (n >= 0 && n <= 31) {
+                const names = ['NUL','SOH','STX','ETX','EOT','ENQ','ACK','BEL','BS','TAB','LF','VT','FF','CR','SO','SI',
+                               'DLE','DC1','DC2','DC3','DC4','NAK','SYN','ETB','CAN','EM','SUB','ESC','FS','GS','RS','US'];
+                document.getElementById('valAscii').innerHTML = `<span class="prefix">[${names[n]}]</span> (non-printable)`;
+            } else if (n === 127) {
+                document.getElementById('valAscii').innerHTML = '<span class="prefix">[DEL]</span> (non-printable)';
+            } else {
+                document.getElementById('valAscii').innerHTML = '<span class="prefix">Out of ASCII range</span>';
+            }
+
+            // BCD
+            const decStr = currentValue.toString(10);
+            document.getElementById('valBcd').textContent = toBcd(decStr);
+
+            // Signed Two's Complement
+            const s8 = twosComplement(currentValue & 0xFFn, 8);
+            const s16 = twosComplement(currentValue & 0xFFFFn, 16);
+            const s32 = twosComplement(currentValue & 0xFFFFFFFFn, 32);
+            document.getElementById('valSigned').innerHTML =
+                `<span class="prefix">8-bit:</span> ${s8} &nbsp; <span class="prefix">16-bit:</span> ${s16} &nbsp; <span class="prefix">32-bit:</span> ${s32}`;
+            document.getElementById('valSignedInfo').textContent =
+                `8-bit range: -128..127 | 16-bit: -32768..32767`;
+
+            // IEEE 754
+            const clampedN = Math.min(Math.max(n, -3.4e38), 3.4e38);
+            const ieeeBits = toIeee754(clampedN);
+            const floatVal = ieee754ToFloat(ieeeBits);
+            document.getElementById('valIeee').innerHTML =
+                `${floatVal} <span class="prefix">(0x${parseInt(ieeeBits, 2).toString(16).toUpperCase().padStart(8, '0')})</span>`;
+
+            // IEEE breakdown visual
+            const sign = ieeeBits[0];
+            const exp = ieeeBits.substring(1, 9);
+            const mantissa = ieeeBits.substring(9, 32);
+            let breakdownHtml = '<div class="ieee-breakdown">';
+            breakdownHtml += `<div class="ieee-bit ieee-sign">${sign}</div>`;
+            for (let c of exp) breakdownHtml += `<div class="ieee-bit ieee-exp">${c}</div>`;
+            for (let c of mantissa) breakdownHtml += `<div class="ieee-bit ieee-man">${c}</div>`;
+            breakdownHtml += '</div>';
+            breakdownHtml += '<div class="ieee-labels">';
+            breakdownHtml += '<span><span class="dot" style="background:#ef4444"></span> Sign</span>';
+            breakdownHtml += '<span><span class="dot" style="background:#3b82f6"></span> Exponent (8)</span>';
+            breakdownHtml += '<span><span class="dot" style="background:#8b5cf6"></span> Mantissa (23)</span>';
+            breakdownHtml += '</div>';
+            document.getElementById('ieeeBreakdown').innerHTML = breakdownHtml;
+        }
+
+        // Bit Visualization
+        function setBitWidth(w) {
+            bitWidth = w;
+            document.querySelectorAll('.bit-width-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            // Mask value to fit width
+            const mask = (1n << BigInt(bitWidth)) - 1n;
+            currentValue = currentValue & mask;
+            updateInputFromValue();
+            updateDisplay();
+            renderBits();
+        }
+
+        function renderBits() {
+            const posDiv = document.getElementById('bitPositions');
+            const rowDiv = document.getElementById('bitRow');
+            let posHtml = '';
+            let rowHtml = '';
+            const mask = (1n << BigInt(bitWidth)) - 1n;
+            const val = currentValue & mask;
+
+            for (let i = bitWidth - 1; i >= 0; i--) {
+                const bitOn = (val >> BigInt(i)) & 1n;
+                posHtml += `<div class="bit-pos-label">${i}</div>`;
+                rowHtml += `<div class="bit-cell ${bitOn ? 'on' : 'off'}" onclick="toggleBit(${i})">${bitOn ? '1' : '0'}</div>`;
+                // Add separator every 4 bits (except at the end)
+                if (i > 0 && i % 4 === 0) {
+                    posHtml += '<div class="bit-separator-label"></div>';
+                    rowHtml += '<div class="bit-separator"></div>';
+                }
+            }
+            posDiv.innerHTML = posHtml;
+            rowDiv.innerHTML = rowHtml;
+        }
+
+        function toggleBit(pos) {
+            const mask = (1n << BigInt(bitWidth)) - 1n;
+            currentValue = (currentValue ^ (1n << BigInt(pos))) & mask;
+            updateInputFromValue();
+            updateDisplay();
+            renderBits();
+        }
+
+        function updateInputFromValue() {
+            const baseStr = document.getElementById('baseSelect').value;
+            if (baseStr === 'text') {
+                const ch = String.fromCharCode(Number(currentValue));
+                document.getElementById('mainInput').value = ch;
+                return;
+            }
+            const base = parseInt(baseStr);
+            let str;
+            switch (base) {
+                case 2: str = currentValue.toString(2); break;
+                case 8: str = currentValue.toString(8); break;
+                case 10: str = currentValue.toString(10); break;
+                case 16: str = currentValue.toString(16).toUpperCase(); break;
+                default: str = currentValue.toString(10);
+            }
+            document.getElementById('mainInput').value = str === '0' ? '' : str;
+            if (currentValue === 0n) {
+                document.getElementById('mainInput').value = '';
+                clearDisplay();
+            }
+        }
+
+        function clearAll() {
+            currentValue = 0n;
+            document.getElementById('mainInput').value = '';
+            clearDisplay();
+            renderBits();
+        }
+
+        function swapEndianness() {
+            if (currentValue === 0n) return;
+            const mask = (1n << BigInt(bitWidth)) - 1n;
+            let val = currentValue & mask;
+            let swapped = 0n;
+            const bytes = bitWidth / 8;
+            for (let i = 0; i < bytes; i++) {
+                const byte = (val >> BigInt(i * 8)) & 0xFFn;
+                swapped |= byte << BigInt((bytes - 1 - i) * 8);
+            }
+            currentValue = swapped & mask;
+            updateInputFromValue();
+            if (currentValue > 0n) updateDisplay();
+            renderBits();
+        }
+
+        function copyVal(id, btn) {
+            const el = document.getElementById(id);
+            const text = el.textContent.replace(/\s+/g, ' ').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 1200);
+            });
+        }
+
+        // Init
+        buildReferences();
+        onBaseChange();
+        renderBits();
+    </script>
+</body>
+</html>
