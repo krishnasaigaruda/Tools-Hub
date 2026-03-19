@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: #475569;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,.3);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn {
+            background: rgba(255,255,255,.15);
+            border: none; color: white;
+            padding: 6px 12px; border-radius: 6px;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            font-size: 13px; transition: background .2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,.25); }
+        .header h1 { font-size: 16px; font-weight: 600; }
+        .header h1 i { margin-right: 6px; opacity: .85; }
+        .header-right { display: flex; gap: 4px; }
+
+        /* Menu Bar */
+        .menu-bar {
+            background: #1e293b;
+            display: flex; align-items: center;
+            padding: 0 8px;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+            gap: 2px;
+        }
+        .menu-item {
+            position: relative;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #cbd5e1;
+            user-select: none;
+        }
+        .menu-item:hover { background: #334155; color: #f1f5f9; }
+        .menu-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            min-width: 240px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.5);
+            z-index: 200;
+            padding: 4px;
+        }
+        .menu-item:hover .menu-dropdown { display: block; }
+        .menu-dd-item {
+            padding: 6px 12px;
+            font-size: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 4px; cursor: pointer; color: #cbd5e1;
+        }
+        .menu-dd-item:hover { background: #475569; color: white; }
+        .menu-dd-item .sc { opacity: .5; font-size: 11px; }
+        .menu-sep { height: 1px; background: #334155; margin: 4px 8px; }
+
+        /* Main Layout */
+        .main-wrapper {
+            flex: 1;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: 1fr;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            grid-row: 1 / 2;
+            position: relative;
+            min-width: 150px;
+        }
+        .sidebar.hidden { display: none; }
+        .sidebar-resize {
+            position: absolute;
+            top: 0; right: -3px;
+            width: 6px; height: 100%;
+            cursor: col-resize;
+            z-index: 50;
+        }
+        .sidebar-resize:hover { background: #475569; }
+        .sidebar-header {
+            display: flex;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+        }
+        .sidebar-tab {
+            flex: 1;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 11px;
+            cursor: pointer;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            transition: all .2s;
+        }
+        .sidebar-tab.active { color: #e2e8f0; border-bottom-color: #475569; }
+        .sidebar-tab:hover { color: #cbd5e1; }
+        .sidebar-content { flex: 1; overflow-y: auto; }
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .sidebar-section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            padding: 10px 12px 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-actions {
+            display: flex; gap: 2px;
+        }
+        .sidebar-actions button {
+            background: none; border: none; color: #64748b; cursor: pointer;
+            padding: 3px 6px; border-radius: 4px; font-size: 11px;
+        }
+        .sidebar-actions button:hover { background: #334155; color: #e2e8f0; }
+
+        /* File Context Menu */
+        .file-ctx-menu {
+            display: none;
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 700;
+            padding: 4px;
+            min-width: 180px;
+        }
+        .file-ctx-menu.open { display: block; }
+        .fctx-item {
+            padding: 7px 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .fctx-item:hover { background: #334155; color: #e2e8f0; }
+        .fctx-item.danger:hover { background: #7f1d1d; color: #fca5a5; }
+        .fctx-sep { height: 1px; background: #334155; margin: 4px 0;
+        }
+        .tree-item {
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #94a3b8;
+            padding: 3px 8px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .tree-item:hover { background: #334155; color: #e2e8f0; }
+        .tree-item.active { background: #334155; color: #e2e8f0; }
+        .tree-item .tree-icon { font-size: 11px; width: 14px; text-align: center; flex-shrink: 0; }
+        .tree-item .tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+        .tree-item .tree-close {
+            margin-left: auto;
+            opacity: 0;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .tree-item:hover .tree-close { opacity: .6; }
+        .tree-item .tree-close:hover { opacity: 1; background: #475569; }
+        .tree-item .dot-modified {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #f59e0b;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .file-panel { display: flex; flex-direction: column; height: 100%; }
+        .file-panel.active { display: flex; }
+
+        /* Editor Area */
+        .editor-area {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        /* Tabs */
+        .tabs-bar {
+            background: #0f172a;
+            display: flex;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+        .tabs-bar::-webkit-scrollbar { height: 0; }
+        .tab {
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+            border-right: 1px solid #1e293b;
+            white-space: nowrap;
+            min-width: 0;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .tab.active { background: #1e293b; color: #e2e8f0; border-bottom: 2px solid #475569; }
+        .tab:hover { color: #cbd5e1; }
+        .tab .tab-close {
+            font-size: 10px;
+            opacity: 0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .tab:hover .tab-close { opacity: .6; }
+        .tab .tab-close:hover { opacity: 1; background: #475569; }
+        .tab .unsaved-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #f59e0b;
+            flex-shrink: 0;
+        }
+        .tab i { font-size: 11px; }
+
+        /* Editor Container */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Line Numbers */
+        .line-numbers {
+            background: #0f172a;
+            color: #4a5568;
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 8px 0;
+            text-align: right;
+            min-width: 50px;
+            user-select: none;
+            overflow: hidden;
+            flex-shrink: 0;
+            border-right: 1px solid #1e293b;
+        }
+        .line-numbers .line-num {
+            padding: 0 12px 0 8px;
+            display: block;
+        }
+        .line-numbers .line-num.active { color: #e2e8f0; }
+
+        /* Editor Scroll Wrapper */
+        .editor-scroll-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Indent Guides Layer */
+        .indent-guides {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+            padding: 8px;
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre;
+            z-index: 0;
+        }
+        .indent-guide-line {
+            position: absolute;
+            width: 1px;
+            background: #2d3748;
+            top: 0;
+            bottom: 0;
+        }
+
+        /* Highlight Layer (pre/code behind textarea) */
+        .highlight-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: auto;
+            padding: 8px;
+            margin: 0;
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre;
+            color: #abb2bf;
+            z-index: 1;
+            pointer-events: none;
+            border: none;
+            background: transparent;
+        }
+        .highlight-layer code {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+            display: block;
+        }
+
+        /* Current Line Highlight */
+        .current-line-highlight {
+            position: absolute;
+            left: 0; right: 0;
+            height: 22.4px;
+            background: rgba(255,255,255,.04);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Textarea on top */
+        .code-textarea {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: auto;
+            padding: 8px;
+            margin: 0;
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: transparent;
+            caret-color: #e2e8f0;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            white-space: pre;
+            z-index: 2;
+            tab-size: 4;
+            -moz-tab-size: 4;
+            width: 100%;
+            height: 100%;
+        }
+        .code-textarea::selection {
+            background: rgba(71, 85, 105, .5);
+        }
+
+        /* Minimap */
+        .minimap {
+            width: 80px;
+            background: #0f172a;
+            border-left: 1px solid #1e293b;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .minimap-content {
+            position: absolute;
+            top: 0; left: 4px; right: 4px;
+            font-family: 'Fira Code', Consolas, monospace;
+            font-size: 2px;
+            line-height: 3px;
+            color: #64748b;
+            white-space: pre;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .minimap-viewport {
+            position: absolute;
+            left: 0; right: 0;
+            background: rgba(71, 85, 105, .3);
+            border: 1px solid rgba(71, 85, 105, .5);
+            pointer-events: none;
+            min-height: 20px;
+        }
+
+        /* Bracket Match */
+        .bracket-match {
+            position: absolute;
+            border: 1px solid #475569;
+            background: rgba(71,85,105,.3);
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* Context Menu */
+        .editor-ctx-menu {
+            display: none;
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 700;
+            padding: 4px;
+            min-width: 200px;
+        }
+        .editor-ctx-menu.open { display: block; }
+        .ctx-item {
+            padding: 7px 14px;
+            font-size: 12px;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ctx-item:hover { background: #334155; color: #e2e8f0; }
+        .ctx-item .ctx-shortcut { font-size: 10px; color: #475569; }
+        .ctx-sep { height: 1px; background: #334155; margin: 4px 0; }
+
+        /* Run Panel */
+        .run-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 599;
+        }
+        .run-overlay.open { display: block; }
+        .run-panel {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 600;
+            width: 560px; max-height: 80vh; overflow: hidden;
+        }
+        .run-panel.open { display: block; }
+        .run-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 18px; border-bottom: 1px solid #334155;
+            font-size: 14px; font-weight: 700; color: #e2e8f0;
+        }
+        .run-header i { margin-right: 8px; color: #4ade80; }
+        .run-close {
+            background: none; border: none; color: #64748b; cursor: pointer;
+            font-size: 14px; padding: 4px 6px; border-radius: 4px;
+        }
+        .run-close:hover { background: #334155; color: #e2e8f0; }
+        .run-body { padding: 14px 18px; overflow-y: auto; max-height: calc(80vh - 50px); }
+        .run-card {
+            display: flex; gap: 14px; padding: 12px; margin-bottom: 8px;
+            background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+        .run-card:hover { border-color: #475569; }
+        .run-card-icon { font-size: 24px; flex-shrink: 0; width: 32px; text-align: center; padding-top: 2px; }
+        .run-card-content h4 { font-size: 13px; color: #e2e8f0; margin-bottom: 4px; }
+        .run-card-content p { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px; }
+        .run-card-content code {
+            display: block; background: #1a1a2e; color: #4ade80; padding: 6px 10px;
+            border-radius: 4px; font-size: 11px; font-family: 'Consolas', 'Fira Code', monospace;
+            line-height: 1.6;
+        }
+        /* Status Bar */
+        .status-bar {
+            background: #475569;
+            color: white;
+            padding: 2px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+        .status-left, .status-right { display: flex; gap: 16px; align-items: center; }
+        .status-item { opacity: .85; cursor: default; }
+        .status-item:hover { opacity: 1; }
+
+        /* Find & Replace Panel */
+        .find-panel {
+            display: none;
+            position: absolute;
+            top: 0; right: 20px;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 0 0 8px 8px;
+            padding: 8px 12px;
+            z-index: 150;
+            box-shadow: 0 4px 16px rgba(0,0,0,.4);
+            min-width: 340px;
+        }
+        .find-panel.show { display: block; }
+        .find-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+        .find-row:last-child { margin-bottom: 0; }
+        .find-input {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+        }
+        .find-input:focus { border-color: #475569; }
+        .find-btn {
+            background: #334155;
+            border: none;
+            color: #cbd5e1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .find-btn:hover { background: #475569; color: white; }
+        .find-count { font-size: 11px; color: #64748b; min-width: 60px; text-align: center; }
+        .find-close {
+            background: none; border: none; color: #64748b;
+            cursor: pointer; font-size: 14px; padding: 2px 6px;
+        }
+        .find-close:hover { color: white; }
+
+        /* Go To Line Dialog */
+        .goto-dialog {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 200;
+            box-shadow: 0 8px 32px rgba(0,0,0,.5);
+            min-width: 280px;
+        }
+        .goto-dialog.show { display: block; }
+        .goto-dialog label { font-size: 12px; color: #94a3b8; display: block; margin-bottom: 8px; }
+        .goto-dialog input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .goto-dialog input:focus { border-color: #475569; }
+
+        /* Shortcuts Panel */
+        .shortcuts-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,.6);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
+        .shortcuts-overlay.show { display: flex; }
+        .shortcuts-panel {
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 16px 48px rgba(0,0,0,.5);
+        }
+        .shortcuts-panel h2 {
+            font-size: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shortcuts-panel .close-sc {
+            background: none; border: none; color: #94a3b8;
+            font-size: 18px; cursor: pointer;
+        }
+        .shortcuts-panel .close-sc:hover { color: white; }
+        .sc-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 6px 16px;
+            font-size: 12px;
+        }
+        .sc-grid .sc-label { color: #94a3b8; }
+        .sc-grid .sc-key {
+            text-align: right;
+            color: #e2e8f0;
+            font-family: 'Fira Code', Consolas, monospace;
+            font-size: 11px;
+        }
+        .sc-grid .sc-key kbd {
+            background: #334155;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #475569;
+        }
+
+        /* Syntax Highlight Colors */
+        .hl-keyword { color: #c678dd; }
+        .hl-string { color: #98c379; }
+        .hl-number { color: #d19a66; }
+        .hl-comment { color: #5c6370; font-style: italic; }
+        .hl-function { color: #61afef; }
+        .hl-tag { color: #e06c75; }
+        .hl-attr { color: #d19a66; }
+        .hl-operator { color: #56b6c2; }
+        .hl-punctuation { color: #abb2bf; }
+        .hl-property { color: #e06c75; }
+        .hl-value { color: #98c379; }
+        .hl-selector { color: #e06c75; }
+        .hl-decorator { color: #d19a66; }
+
+        /* Toolbar buttons */
+        .tbtn {
+            background: rgba(255,255,255,.1);
+            border: none; color: #cbd5e1;
+            padding: 5px 8px; border-radius: 4px;
+            cursor: pointer; font-size: 12px;
+            transition: all .15s;
+        }
+        .tbtn:hover { background: rgba(255,255,255,.2); color: white; }
+        .tbtn.active { background: rgba(71,85,105,.5); color: white; }
+        .sep { width: 1px; height: 18px; background: #334155; margin: 0 4px; }
+
+        /* Word wrap mode */
+        .editor-scroll-wrap.word-wrap .code-textarea,
+        .editor-scroll-wrap.word-wrap .highlight-layer {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Welcome message in editor */
+        .welcome-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #334155;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .welcome-msg i { font-size: 48px; margin-bottom: 12px; display: block; }
+        .welcome-msg p { font-size: 14px; }
+
+        /* Markdown Preview */
+        .md-preview-btn {
+            background: none; border: 1px solid #334155; color: #94a3b8;
+            padding: 4px 12px; margin: 0 8px; border-radius: 4px;
+            font-size: 11px; cursor: pointer; white-space: nowrap;
+            font-family: inherit; display: flex; align-items: center; gap: 5px;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .md-preview-btn:hover { background: #334155; color: #e2e8f0; }
+        .md-preview-btn.active { background: #475569; color: #e2e8f0; border-color: #475569; }
+        .md-preview-panel {
+            display: none;
+            position: absolute;
+            top: 0; right: 0; bottom: 0;
+            width: 50%;
+            background: #1e293b;
+            border-left: 2px solid #334155;
+            overflow-y: auto;
+            z-index: 20;
+            padding: 24px 32px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #e2e8f0;
+        }
+        .md-preview-panel.open { display: block; }
+        .md-preview-panel h1 { font-size: 2em; font-weight: 700; margin: 0 0 16px; padding-bottom: 8px; border-bottom: 1px solid #334155; color: #f1f5f9; }
+        .md-preview-panel h2 { font-size: 1.5em; font-weight: 700; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #334155; color: #f1f5f9; }
+        .md-preview-panel h3 { font-size: 1.25em; font-weight: 600; margin: 20px 0 8px; color: #f1f5f9; }
+        .md-preview-panel h4 { font-size: 1.1em; font-weight: 600; margin: 16px 0 6px; color: #f1f5f9; }
+        .md-preview-panel p { margin: 0 0 12px; }
+        .md-preview-panel a { color: #60a5fa; text-decoration: none; }
+        .md-preview-panel a:hover { text-decoration: underline; }
+        .md-preview-panel strong { color: #f1f5f9; }
+        .md-preview-panel code {
+            background: #0f172a; color: #4ade80; padding: 2px 6px;
+            border-radius: 4px; font-family: 'Consolas', 'Fira Code', monospace; font-size: 0.9em;
+        }
+        .md-preview-panel pre {
+            background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+            padding: 16px; margin: 12px 0; overflow-x: auto;
+        }
+        .md-preview-panel pre code {
+            background: none; padding: 0; color: #e2e8f0; font-size: 13px;
+            line-height: 1.6; display: block;
+        }
+        .md-preview-panel blockquote {
+            border-left: 4px solid #475569; padding: 8px 16px; margin: 12px 0;
+            color: #94a3b8; background: rgba(15,23,42,0.5); border-radius: 0 6px 6px 0;
+        }
+        .md-preview-panel ul, .md-preview-panel ol { padding-left: 24px; margin: 8px 0 12px; }
+        .md-preview-panel li { margin: 4px 0; }
+        .md-preview-panel hr { border: none; border-top: 1px solid #334155; margin: 20px 0; }
+        .md-preview-panel img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+        .md-preview-panel table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        .md-preview-panel th, .md-preview-panel td {
+            border: 1px solid #334155; padding: 8px 12px; text-align: left;
+        }
+        .md-preview-panel th { background: #0f172a; font-weight: 600; }
+        .md-preview-panel input[type="checkbox"] { margin-right: 6px; }
+
+        /* Scrollbar styling */
+        .code-textarea::-webkit-scrollbar,
+        .highlight-layer::-webkit-scrollbar { width: 10px; height: 10px; }
+        .code-textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+        .code-textarea::-webkit-scrollbar-corner { background: transparent; }
+        .highlight-layer::-webkit-scrollbar { width: 0; height: 0; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-left">
+        <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        <h1><i class="fas fa-code"></i> Code Editor</h1>
+    </div>
+    <div class="header-right">
+        <span style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:5px;margin-right:8px;opacity:0.7;"><i class="fas fa-check-circle" style="color:#4ade80;font-size:10px;"></i> Autosaved</span>
+        <button class="tbtn" onclick="toggleRunPanel()" title="Run" style="color:#4ade80;"><i class="fas fa-play"></i></button>
+        <button class="tbtn" onclick="toggleShortcuts()" title="Keyboard Shortcuts"><i class="fas fa-keyboard"></i></button>
+    </div>
+</div>
+
+<!-- Menu Bar -->
+<div class="menu-bar">
+    <div class="menu-item">File
+        <div class="menu-dropdown">
+            <div class="menu-dd-item" onclick="newFile()">New File <span class="sc">Cmd+E</span></div>
+            <div class="menu-dd-item" onclick="openFile()">Open File <span class="sc">Cmd+U</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-dd-item" onclick="saveFile()">Save <span class="sc">Cmd+S</span></div>
+            <div class="menu-dd-item" onclick="saveFileAs()">Save As <span class="sc">Cmd+Shift+S</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-dd-item" onclick="closeActiveTab()">Close Tab</div>
+        </div>
+    </div>
+    <div class="menu-item">Edit
+        <div class="menu-dropdown">
+            <div class="menu-dd-item" onclick="document.execCommand('undo')">Undo <span class="sc">Cmd+Z</span></div>
+            <div class="menu-dd-item" onclick="document.execCommand('redo')">Redo <span class="sc">Cmd+Shift+Z</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-dd-item" onclick="showFind()">Find <span class="sc">Cmd+F</span></div>
+            <div class="menu-dd-item" onclick="showReplace()">Replace <span class="sc">Cmd+H</span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-dd-item" onclick="showGotoLine()">Go to Line <span class="sc">Cmd+G</span></div>
+            <div class="menu-dd-item" onclick="duplicateLine()">Duplicate Line <span class="sc">Cmd+D</span></div>
+            <div class="menu-dd-item" onclick="toggleComment()">Toggle Comment <span class="sc">Cmd+/</span></div>
+        </div>
+    </div>
+    <div class="menu-item">View
+        <div class="menu-dropdown">
+            <div class="menu-dd-item" onclick="toggleSidebar()">Toggle Sidebar <span class="sc">Cmd+B</span></div>
+            <div class="menu-dd-item" onclick="toggleRunPanel()">Run <span class="sc"></span></div>
+            <div class="menu-sep"></div>
+            <div class="menu-dd-item" onclick="changeFontSize(1)">Zoom In <span class="sc">Cmd++</span></div>
+            <div class="menu-dd-item" onclick="changeFontSize(-1)">Zoom Out <span class="sc">Cmd+-</span></div>
+            <div class="menu-dd-item" onclick="toggleWordWrap()">Toggle Word Wrap</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-tab active" data-panel="files"><i class="fas fa-file-code"></i> Explorer</div>
+        </div>
+        <div class="sidebar-content">
+            <!-- File Explorer -->
+            <div class="file-panel active" id="filesPanel">
+                <div class="sidebar-section-title">
+                    <span>Open Files</span>
+                    <div class="sidebar-actions">
+                        <button onclick="newFile()" title="New File"><i class="far fa-file"></i></button>
+                    </div>
+                </div>
+                <div id="fileList"></div>
+            </div>
+        </div>
+        <div class="sidebar-resize" id="sidebarResize"></div>
+    </div>
+
+    <!-- Editor Area -->
+    <div class="editor-area">
+        <!-- Tabs -->
+        <div style="display:flex;align-items:center;flex-shrink:0;">
+            <div class="tabs-bar" id="tabsBar" style="flex:1;"></div>
+            <button class="md-preview-btn" id="mdPreviewBtn" onclick="toggleMdPreview()" title="Preview Markdown" style="display:none;">
+                <i class="fas fa-eye"></i> Preview
+            </button>
+        </div>
+
+        <!-- Editor Container with Find Panel -->
+        <div class="editor-container" id="editorContainer">
+            <!-- Find & Replace -->
+            <div class="find-panel" id="findPanel">
+                <div class="find-row">
+                    <input type="text" class="find-input" id="findInput" placeholder="Find...">
+                    <span class="find-count" id="findCount">0 results</span>
+                    <button class="find-btn" onclick="findPrev()"><i class="fas fa-chevron-up"></i></button>
+                    <button class="find-btn" onclick="findNext()"><i class="fas fa-chevron-down"></i></button>
+                    <button class="find-close" onclick="closeFind()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="find-row" id="replaceRow" style="display:none">
+                    <input type="text" class="find-input" id="replaceInput" placeholder="Replace...">
+                    <button class="find-btn" onclick="replaceOne()">Replace</button>
+                    <button class="find-btn" onclick="replaceAll()">All</button>
+                </div>
+            </div>
+
+            <!-- Go to Line -->
+            <div class="goto-dialog" id="gotoDialog">
+                <label>Go to Line (press Enter):</label>
+                <input type="number" id="gotoInput" min="1">
+            </div>
+
+            <!-- Line Numbers -->
+            <div class="line-numbers" id="lineNumbers"></div>
+
+            <!-- Editor Scroll Wrapper -->
+            <div class="editor-scroll-wrap" id="editorWrap">
+                <div class="current-line-highlight" id="currentLineHL"></div>
+                <pre class="highlight-layer" id="highlightLayer"><code id="highlightCode"></code></pre>
+                <textarea class="code-textarea" id="codeTextarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                <div class="welcome-msg" id="welcomeMsg">
+                    <i class="fas fa-code"></i>
+                    <p>Cmd+E to create a new file<br>Cmd+U to open a file</p>
+                </div>
+            </div>
+
+            <!-- Minimap -->
+            <div class="minimap" id="minimap">
+                <div class="minimap-content" id="minimapContent"></div>
+                <div class="minimap-viewport" id="minimapViewport"></div>
+            </div>
+
+            <!-- Markdown Preview Panel -->
+            <div class="md-preview-panel" id="mdPreviewPanel"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+    <div class="status-left">
+        <span class="status-item" id="statusPos">Ln 1, Col 1</span>
+        <span class="status-item" id="statusChars">0 chars</span>
+        <span class="status-item" id="statusWords">0 words</span>
+        <span class="status-item" id="statusLines">0 lines</span>
+    </div>
+    <div class="status-right">
+        <span class="status-item" id="statusLang">Plain Text</span>
+        <span class="status-item">UTF-8</span>
+        <span class="status-item" id="statusWrap" style="cursor:pointer" onclick="toggleWordWrap()">No Wrap</span>
+    </div>
+</div>
+
+<!-- Shortcuts Overlay -->
+<div class="shortcuts-overlay" id="shortcutsOverlay">
+    <div class="shortcuts-panel">
+        <h2>Keyboard Shortcuts <button class="close-sc" onclick="toggleShortcuts()"><i class="fas fa-times"></i></button></h2>
+        <div class="sc-grid">
+            <span class="sc-label">New File</span><span class="sc-key"><kbd>Cmd+E</kbd></span>
+            <span class="sc-label">Open File</span><span class="sc-key"><kbd>Cmd+U</kbd></span>
+            <span class="sc-label">Save</span><span class="sc-key"><kbd>Cmd+S</kbd></span>
+            <span class="sc-label">Save As</span><span class="sc-key"><kbd>Cmd+Shift+S</kbd></span>
+            <span class="sc-label">Find</span><span class="sc-key"><kbd>Cmd+F</kbd></span>
+            <span class="sc-label">Replace</span><span class="sc-key"><kbd>Cmd+H</kbd></span>
+            <span class="sc-label">Go to Line</span><span class="sc-key"><kbd>Cmd+G</kbd></span>
+            <span class="sc-label">Duplicate Line</span><span class="sc-key"><kbd>Cmd+D</kbd></span>
+            <span class="sc-label">Toggle Comment</span><span class="sc-key"><kbd>Cmd+/</kbd></span>
+            <span class="sc-label">Indent</span><span class="sc-key"><kbd>Cmd+]</kbd></span>
+            <span class="sc-label">Outdent</span><span class="sc-key"><kbd>Cmd+[</kbd></span>
+            <span class="sc-label">Toggle Sidebar</span><span class="sc-key"><kbd>Cmd+B</kbd></span>
+            <span class="sc-label">Undo</span><span class="sc-key"><kbd>Cmd+Z</kbd></span>
+            <span class="sc-label">Redo</span><span class="sc-key"><kbd>Cmd+Shift+Z</kbd></span>
+            <span class="sc-label">Close Panel</span><span class="sc-key"><kbd>Escape</kbd></span>
+        </div>
+    </div>
+</div>
+
+<!-- Run Panel -->
+<div class="run-overlay" id="runOverlay" onclick="toggleRunPanel()"></div>
+<div class="run-panel" id="runPanel">
+    <div class="run-header">
+        <span><i class="fas fa-play-circle"></i> How to Run Your Code</span>
+        <button class="run-close" onclick="toggleRunPanel()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="run-body">
+        <div style="background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
+            <i class="fas fa-info-circle" style="color:#fbbf24;margin-top:2px;"></i>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.6;">
+                <strong style="color:#e2e8f0;">First, open your system terminal</strong> (Terminal on Mac, CMD/PowerShell on Windows) and <code style="background:#1a1a2e;color:#4ade80;padding:2px 6px;border-radius:3px;font-size:11px;">cd</code> into your project folder or codespace before running any commands below.
+                <code style="display:block;background:#1a1a2e;color:#4ade80;padding:6px 10px;border-radius:4px;font-size:11px;margin-top:8px;font-family:'Consolas','Fira Code',monospace;">cd /path/to/your/project</code>
+            </div>
+        </div>
+
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#e06c75;"><i class="fab fa-html5"></i></div>
+            <div class="run-card-content">
+                <h4>HTML / CSS</h4>
+                <p>Save your file and open it directly in any browser. No terminal needed. Or use Live Server in VS Code for auto-reload.</p>
+                <code>open index.html</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#f0db4f;"><i class="fab fa-js-square"></i></div>
+            <div class="run-card-content">
+                <h4>JavaScript</h4>
+                <p>Include in an HTML file with &lt;script&gt; tag, or run with Node.js:</p>
+                <code>cd your-project<br>node filename.js</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#3776ab;"><i class="fab fa-python"></i></div>
+            <div class="run-card-content">
+                <h4>Python</h4>
+                <p>Open terminal, cd into your folder, then run:</p>
+                <code>cd your-project<br>python3 filename.py</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#61dafb;"><i class="fab fa-react"></i></div>
+            <div class="run-card-content">
+                <h4>React / Next.js</h4>
+                <p>Open terminal, cd into your project folder, then:</p>
+                <code>cd my-react-app<br>npm install<br>npm run dev</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#68a063;"><i class="fab fa-node-js"></i></div>
+            <div class="run-card-content">
+                <h4>Node.js / Express</h4>
+                <p>Open terminal, cd into your project folder, then:</p>
+                <code>cd my-server<br>npm install<br>node server.js</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#00599C;"><i class="fas fa-copyright"></i></div>
+            <div class="run-card-content">
+                <h4>C / C++</h4>
+                <p>Open terminal, cd into your folder, compile and run:</p>
+                <code>cd your-project<br>gcc file.c -o out && ./out<br>g++ file.cpp -o out && ./out</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#239120;"><i class="fas fa-hashtag"></i></div>
+            <div class="run-card-content">
+                <h4>C#</h4>
+                <p>Open terminal, cd into your project, then use .NET CLI:</p>
+                <code>cd my-csharp-project<br>dotnet run</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#f05138;"><i class="fab fa-swift"></i></div>
+            <div class="run-card-content">
+                <h4>Swift</h4>
+                <p>Open terminal, cd into your folder, then run:</p>
+                <code>cd your-project<br>swift filename.swift</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#b07219;"><i class="fab fa-java"></i></div>
+            <div class="run-card-content">
+                <h4>Java</h4>
+                <p>Open terminal, cd into your folder, compile and run:</p>
+                <code>cd your-project<br>javac Main.java && java Main</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#e34c26;"><i class="fab fa-rust"></i></div>
+            <div class="run-card-content">
+                <h4>Rust</h4>
+                <p>Open terminal, cd into your Cargo project, then:</p>
+                <code>cd my-rust-project<br>cargo run</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#00ADD8;"><i class="fas fa-code"></i></div>
+            <div class="run-card-content">
+                <h4>Go</h4>
+                <p>Open terminal, cd into your folder, then run:</p>
+                <code>cd your-project<br>go run main.go</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#CC342D;"><i class="fas fa-gem"></i></div>
+            <div class="run-card-content">
+                <h4>Ruby</h4>
+                <p>Open terminal, cd into your folder, then run:</p>
+                <code>cd your-project<br>ruby filename.rb</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#777BB4;"><i class="fab fa-php"></i></div>
+            <div class="run-card-content">
+                <h4>PHP</h4>
+                <p>Open terminal, cd into your folder, then run or start server:</p>
+                <code>cd your-project<br>php filename.php<br>php -S localhost:8000</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#2496ED;"><i class="fab fa-docker"></i></div>
+            <div class="run-card-content">
+                <h4>Docker</h4>
+                <p>Open terminal, cd into folder with Dockerfile, then:</p>
+                <code>cd your-project<br>docker build -t app .<br>docker run app</code>
+            </div>
+        </div>
+        <div class="run-card">
+            <div class="run-card-icon" style="color:#4FC08D;"><i class="fab fa-vuejs"></i></div>
+            <div class="run-card-content">
+                <h4>Vue.js / Angular / Svelte</h4>
+                <p>Start dev server:</p>
+                <code>npm install<br>npm run dev</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Editor Context Menu -->
+<div class="editor-ctx-menu" id="editorCtxMenu">
+    <div class="ctx-item" onclick="ctxCut()">Cut <span class="ctx-shortcut">Cmd+X</span></div>
+    <div class="ctx-item" onclick="ctxCopy()">Copy <span class="ctx-shortcut">Cmd+C</span></div>
+    <div class="ctx-item" onclick="ctxPaste()">Paste <span class="ctx-shortcut">Cmd+V</span></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="ctxSelectAll()">Select All <span class="ctx-shortcut">Cmd+A</span></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="showFind(); closeCtxMenu()">Find <span class="ctx-shortcut">Cmd+F</span></div>
+    <div class="ctx-item" onclick="showReplace(); closeCtxMenu()">Replace <span class="ctx-shortcut">Cmd+H</span></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="toggleComment(); closeCtxMenu()">Toggle Comment <span class="ctx-shortcut">Cmd+/</span></div>
+    <div class="ctx-item" onclick="indentSelection(); closeCtxMenu()">Indent <span class="ctx-shortcut">Cmd+]</span></div>
+    <div class="ctx-item" onclick="outdentSelection(); closeCtxMenu()">Outdent <span class="ctx-shortcut">Cmd+[</span></div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="showGotoLine(); closeCtxMenu()">Go to Line <span class="ctx-shortcut">Cmd+G</span></div>
+</div>
+
+<!-- File Explorer Context Menu -->
+<div class="file-ctx-menu" id="fileCtxMenu">
+    <div class="fctx-item" onclick="fctxOpen()">Open</div>
+    <div class="fctx-sep"></div>
+    <div class="fctx-item" onclick="fctxClose()">Close</div>
+    <div class="fctx-item" onclick="fctxCloseOthers()">Close Others</div>
+    <div class="fctx-item" onclick="fctxCloseAll()">Close All</div>
+    <div class="fctx-sep"></div>
+    <div class="fctx-item" onclick="fctxCopyName()">Copy File Name</div>
+    <div class="fctx-item" onclick="fctxDuplicate()">Duplicate File</div>
+    <div class="fctx-sep"></div>
+    <div class="fctx-item danger" onclick="fctxDelete()">Delete</div>
+</div>
+
+<script>
+// ── State ──
+let files = [];
+let activeFileId = null;
+let nextId = 1;
+let fontSize = 14;
+let wordWrap = false;
+let commits = [];
+let findMatches = [];
+let findIdx = -1;
+let dbHandles = {};
+
+const TA = document.getElementById('codeTextarea');
+const HL = document.getElementById('highlightCode');
+const HLPre = document.getElementById('highlightLayer');
+const LN = document.getElementById('lineNumbers');
+const MM = document.getElementById('minimapContent');
+const MMV = document.getElementById('minimapViewport');
+const MMap = document.getElementById('minimap');
+const CLHL = document.getElementById('currentLineHL');
+const edWrap = document.getElementById('editorWrap');
+const welcomeMsg = document.getElementById('welcomeMsg');
+
+// ── File Management ──
+function createFile(name, content = '', handle = null) {
+    const f = {
+        id: nextId++,
+        name,
+        content,
+        savedContent: content,
+        handle,
+        lang: detectLang(name)
+    };
+    files.push(f);
+    setActive(f.id);
+    renderTabs();
+    renderFileList();
+    saveState();
+    return f;
+}
+
+function getFile(id) { return files.find(f => f.id === id); }
+function getActiveFile() { return getFile(activeFileId); }
+
+function setActive(id) {
+    activeFileId = id;
+    const f = getFile(id);
+    if (f) {
+        TA.value = f.content;
+        welcomeMsg.style.display = 'none';
+        TA.style.display = '';
+        LN.style.display = '';
+        HLPre.style.display = '';
+        MMap.style.display = '';
+        updateHighlight();
+        updateLineNumbers();
+        updateMinimap();
+        updateStatusBar();
+        document.getElementById('statusLang').textContent = langLabel(f.lang);
+        updateMdPreviewBtn();
+        if (mdPreviewOpen) renderMdPreview();
+    } else {
+        TA.value = '';
+        TA.style.display = 'none';
+        LN.style.display = 'none';
+        HLPre.style.display = 'none';
+        MMap.style.display = 'none';
+        welcomeMsg.style.display = '';
+        HL.innerHTML = '';
+        LN.innerHTML = '';
+        MM.textContent = '';
+        document.getElementById('statusLang').textContent = 'Plain Text';
+    }
+    renderTabs();
+    renderFileList();
+}
+
+function closeTab(id) {
+    const idx = files.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    const f = files[idx];
+    if (f.content !== f.savedContent) {
+        if (!confirm(`"${f.name}" has unsaved changes. Close anyway?`)) return;
+    }
+    files.splice(idx, 1);
+    if (activeFileId === id) {
+        if (files.length > 0) {
+            const ni = Math.min(idx, files.length - 1);
+            setActive(files[ni].id);
+        } else {
+            activeFileId = null;
+            TA.value = '';
+            TA.style.display = 'none';
+            LN.style.display = 'none';
+            HLPre.style.display = 'none';
+            MMap.style.display = 'none';
+            welcomeMsg.style.display = '';
+            HL.innerHTML = '';
+            LN.innerHTML = '';
+            MM.textContent = '';
+        }
+    }
+    renderTabs();
+    renderFileList();
+    saveState();
+}
+
+function closeActiveTab() {
+    if (activeFileId) closeTab(activeFileId);
+}
+
+// ── Language Detection ──
+function detectLang(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    const map = {
+        js: 'javascript', mjs: 'javascript', jsx: 'javascript', ts: 'javascript', tsx: 'javascript',
+        html: 'html', htm: 'html', xml: 'html', svg: 'html',
+        css: 'css', scss: 'css', less: 'css',
+        py: 'python', pyw: 'python',
+        json: 'json', jsonl: 'json',
+        md: 'markdown', mdx: 'markdown',
+    };
+    return map[ext] || 'plain';
+}
+
+function langLabel(lang) {
+    const labels = { javascript: 'JavaScript', html: 'HTML', css: 'CSS', python: 'Python', json: 'JSON', markdown: 'Markdown', plain: 'Plain Text' };
+    return labels[lang] || 'Plain Text';
+}
+
+function langIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    const icons = {
+        js: 'fab fa-js', jsx: 'fab fa-react', ts: 'fab fa-js', tsx: 'fab fa-react',
+        html: 'fab fa-html5', htm: 'fab fa-html5',
+        css: 'fab fa-css3-alt', scss: 'fab fa-sass',
+        py: 'fab fa-python', json: 'fas fa-brackets-curly',
+        md: 'fab fa-markdown',
+    };
+    return icons[ext] || 'fas fa-file-code';
+}
+
+// ── Syntax Highlighting ──
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightJS(code) {
+    let result = '';
+    const lines = code.split('\n');
+    let inBlockComment = false;
+    for (let line of lines) {
+        let out = '';
+        let i = 0;
+        let inStr = null;
+        if (inBlockComment) {
+            const endIdx = line.indexOf('*/');
+            if (endIdx !== -1) {
+                out += '<span class="hl-comment">' + escapeHtml(line.substring(0, endIdx + 2)) + '</span>';
+                i = endIdx + 2;
+                inBlockComment = false;
+            } else {
+                out += '<span class="hl-comment">' + escapeHtml(line) + '</span>';
+                result += out + '\n';
+                continue;
+            }
+        }
+        while (i < line.length) {
+            // Line comment
+            if (!inStr && line[i] === '/' && line[i+1] === '/') {
+                out += '<span class="hl-comment">' + escapeHtml(line.substring(i)) + '</span>';
+                i = line.length;
+                continue;
+            }
+            // Block comment start
+            if (!inStr && line[i] === '/' && line[i+1] === '*') {
+                const endIdx = line.indexOf('*/', i + 2);
+                if (endIdx !== -1) {
+                    out += '<span class="hl-comment">' + escapeHtml(line.substring(i, endIdx + 2)) + '</span>';
+                    i = endIdx + 2;
+                } else {
+                    out += '<span class="hl-comment">' + escapeHtml(line.substring(i)) + '</span>';
+                    i = line.length;
+                    inBlockComment = true;
+                }
+                continue;
+            }
+            // Strings
+            if (!inStr && (line[i] === '"' || line[i] === "'" || line[i] === '`')) {
+                const q = line[i];
+                let j = i + 1;
+                while (j < line.length && !(line[j] === q && line[j-1] !== '\\')) j++;
+                if (j < line.length) j++;
+                out += '<span class="hl-string">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            // Numbers
+            if (!inStr && /[0-9]/.test(line[i]) && (i === 0 || /[\s=:(,+\-*/%!&|^~<>[]/.test(line[i-1]))) {
+                let j = i;
+                while (j < line.length && /[0-9.xXa-fA-FeEbBoO_n]/.test(line[j])) j++;
+                out += '<span class="hl-number">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            // Words (keywords, functions)
+            if (/[a-zA-Z_$]/.test(line[i])) {
+                let j = i;
+                while (j < line.length && /[a-zA-Z0-9_$]/.test(line[j])) j++;
+                const word = line.substring(i, j);
+                const keywords = ['const','let','var','function','return','if','else','for','while','do','switch','case','break','continue','new','this','class','extends','import','export','from','default','try','catch','finally','throw','async','await','yield','typeof','instanceof','in','of','void','delete','true','false','null','undefined','NaN','Infinity','super','static','get','set','constructor'];
+                if (keywords.includes(word)) {
+                    out += '<span class="hl-keyword">' + escapeHtml(word) + '</span>';
+                } else if (j < line.length && line[j] === '(') {
+                    out += '<span class="hl-function">' + escapeHtml(word) + '</span>';
+                } else {
+                    out += escapeHtml(word);
+                }
+                i = j;
+                continue;
+            }
+            out += escapeHtml(line[i]);
+            i++;
+        }
+        result += out + '\n';
+    }
+    return result.slice(0, -1);
+}
+
+function highlightHTML(code) {
+    let result = '';
+    let i = 0;
+    while (i < code.length) {
+        // Comment
+        if (code.startsWith('<!--', i)) {
+            const end = code.indexOf('-->', i);
+            const endIdx = end !== -1 ? end + 3 : code.length;
+            result += '<span class="hl-comment">' + escapeHtml(code.substring(i, endIdx)) + '</span>';
+            i = endIdx;
+            continue;
+        }
+        // Tag
+        if (code[i] === '<' && /[a-zA-Z/!]/.test(code[i+1] || '')) {
+            let j = i;
+            const isClosing = code[j+1] === '/';
+            result += '<span class="hl-punctuation">' + escapeHtml(code[j]) + '</span>';
+            j++;
+            if (isClosing) { result += '<span class="hl-punctuation">/</span>'; j++; }
+            // Tag name
+            let nameStart = j;
+            while (j < code.length && /[a-zA-Z0-9-]/.test(code[j])) j++;
+            result += '<span class="hl-tag">' + escapeHtml(code.substring(nameStart, j)) + '</span>';
+            // Attributes
+            while (j < code.length && code[j] !== '>') {
+                if (/\s/.test(code[j])) {
+                    result += escapeHtml(code[j]); j++; continue;
+                }
+                if (code[j] === '/' && code[j+1] === '>') {
+                    result += '<span class="hl-punctuation">/&gt;</span>';
+                    j += 2; break;
+                }
+                if (/[a-zA-Z_:-]/.test(code[j])) {
+                    let aStart = j;
+                    while (j < code.length && /[a-zA-Z0-9_:-]/.test(code[j])) j++;
+                    result += '<span class="hl-attr">' + escapeHtml(code.substring(aStart, j)) + '</span>';
+                    // =
+                    if (code[j] === '=') {
+                        result += '<span class="hl-punctuation">=</span>';
+                        j++;
+                        if (code[j] === '"' || code[j] === "'") {
+                            const q = code[j];
+                            let vEnd = code.indexOf(q, j + 1);
+                            if (vEnd === -1) vEnd = code.length - 1;
+                            result += '<span class="hl-string">' + escapeHtml(code.substring(j, vEnd + 1)) + '</span>';
+                            j = vEnd + 1;
+                        }
+                    }
+                    continue;
+                }
+                result += escapeHtml(code[j]); j++;
+            }
+            if (j < code.length && code[j] === '>') {
+                result += '<span class="hl-punctuation">&gt;</span>';
+                j++;
+            }
+            i = j;
+            continue;
+        }
+        result += escapeHtml(code[i]);
+        i++;
+    }
+    return result;
+}
+
+function highlightCSS(code) {
+    let result = '';
+    const lines = code.split('\n');
+    let inComment = false;
+    for (let line of lines) {
+        let out = '';
+        let i = 0;
+        if (inComment) {
+            const endIdx = line.indexOf('*/');
+            if (endIdx !== -1) {
+                out += '<span class="hl-comment">' + escapeHtml(line.substring(0, endIdx + 2)) + '</span>';
+                i = endIdx + 2;
+                inComment = false;
+            } else {
+                out += '<span class="hl-comment">' + escapeHtml(line) + '</span>';
+                result += out + '\n';
+                continue;
+            }
+        }
+        while (i < line.length) {
+            if (line[i] === '/' && line[i+1] === '*') {
+                const endIdx = line.indexOf('*/', i + 2);
+                if (endIdx !== -1) {
+                    out += '<span class="hl-comment">' + escapeHtml(line.substring(i, endIdx + 2)) + '</span>';
+                    i = endIdx + 2;
+                } else {
+                    out += '<span class="hl-comment">' + escapeHtml(line.substring(i)) + '</span>';
+                    i = line.length;
+                    inComment = true;
+                }
+                continue;
+            }
+            if (line[i] === '"' || line[i] === "'") {
+                const q = line[i];
+                let j = i + 1;
+                while (j < line.length && line[j] !== q) j++;
+                if (j < line.length) j++;
+                out += '<span class="hl-string">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            if (line[i] === '#' && /[0-9a-fA-F]/.test(line[i+1] || '')) {
+                let j = i + 1;
+                while (j < line.length && /[0-9a-fA-F]/.test(line[j])) j++;
+                out += '<span class="hl-number">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            if (/[0-9]/.test(line[i])) {
+                let j = i;
+                while (j < line.length && /[0-9.%a-zA-Z]/.test(line[j])) j++;
+                out += '<span class="hl-number">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            if (/[a-zA-Z_.-]/.test(line[i]) && (i === 0 || /[\s{;,:]/.test(line[i-1]))) {
+                let j = i;
+                while (j < line.length && /[a-zA-Z0-9_-]/.test(line[j])) j++;
+                const word = line.substring(i, j);
+                const cssProp = ['color','background','margin','padding','border','display','position','width','height','font','flex','grid','top','left','right','bottom','z-index','overflow','opacity','transform','transition','animation','box-shadow','text-align','justify-content','align-items'];
+                if (j < line.length && line[j] === ':' && !line.substring(0,i).includes('{')) {
+                    out += '<span class="hl-selector">' + escapeHtml(word) + '</span>';
+                } else if (line.substring(0,i).includes(':')) {
+                    out += '<span class="hl-value">' + escapeHtml(word) + '</span>';
+                } else {
+                    out += '<span class="hl-selector">' + escapeHtml(word) + '</span>';
+                }
+                i = j;
+                continue;
+            }
+            out += escapeHtml(line[i]);
+            i++;
+        }
+        result += out + '\n';
+    }
+    return result.slice(0, -1);
+}
+
+function highlightPython(code) {
+    let result = '';
+    const lines = code.split('\n');
+    let inTriple = false;
+    let tripleChar = '';
+    for (let line of lines) {
+        let out = '';
+        let i = 0;
+        if (inTriple) {
+            const endIdx = line.indexOf(tripleChar, 0);
+            if (endIdx !== -1) {
+                out += '<span class="hl-string">' + escapeHtml(line.substring(0, endIdx + 3)) + '</span>';
+                i = endIdx + 3;
+                inTriple = false;
+            } else {
+                out += '<span class="hl-string">' + escapeHtml(line) + '</span>';
+                result += out + '\n';
+                continue;
+            }
+        }
+        while (i < line.length) {
+            // Comment
+            if (line[i] === '#') {
+                out += '<span class="hl-comment">' + escapeHtml(line.substring(i)) + '</span>';
+                i = line.length;
+                continue;
+            }
+            // Triple string
+            if ((line.startsWith('"""', i) || line.startsWith("'''", i))) {
+                tripleChar = line.substring(i, i+3);
+                const endIdx = line.indexOf(tripleChar, i + 3);
+                if (endIdx !== -1) {
+                    out += '<span class="hl-string">' + escapeHtml(line.substring(i, endIdx + 3)) + '</span>';
+                    i = endIdx + 3;
+                } else {
+                    out += '<span class="hl-string">' + escapeHtml(line.substring(i)) + '</span>';
+                    i = line.length;
+                    inTriple = true;
+                }
+                continue;
+            }
+            // String
+            if (line[i] === '"' || line[i] === "'") {
+                const q = line[i];
+                let j = i + 1;
+                while (j < line.length && !(line[j] === q && line[j-1] !== '\\')) j++;
+                if (j < line.length) j++;
+                out += '<span class="hl-string">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            // Decorator
+            if (line[i] === '@' && /[a-zA-Z]/.test(line[i+1] || '')) {
+                let j = i + 1;
+                while (j < line.length && /[a-zA-Z0-9_.]/.test(line[j])) j++;
+                out += '<span class="hl-decorator">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            // Numbers
+            if (/[0-9]/.test(line[i]) && (i === 0 || /[\s=:(,+\-*/%!&|^~<>\[]/.test(line[i-1]))) {
+                let j = i;
+                while (j < line.length && /[0-9.xXoObBeEjJ_]/.test(line[j])) j++;
+                out += '<span class="hl-number">' + escapeHtml(line.substring(i, j)) + '</span>';
+                i = j;
+                continue;
+            }
+            // Words
+            if (/[a-zA-Z_]/.test(line[i])) {
+                let j = i;
+                while (j < line.length && /[a-zA-Z0-9_]/.test(line[j])) j++;
+                const word = line.substring(i, j);
+                const kw = ['def','class','if','elif','else','for','while','try','except','finally','with','as','import','from','return','yield','raise','pass','break','continue','and','or','not','is','in','lambda','global','nonlocal','assert','del','True','False','None','async','await','self','print'];
+                if (kw.includes(word)) {
+                    out += '<span class="hl-keyword">' + escapeHtml(word) + '</span>';
+                } else if (j < line.length && line[j] === '(') {
+                    out += '<span class="hl-function">' + escapeHtml(word) + '</span>';
+                } else {
+                    out += escapeHtml(word);
+                }
+                i = j;
+                continue;
+            }
+            out += escapeHtml(line[i]);
+            i++;
+        }
+        result += out + '\n';
+    }
+    return result.slice(0, -1);
+}
+
+function highlightJSON(code) {
+    let result = '';
+    let i = 0;
+    while (i < code.length) {
+        if (code[i] === '"') {
+            let j = i + 1;
+            while (j < code.length && !(code[j] === '"' && code[j-1] !== '\\')) j++;
+            if (j < code.length) j++;
+            const str = code.substring(i, j);
+            // Check if it's a key (followed by :)
+            let k = j;
+            while (k < code.length && /\s/.test(code[k])) k++;
+            if (code[k] === ':') {
+                result += '<span class="hl-property">' + escapeHtml(str) + '</span>';
+            } else {
+                result += '<span class="hl-string">' + escapeHtml(str) + '</span>';
+            }
+            i = j;
+            continue;
+        }
+        if (/[0-9-]/.test(code[i]) && (i === 0 || /[\s:,\[\{]/.test(code[i-1]))) {
+            let j = i;
+            if (code[j] === '-') j++;
+            while (j < code.length && /[0-9.eE+\-]/.test(code[j])) j++;
+            result += '<span class="hl-number">' + escapeHtml(code.substring(i, j)) + '</span>';
+            i = j;
+            continue;
+        }
+        if (code.startsWith('true', i) || code.startsWith('false', i) || code.startsWith('null', i)) {
+            const word = code.startsWith('true', i) ? 'true' : code.startsWith('false', i) ? 'false' : 'null';
+            result += '<span class="hl-keyword">' + word + '</span>';
+            i += word.length;
+            continue;
+        }
+        result += escapeHtml(code[i]);
+        i++;
+    }
+    return result;
+}
+
+function highlightMarkdown(code) {
+    let result = '';
+    const lines = code.split('\n');
+    let inCode = false;
+    for (let line of lines) {
+        if (line.startsWith('```')) {
+            inCode = !inCode;
+            result += '<span class="hl-string">' + escapeHtml(line) + '</span>\n';
+            continue;
+        }
+        if (inCode) {
+            result += '<span class="hl-string">' + escapeHtml(line) + '</span>\n';
+            continue;
+        }
+        if (/^#{1,6}\s/.test(line)) {
+            result += '<span class="hl-keyword">' + escapeHtml(line) + '</span>\n';
+        } else if (/^\s*[-*+]\s/.test(line)) {
+            result += '<span class="hl-tag">' + escapeHtml(line.match(/^(\s*[-*+])/)[0]) + '</span>' + escapeHtml(line.substring(line.match(/^(\s*[-*+])/)[0].length)) + '\n';
+        } else if (/^\s*\d+\.\s/.test(line)) {
+            result += '<span class="hl-number">' + escapeHtml(line.match(/^(\s*\d+\.)/)[0]) + '</span>' + escapeHtml(line.substring(line.match(/^(\s*\d+\.)/)[0].length)) + '\n';
+        } else {
+            let out = escapeHtml(line);
+            out = out.replace(/`([^`]+)`/g, '<span class="hl-string">`$1`</span>');
+            out = out.replace(/\*\*([^*]+)\*\*/g, '<span class="hl-keyword">**$1**</span>');
+            out = out.replace(/\*([^*]+)\*/g, '<span class="hl-attr">*$1*</span>');
+            result += out + '\n';
+        }
+    }
+    return result.slice(0, -1);
+}
+
+function highlightCode(code, lang) {
+    if (!code) return '';
+    // Limit highlighting for performance
+    if (code.length > 100000) return escapeHtml(code);
+    switch (lang) {
+        case 'javascript': return highlightJS(code);
+        case 'html': return highlightHTML(code);
+        case 'css': return highlightCSS(code);
+        case 'python': return highlightPython(code);
+        case 'json': return highlightJSON(code);
+        case 'markdown': return highlightMarkdown(code);
+        default: return escapeHtml(code);
+    }
+}
+
+// ── Update Functions ──
+function updateHighlight() {
+    const f = getActiveFile();
+    if (!f) return;
+    const code = TA.value;
+    HL.innerHTML = highlightCode(code, f.lang);
+}
+
+function updateLineNumbers() {
+    const text = TA.value;
+    const lineCount = text.split('\n').length;
+    const curLine = getCurrentLine();
+    let html = '';
+    for (let i = 1; i <= lineCount; i++) {
+        html += `<span class="line-num${i === curLine ? ' active' : ''}">${i}</span>\n`;
+    }
+    LN.innerHTML = html;
+}
+
+function updateMinimap() {
+    const text = TA.value;
+    // Simplified text for minimap
+    MM.textContent = text;
+    updateMinimapViewport();
+}
+
+function updateMinimapViewport() {
+    const ta = TA;
+    if (!ta.scrollHeight || ta.scrollHeight <= ta.clientHeight) {
+        MMV.style.top = '0px';
+        MMV.style.height = MMap.clientHeight + 'px';
+        return;
+    }
+    const ratio = MMap.clientHeight / ta.scrollHeight;
+    const top = ta.scrollTop * ratio;
+    const height = Math.max(20, ta.clientHeight * ratio);
+    MMV.style.top = top + 'px';
+    MMV.style.height = height + 'px';
+}
+
+function updateCurrentLineHighlight() {
+    const line = getCurrentLine();
+    const lineHeight = parseFloat(getComputedStyle(TA).lineHeight) || (fontSize * 1.6);
+    CLHL.style.top = ((line - 1) * lineHeight + 8 - TA.scrollTop) + 'px';
+    CLHL.style.height = lineHeight + 'px';
+}
+
+function getCurrentLine() {
+    const text = TA.value;
+    const pos = TA.selectionStart;
+    return text.substring(0, pos).split('\n').length;
+}
+
+function getCurrentCol() {
+    const text = TA.value;
+    const pos = TA.selectionStart;
+    const lastNewline = text.lastIndexOf('\n', pos - 1);
+    return pos - lastNewline;
+}
+
+function updateStatusBar() {
+    const text = TA.value;
+    const line = getCurrentLine();
+    const col = getCurrentCol();
+    document.getElementById('statusPos').textContent = `Ln ${line}, Col ${col}`;
+    document.getElementById('statusChars').textContent = `${text.length} chars`;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    document.getElementById('statusWords').textContent = `${words} words`;
+    document.getElementById('statusLines').textContent = `${text.split('\n').length} lines`;
+}
+
+// ── Sync scroll between textarea and highlight layer ──
+function syncScroll() {
+    HLPre.scrollTop = TA.scrollTop;
+    HLPre.scrollLeft = TA.scrollLeft;
+    LN.scrollTop = TA.scrollTop;
+    updateMinimapViewport();
+    updateCurrentLineHighlight();
+}
+
+// ── Render Functions ──
+function renderTabs() {
+    const bar = document.getElementById('tabsBar');
+    bar.innerHTML = '';
+    files.forEach(f => {
+        const modified = f.content !== f.savedContent;
+        const div = document.createElement('div');
+        div.className = 'tab' + (f.id === activeFileId ? ' active' : '');
+        div.innerHTML = `<i class="${langIcon(f.name)}"></i><span>${escapeHtmlStr(f.name)}</span>${modified ? '<span class="unsaved-dot"></span>' : ''}<span class="tab-close" data-id="${f.id}"><i class="fas fa-times"></i></span>`;
+        div.addEventListener('click', (e) => {
+            if (e.target.closest('.tab-close')) {
+                closeTab(parseInt(e.target.closest('.tab-close').dataset.id));
+            } else {
+                setActive(f.id);
+            }
+        });
+        bar.appendChild(div);
+    });
+}
+
+function renderFileList() {
+    const list = document.getElementById('fileList');
+    list.innerHTML = '';
+    files.forEach(f => {
+        const modified = f.content !== f.savedContent;
+        const div = document.createElement('div');
+        div.className = 'tree-item' + (f.id === activeFileId ? ' active' : '');
+        div.innerHTML = `<span class="tree-icon"><i class="${langIcon(f.name)}"></i></span><span class="tree-name">${escapeHtmlStr(f.name)}</span>${modified ? '<span class="dot-modified"></span>' : ''}<span class="tree-close" data-id="${f.id}"><i class="fas fa-times"></i></span>`;
+        div.addEventListener('click', (e) => {
+            if (e.target.closest('.tree-close')) {
+                closeTab(parseInt(e.target.closest('.tree-close').dataset.id));
+            } else {
+                setActive(f.id);
+            }
+        });
+        div.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            fctxTargetId = f.id;
+            const menu = document.getElementById('fileCtxMenu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('open');
+        });
+        list.appendChild(div);
+    });
+}
+
+function escapeHtmlStr(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── File Operations ──
+async function newFile() {
+    let name = prompt('File name:', 'untitled.js');
+    if (!name) return;
+    name = name.trim() || 'untitled.js';
+    if (!name.includes('.')) name += '.txt';
+    const f = createFile(name);
+    TA.focus();
+
+    // Prompt to save to disk immediately
+    if (window.showSaveFilePicker) {
+        try {
+            const handle = await window.showSaveFilePicker({ suggestedName: name });
+            const writable = await handle.createWritable();
+            await writable.write('');
+            await writable.close();
+            f.handle = handle;
+            f.name = handle.name;
+            f.savedContent = '';
+            renderTabs();
+            renderFileList();
+            saveState();
+            showToast('Created ' + f.name);
+        } catch(e) { /* user cancelled - file stays in-memory only */ }
+    }
+}
+
+// File context menu
+let fctxTargetId = null;
+
+function closeFileCtxMenu() {
+    document.getElementById('fileCtxMenu').classList.remove('open');
+}
+
+function fctxOpen() {
+    closeFileCtxMenu();
+    if (fctxTargetId) setActive(fctxTargetId);
+}
+
+function fctxClose() {
+    closeFileCtxMenu();
+    if (fctxTargetId) closeTab(fctxTargetId);
+}
+
+function fctxCloseOthers() {
+    closeFileCtxMenu();
+    const keep = fctxTargetId;
+    [...files].forEach(f => { if (f.id !== keep) closeTab(f.id); });
+}
+
+function fctxCloseAll() {
+    closeFileCtxMenu();
+    [...files].forEach(f => closeTab(f.id));
+}
+
+function fctxCopyName() {
+    closeFileCtxMenu();
+    const f = files.find(f => f.id === fctxTargetId);
+    if (f) {
+        navigator.clipboard.writeText(f.name);
+        showToast('Copied: ' + f.name);
+    }
+}
+
+function fctxDuplicate() {
+    closeFileCtxMenu();
+    const f = files.find(f => f.id === fctxTargetId);
+    if (f) {
+        const ext = f.name.includes('.') ? '.' + f.name.split('.').pop() : '';
+        const base = f.name.replace(ext, '');
+        createFile(base + ' (copy)' + ext, f.content);
+    }
+}
+
+function fctxDelete() {
+    closeFileCtxMenu();
+    const f = files.find(f => f.id === fctxTargetId);
+    if (f && confirm('Delete "' + f.name + '"?')) {
+        closeTab(f.id);
+    }
+}
+
+document.addEventListener('click', () => closeFileCtxMenu());
+
+// ── Markdown Preview ──
+let mdPreviewOpen = false;
+
+function updateMdPreviewBtn() {
+    const f = getActiveFile();
+    const btn = document.getElementById('mdPreviewBtn');
+    if (f && (f.name.endsWith('.md') || f.name.endsWith('.markdown') || f.name.endsWith('.mdx'))) {
+        btn.style.display = 'flex';
+    } else {
+        btn.style.display = 'none';
+        if (mdPreviewOpen) closeMdPreview();
+    }
+}
+
+function toggleMdPreview() {
+    if (mdPreviewOpen) {
+        closeMdPreview();
+    } else {
+        openMdPreview();
+    }
+}
+
+function openMdPreview() {
+    const f = getActiveFile();
+    if (!f) return;
+    mdPreviewOpen = true;
+    const panel = document.getElementById('mdPreviewPanel');
+    panel.classList.add('open');
+    document.getElementById('mdPreviewBtn').classList.add('active');
+    renderMdPreview();
+}
+
+function closeMdPreview() {
+    mdPreviewOpen = false;
+    document.getElementById('mdPreviewPanel').classList.remove('open');
+    document.getElementById('mdPreviewBtn').classList.remove('active');
+}
+
+function renderMdPreview() {
+    if (!mdPreviewOpen) return;
+    const f = getActiveFile();
+    if (!f) return;
+    const html = markdownToHtml(f.content || TA.value);
+    document.getElementById('mdPreviewPanel').innerHTML = html;
+}
+
+function markdownToHtml(md) {
+    let html = md;
+
+    // Escape HTML
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Code blocks (``` ... ```)
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+        return '<pre><code class="lang-' + lang + '">' + code.trim() + '</code></pre>';
+    });
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Images
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+
+    // Links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+    // Headings
+    html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+    html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+    html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+    // Blockquotes
+    html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Horizontal rules
+    html = html.replace(/^(---|\*\*\*|___)$/gm, '<hr>');
+
+    // Bold and italic
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+    // Task lists
+    html = html.replace(/^[-*]\s+\[x\]\s+(.+)$/gm, '<li style="list-style:none;"><input type="checkbox" checked disabled> $1</li>');
+    html = html.replace(/^[-*]\s+\[\s\]\s+(.+)$/gm, '<li style="list-style:none;"><input type="checkbox" disabled> $1</li>');
+
+    // Unordered lists
+    html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+    // Ordered lists
+    html = html.replace(/^\d+\.\s+(.+)$/gm, '<oli>$1</oli>');
+    html = html.replace(/((?:<oli>.*<\/oli>\n?)+)/g, function(match) {
+        return '<ol>' + match.replace(/<\/?oli>/g, function(t) { return t.replace('oli', 'li'); }) + '</ol>';
+    });
+
+    // Tables
+    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/gm, function(_, header, sep, body) {
+        const ths = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
+        const rows = body.trim().split('\n').map(row => {
+            const tds = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
+            return '<tr>' + tds + '</tr>';
+        }).join('');
+        return '<table><thead><tr>' + ths + '</tr></thead><tbody>' + rows + '</tbody></table>';
+    });
+
+    // Paragraphs - wrap remaining loose text
+    html = html.replace(/^(?!<[a-z/])((?!^\s*$).+)$/gm, '<p>$1</p>');
+
+    // Clean up empty paragraphs and double breaks
+    html = html.replace(/<p><\/p>/g, '');
+    html = html.replace(/\n{2,}/g, '\n');
+
+    return html;
+}
+
+function showToast(msg) {
+    let toast = document.getElementById('ceToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'ceToast';
+        toast.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:#475569;color:#e2e8f0;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2000);
+}
+
+async function openFile() {
+    if (window.showOpenFilePicker) {
+        try {
+            const [handle] = await window.showOpenFilePicker();
+            const file = await handle.getFile();
+            const content = await file.text();
+            const f = createFile(file.name, content, handle);
+            f.savedContent = content;
+            saveHandleToIDB(f.id, handle);
+            TA.focus();
+        } catch (e) { /* user cancelled */ }
+    } else {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const content = await file.text();
+            createFile(file.name, content);
+            TA.focus();
+        };
+        input.click();
+    }
+}
+
+async function saveFile() {
+    const f = getActiveFile();
+    if (!f) return;
+    if (f.handle) {
+        try {
+            // Request permission if needed (required after page reload)
+            const perm = await f.handle.queryPermission({ mode: 'readwrite' });
+            if (perm !== 'granted') {
+                const req = await f.handle.requestPermission({ mode: 'readwrite' });
+                if (req !== 'granted') throw new Error('Permission denied');
+            }
+            const writable = await f.handle.createWritable();
+            await writable.write(f.content);
+            await writable.close();
+            f.savedContent = f.content;
+            renderTabs();
+            renderFileList();
+            saveState();
+            showToast('Saved to ' + f.name);
+            return;
+        } catch (e) { /* fall through to save as */ }
+    }
+    await saveFileAs();
+}
+
+async function saveFileAs() {
+    const f = getActiveFile();
+    if (!f) return;
+    if (window.showSaveFilePicker) {
+        try {
+            const handle = await window.showSaveFilePicker({ suggestedName: f.name });
+            const writable = await handle.createWritable();
+            await writable.write(f.content);
+            await writable.close();
+            f.handle = handle;
+            f.name = handle.name;
+            f.lang = detectLang(f.name);
+            f.savedContent = f.content;
+            saveHandleToIDB(f.id, handle);
+            renderTabs();
+            renderFileList();
+            updateHighlight();
+                    document.getElementById('statusLang').textContent = langLabel(f.lang);
+            saveState();
+        } catch (e) { /* cancelled */ }
+    } else {
+        const blob = new Blob([f.content], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = f.name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        f.savedContent = f.content;
+        renderTabs();
+        renderFileList();
+        saveState();
+    }
+}
+
+// ── IndexedDB for handles ──
+function openIDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('CodeEditorHandles', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('handles');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function saveHandleToIDB(id, handle) {
+    try {
+        const db = await openIDB();
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(handle, 'file_' + id);
+    } catch (e) {}
+}
+
+async function getHandleFromIDB(id) {
+    try {
+        const db = await openIDB();
+        const tx = db.transaction('handles', 'readonly');
+        const req = tx.objectStore('handles').get('file_' + id);
+        return new Promise(r => {
+            req.onsuccess = () => r(req.result || null);
+            req.onerror = () => r(null);
+        });
+    } catch { return null; }
+}
+
+// ── Textarea Events ──
+let inputDebounce = null;
+TA.addEventListener('input', () => {
+    const f = getActiveFile();
+    if (!f) return;
+    f.content = TA.value;
+    clearTimeout(inputDebounce);
+    inputDebounce = setTimeout(() => {
+        updateHighlight();
+        updateLineNumbers();
+        updateMinimap();
+        updateStatusBar();
+        updateCurrentLineHighlight();
+        saveState();
+        if (mdPreviewOpen) renderMdPreview();
+    }, 50);
+});
+
+TA.addEventListener('scroll', syncScroll);
+
+TA.addEventListener('keyup', () => {
+    updateStatusBar();
+    updateCurrentLineHighlight();
+    updateLineNumbers();
+});
+
+TA.addEventListener('click', () => {
+    updateStatusBar();
+    updateCurrentLineHighlight();
+    updateLineNumbers();
+});
+
+TA.addEventListener('mouseup', () => {
+    updateStatusBar();
+});
+
+// ── Tab Key (4 spaces) ──
+TA.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = TA.selectionStart;
+        const end = TA.selectionEnd;
+        const val = TA.value;
+        if (e.shiftKey) {
+            // Outdent
+            const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+            const line = val.substring(lineStart, end);
+            if (line.startsWith('    ')) {
+                TA.value = val.substring(0, lineStart) + line.substring(4) + val.substring(end);
+                TA.selectionStart = TA.selectionEnd = start - 4;
+            }
+        } else {
+            TA.value = val.substring(0, start) + '    ' + val.substring(end);
+            TA.selectionStart = TA.selectionEnd = start + 4;
+        }
+        TA.dispatchEvent(new Event('input'));
+    }
+});
+
+// ── Auto-indent on Enter ──
+TA.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        const start = TA.selectionStart;
+        const val = TA.value;
+        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+        const line = val.substring(lineStart, start);
+        const indent = line.match(/^(\s*)/)[1];
+        let extra = '';
+        const lastChar = line.trim().slice(-1);
+        if (['{', '(', '[', ':'].includes(lastChar)) extra = '    ';
+        const insert = '\n' + indent + extra;
+        TA.value = val.substring(0, start) + insert + val.substring(TA.selectionEnd);
+        TA.selectionStart = TA.selectionEnd = start + insert.length;
+        TA.dispatchEvent(new Event('input'));
+    }
+});
+
+// ── Auto-closing brackets ──
+TA.addEventListener('keydown', (e) => {
+    const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
+    if (pairs[e.key] && !e.ctrlKey && !e.metaKey) {
+        const start = TA.selectionStart;
+        const end = TA.selectionEnd;
+        const val = TA.value;
+        // Don't auto-close quotes if preceded by a letter (likely part of a word)
+        if ((e.key === '"' || e.key === "'") && start > 0 && /[a-zA-Z0-9]/.test(val[start-1])) return;
+        e.preventDefault();
+        if (start !== end) {
+            // Wrap selection
+            TA.value = val.substring(0, start) + e.key + val.substring(start, end) + pairs[e.key] + val.substring(end);
+            TA.selectionStart = start + 1;
+            TA.selectionEnd = end + 1;
+        } else {
+            TA.value = val.substring(0, start) + e.key + pairs[e.key] + val.substring(end);
+            TA.selectionStart = TA.selectionEnd = start + 1;
+        }
+        TA.dispatchEvent(new Event('input'));
+    }
+    // Skip closing bracket if next char is the same
+    const closers = [')', ']', '}', '"', "'"];
+    if (closers.includes(e.key)) {
+        const start = TA.selectionStart;
+        if (TA.value[start] === e.key) {
+            e.preventDefault();
+            TA.selectionStart = TA.selectionEnd = start + 1;
+        }
+    }
+    // Backspace deletes pair
+    if (e.key === 'Backspace') {
+        const start = TA.selectionStart;
+        const val = TA.value;
+        const before = val[start - 1];
+        const after = val[start];
+        const pairsMap = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
+        if (pairsMap[before] === after) {
+            e.preventDefault();
+            TA.value = val.substring(0, start - 1) + val.substring(start + 1);
+            TA.selectionStart = TA.selectionEnd = start - 1;
+            TA.dispatchEvent(new Event('input'));
+        }
+    }
+});
+
+// ── Keyboard Shortcuts ──
+document.addEventListener('keydown', (e) => {
+    const mod = e.metaKey || e.ctrlKey;
+
+    if (mod && e.key === 'e') {
+        e.preventDefault(); newFile();
+    } else if (mod && e.key === 'u') {
+        e.preventDefault(); openFile();
+    } else if (mod && e.shiftKey && e.key === 'S') {
+        e.preventDefault(); saveFileAs();
+    } else if (mod && e.key === 's') {
+        e.preventDefault(); saveFile();
+    } else if (mod && e.key === 'f') {
+        e.preventDefault(); showFind();
+    } else if (mod && e.key === 'h') {
+        e.preventDefault(); showReplace();
+    } else if (mod && e.key === 'g') {
+        e.preventDefault(); showGotoLine();
+    } else if (mod && e.key === 'd') {
+        e.preventDefault(); duplicateLine();
+    } else if (mod && e.key === '/') {
+        e.preventDefault(); toggleComment();
+    } else if (mod && e.key === ']') {
+        e.preventDefault(); indentSelection();
+    } else if (mod && e.key === '[') {
+        e.preventDefault(); outdentSelection();
+    } else if (mod && e.key === 'b') {
+        e.preventDefault(); toggleSidebar();
+    } else if (mod && (e.key === '=' || e.key === '+')) {
+        e.preventDefault(); changeFontSize(1);
+    } else if (mod && e.key === '-') {
+        e.preventDefault(); changeFontSize(-1);
+    } else if (e.key === 'Escape') {
+        closeFind();
+        closeGoto();
+        closeShortcuts();
+        closeRunPanel();
+        closeCtxMenu();
+    }
+});
+
+// ── Find & Replace ──
+function showFind() {
+    document.getElementById('findPanel').classList.add('show');
+    document.getElementById('replaceRow').style.display = 'none';
+    document.getElementById('findInput').focus();
+}
+
+function showReplace() {
+    document.getElementById('findPanel').classList.add('show');
+    document.getElementById('replaceRow').style.display = 'flex';
+    document.getElementById('findInput').focus();
+}
+
+function closeFind() {
+    document.getElementById('findPanel').classList.remove('show');
+}
+
+document.getElementById('findInput').addEventListener('input', doFind);
+
+function doFind() {
+    const query = document.getElementById('findInput').value;
+    if (!query) {
+        findMatches = [];
+        findIdx = -1;
+        document.getElementById('findCount').textContent = '0 results';
+        return;
+    }
+    const text = TA.value;
+    findMatches = [];
+    let idx = text.indexOf(query);
+    while (idx !== -1) {
+        findMatches.push(idx);
+        idx = text.indexOf(query, idx + 1);
+    }
+    findIdx = findMatches.length > 0 ? 0 : -1;
+    document.getElementById('findCount').textContent = `${findMatches.length} result${findMatches.length !== 1 ? 's' : ''}`;
+    if (findIdx >= 0) selectMatch();
+}
+
+function findNext() {
+    if (findMatches.length === 0) return;
+    findIdx = (findIdx + 1) % findMatches.length;
+    selectMatch();
+}
+
+function findPrev() {
+    if (findMatches.length === 0) return;
+    findIdx = (findIdx - 1 + findMatches.length) % findMatches.length;
+    selectMatch();
+}
+
+function selectMatch() {
+    const query = document.getElementById('findInput').value;
+    TA.focus();
+    TA.selectionStart = findMatches[findIdx];
+    TA.selectionEnd = findMatches[findIdx] + query.length;
+    // Scroll into view
+    const lineNum = TA.value.substring(0, findMatches[findIdx]).split('\n').length;
+    const lineHeight = parseFloat(getComputedStyle(TA).lineHeight);
+    TA.scrollTop = (lineNum - 5) * lineHeight;
+    document.getElementById('findCount').textContent = `${findIdx + 1}/${findMatches.length}`;
+}
+
+function replaceOne() {
+    if (findIdx < 0) return;
+    const query = document.getElementById('findInput').value;
+    const repl = document.getElementById('replaceInput').value;
+    const val = TA.value;
+    const pos = findMatches[findIdx];
+    TA.value = val.substring(0, pos) + repl + val.substring(pos + query.length);
+    TA.dispatchEvent(new Event('input'));
+    doFind();
+}
+
+function replaceAll() {
+    const query = document.getElementById('findInput').value;
+    const repl = document.getElementById('replaceInput').value;
+    if (!query) return;
+    TA.value = TA.value.split(query).join(repl);
+    TA.dispatchEvent(new Event('input'));
+    doFind();
+}
+
+document.getElementById('findInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); findNext(); }
+    if (e.key === 'Escape') closeFind();
+});
+
+// ── Go to Line ──
+function showGotoLine() {
+    document.getElementById('gotoDialog').classList.add('show');
+    const inp = document.getElementById('gotoInput');
+    inp.value = getCurrentLine();
+    inp.focus();
+    inp.select();
+}
+
+function closeGoto() {
+    document.getElementById('gotoDialog').classList.remove('show');
+}
+
+document.getElementById('gotoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const line = parseInt(document.getElementById('gotoInput').value);
+        if (isNaN(line)) return;
+        gotoLine(line);
+        closeGoto();
+        TA.focus();
+    }
+    if (e.key === 'Escape') closeGoto();
+});
+
+function gotoLine(lineNum) {
+    const lines = TA.value.split('\n');
+    lineNum = Math.max(1, Math.min(lineNum, lines.length));
+    let pos = 0;
+    for (let i = 0; i < lineNum - 1; i++) pos += lines[i].length + 1;
+    TA.selectionStart = TA.selectionEnd = pos;
+    const lineHeight = parseFloat(getComputedStyle(TA).lineHeight);
+    TA.scrollTop = (lineNum - 5) * lineHeight;
+    updateStatusBar();
+    updateCurrentLineHighlight();
+    updateLineNumbers();
+}
+
+// ── Line Operations ──
+function duplicateLine() {
+    const start = TA.selectionStart;
+    const val = TA.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = val.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = val.length;
+    const line = val.substring(lineStart, lineEnd);
+    TA.value = val.substring(0, lineEnd) + '\n' + line + val.substring(lineEnd);
+    TA.selectionStart = TA.selectionEnd = start + line.length + 1;
+    TA.dispatchEvent(new Event('input'));
+}
+
+function toggleComment() {
+    const f = getActiveFile();
+    if (!f) return;
+    const start = TA.selectionStart;
+    const val = TA.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = val.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = val.length;
+    const line = val.substring(lineStart, lineEnd);
+    const commentPrefixes = { javascript: '//', python: '#', css: '//', html: '<!--', json: '//', markdown: '', plain: '//' };
+    const prefix = commentPrefixes[f.lang] || '//';
+    if (!prefix) return;
+    let newLine;
+    if (f.lang === 'html') {
+        if (line.trim().startsWith('<!--') && line.trim().endsWith('-->')) {
+            newLine = line.replace(/<!--\s?/, '').replace(/\s?-->/, '');
+        } else {
+            newLine = '<!-- ' + line + ' -->';
+        }
+    } else {
+        if (line.trim().startsWith(prefix)) {
+            const idx = line.indexOf(prefix);
+            newLine = line.substring(0, idx) + line.substring(idx + prefix.length + (line[idx + prefix.length] === ' ' ? 1 : 0));
+        } else {
+            const indent = line.match(/^(\s*)/)[1];
+            newLine = indent + prefix + ' ' + line.trimStart();
+        }
+    }
+    TA.value = val.substring(0, lineStart) + newLine + val.substring(lineEnd);
+    TA.selectionStart = TA.selectionEnd = lineStart + newLine.length;
+    TA.dispatchEvent(new Event('input'));
+}
+
+function indentSelection() {
+    const start = TA.selectionStart;
+    const end = TA.selectionEnd;
+    const val = TA.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = val.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = val.length;
+    const block = val.substring(lineStart, lineEnd);
+    const indented = block.split('\n').map(l => '    ' + l).join('\n');
+    TA.value = val.substring(0, lineStart) + indented + val.substring(lineEnd);
+    TA.selectionStart = start + 4;
+    TA.selectionEnd = end + (indented.length - block.length);
+    TA.dispatchEvent(new Event('input'));
+}
+
+function outdentSelection() {
+    const start = TA.selectionStart;
+    const end = TA.selectionEnd;
+    const val = TA.value;
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = val.indexOf('\n', end);
+    if (lineEnd === -1) lineEnd = val.length;
+    const block = val.substring(lineStart, lineEnd);
+    const outdented = block.split('\n').map(l => l.startsWith('    ') ? l.substring(4) : l.replace(/^\t/, '')).join('\n');
+    const diff = block.length - outdented.length;
+    TA.value = val.substring(0, lineStart) + outdented + val.substring(lineEnd);
+    TA.selectionStart = Math.max(lineStart, start - 4);
+    TA.selectionEnd = end - diff;
+    TA.dispatchEvent(new Event('input'));
+}
+
+// ── Toggle Functions ──
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    sb.classList.toggle('hidden');
+    localStorage.setItem('ce_sidebarHidden', sb.classList.contains('hidden'));
+}
+
+function toggleWordWrap() {
+    wordWrap = !wordWrap;
+    edWrap.classList.toggle('word-wrap', wordWrap);
+    document.getElementById('statusWrap').textContent = wordWrap ? 'Wrap' : 'No Wrap';
+    localStorage.setItem('ce_wordWrap', wordWrap);
+}
+
+function changeFontSize(delta) {
+    fontSize = Math.max(10, Math.min(32, fontSize + delta));
+    TA.style.fontSize = fontSize + 'px';
+    HLPre.style.fontSize = fontSize + 'px';
+    LN.style.fontSize = fontSize + 'px';
+    localStorage.setItem('ce_fontSize', fontSize);
+    updateLineNumbers();
+    updateCurrentLineHighlight();
+}
+
+function toggleShortcuts() {
+    document.getElementById('shortcutsOverlay').classList.toggle('show');
+}
+
+function closeShortcuts() {
+    document.getElementById('shortcutsOverlay').classList.remove('show');
+}
+
+// ── Minimap Click ──
+MMap.addEventListener('click', (e) => {
+    const rect = MMap.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const ratio = y / rect.height;
+    TA.scrollTop = ratio * TA.scrollHeight - TA.clientHeight / 2;
+    syncScroll();
+});
+
+// ── Resizable Sidebar ──
+{
+    const handle = document.getElementById('sidebarResize');
+    const sidebar = document.getElementById('sidebar');
+    let dragging = false;
+    handle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        e.preventDefault();
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const w = Math.max(150, Math.min(500, e.clientX));
+        sidebar.style.width = w + 'px';
+        localStorage.setItem('ce_sidebarWidth', w);
+    });
+    document.addEventListener('mouseup', () => {
+        if (dragging) {
+            dragging = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    });
+}
+
+// ── localStorage Persistence ──
+function saveState() {
+    const state = {
+        files: files.map(f => ({
+            id: f.id, name: f.name, content: f.content,
+            savedContent: f.savedContent, lang: f.lang
+        })),
+        activeFileId,
+        nextId,
+        commits
+    };
+    try {
+        localStorage.setItem('ce_state', JSON.stringify(state));
+    } catch(e) {}
+}
+
+async function loadState() {
+    try {
+        const raw = localStorage.getItem('ce_state');
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.files) {
+            files = [];
+            for (const f of state.files) {
+                const handle = await getHandleFromIDB(f.id);
+                files.push({ ...f, handle });
+            }
+            nextId = state.nextId || (files.length + 1);
+            commits = state.commits || [];
+            if (state.activeFileId && files.find(f => f.id === state.activeFileId)) {
+                setActive(state.activeFileId);
+            } else if (files.length > 0) {
+                setActive(files[0].id);
+            }
+            renderTabs();
+            renderFileList();
+        }
+    } catch(e) {}
+
+    // Restore UI preferences
+    const savedFontSize = localStorage.getItem('ce_fontSize');
+    if (savedFontSize) { fontSize = parseInt(savedFontSize); changeFontSize(0); }
+    const savedWrap = localStorage.getItem('ce_wordWrap');
+    if (savedWrap === 'true') toggleWordWrap();
+    const savedSW = localStorage.getItem('ce_sidebarWidth');
+    if (savedSW) document.getElementById('sidebar').style.width = savedSW + 'px';
+    if (localStorage.getItem('ce_sidebarHidden') === 'true') document.getElementById('sidebar').classList.add('hidden');
+}
+
+// ── Run Panel ──
+function toggleRunPanel() {
+    const panel = document.getElementById('runPanel');
+    const overlay = document.getElementById('runOverlay');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    overlay.classList.toggle('open', !isOpen);
+}
+
+function closeRunPanel() {
+    document.getElementById('runPanel').classList.remove('open');
+    document.getElementById('runOverlay').classList.remove('open');
+}
+
+// ── Context Menu ──
+const ctxMenu = document.getElementById('editorCtxMenu');
+
+TA.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    ctxMenu.style.left = e.clientX + 'px';
+    ctxMenu.style.top = e.clientY + 'px';
+    ctxMenu.classList.add('open');
+    // Adjust if menu goes off screen
+    const rect = ctxMenu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) ctxMenu.style.left = (window.innerWidth - rect.width - 4) + 'px';
+    if (rect.bottom > window.innerHeight) ctxMenu.style.top = (window.innerHeight - rect.height - 4) + 'px';
+});
+
+document.addEventListener('click', (e) => {
+    if (!ctxMenu.contains(e.target)) closeCtxMenu();
+});
+
+function closeCtxMenu() {
+    ctxMenu.classList.remove('open');
+}
+
+function ctxCut() {
+    document.execCommand('cut');
+    closeCtxMenu();
+    TA.focus();
+}
+
+function ctxCopy() {
+    document.execCommand('copy');
+    closeCtxMenu();
+    TA.focus();
+}
+
+async function ctxPaste() {
+    closeCtxMenu();
+    TA.focus();
+    try {
+        const text = await navigator.clipboard.readText();
+        const start = TA.selectionStart;
+        const end = TA.selectionEnd;
+        TA.value = TA.value.substring(0, start) + text + TA.value.substring(end);
+        TA.selectionStart = TA.selectionEnd = start + text.length;
+        TA.dispatchEvent(new Event('input'));
+    } catch (e) {
+        document.execCommand('paste');
+    }
+}
+
+function ctxSelectAll() {
+    closeCtxMenu();
+    TA.focus();
+    TA.select();
+}
+
+// ── Auto-save interval ──
+setInterval(saveState, 30000);
+
+// ── Init ──
+(async () => {
+await loadState();
+if (files.length === 0) {
+    welcomeMsg.style.display = '';
+    TA.style.display = 'none';
+    LN.style.display = 'none';
+    HLPre.style.display = 'none';
+    MMap.style.display = 'none';
+} else {
+    welcomeMsg.style.display = 'none';
+}
+updateCurrentLineHighlight();
+})();
+</script>
+</body>
+</html>
