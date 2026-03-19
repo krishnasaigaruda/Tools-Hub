@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roman Numeral Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #fbbf24;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex; align-items: center; padding: 14px 24px;
+            background: var(--panel); border-bottom: 1px solid var(--border); gap: 16px;
+        }
+        .back-btn {
+            background: none; border: 1px solid #475569; color: var(--muted);
+            padding: 8px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.2s; font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+
+        .main-wrap { flex: 1; display: flex; justify-content: center; padding: 40px 24px; align-items: flex-start; }
+        .converter {
+            width: 720px; max-width: 100%; background: var(--panel); border-radius: 20px; padding: 28px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(217,119,6,0.1);
+        }
+        .conv-title { font-size: 1.1rem; font-weight: 700; color: var(--accent2); margin-bottom: 6px; }
+        .conv-desc { font-size: 0.78rem; color: var(--dim); margin-bottom: 24px; }
+
+        .conversion-area {
+            display: flex; gap: 16px; align-items: stretch; margin-bottom: 24px;
+        }
+
+        .input-section {
+            flex: 1;
+            padding: 20px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-section:focus-within {
+            border-color: var(--accent);
+        }
+        .input-section h3 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .input-section h3 i { color: var(--accent); font-size: 0.85rem; }
+
+        .input-section input {
+            background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px 16px; color: var(--text); font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem; font-weight: 600; outline: none; transition: border-color 0.2s;
+            width: 100%; text-align: center;
+        }
+        .input-section input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,6,0.1); }
+        .input-section input::placeholder { color: #475569; font-size: 0.9rem; }
+
+        .result-display {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(217,119,6,0.06);
+            border-radius: 8px;
+            text-align: center;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-display .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent2);
+        }
+        .result-display .placeholder-text {
+            font-size: 0.78rem;
+            color: var(--dim);
+        }
+
+        .error-msg {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--error);
+            text-align: center;
+            min-height: 18px;
+        }
+
+        .swap-col {
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .swap-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--accent-dim); border: 1px solid var(--border);
+            color: var(--accent); font-size: 1.1rem; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .swap-btn:hover {
+            background: var(--accent); color: var(--bg);
+            box-shadow: 0 0 16px rgba(217,119,6,0.3);
+        }
+
+        .ref-section {
+            background: var(--bg); border-radius: 12px; border: 1px solid var(--border);
+            padding: 20px;
+        }
+        .ref-title {
+            font-size: 0.72rem; font-weight: 700; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ref-title i { color: var(--accent); }
+        .ref-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+        }
+        .ref-item {
+            text-align: center; padding: 12px 6px;
+            background: var(--panel); border-radius: 10px;
+            border: 1px solid var(--border); transition: border-color 0.2s;
+        }
+        .ref-item:hover { border-color: var(--accent); }
+        .ref-item .roman {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem; font-weight: 700; color: var(--accent2);
+        }
+        .ref-item .decimal {
+            font-size: 0.75rem; color: var(--dim); margin-top: 4px;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+            .conversion-area { flex-direction: column; }
+            .swap-col { transform: rotate(90deg); }
+            .ref-grid { grid-template-columns: repeat(4, 1fr); }
+            .converter { padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-landmark"></i> Roman Numeral Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="converter">
+            <div class="conv-title">Roman Numeral Converter</div>
+            <div class="conv-desc">Convert between decimal numbers (1-3999) and Roman numerals in real time.</div>
+
+            <div class="conversion-area">
+                <div class="input-section">
+                    <h3><i class="fas fa-hashtag"></i> Decimal Number</h3>
+                    <input type="text" id="decimalInput" placeholder="e.g. 2024" inputmode="numeric" autocomplete="off">
+                    <div class="result-display" id="romanResult">
+                        <span class="placeholder-text">Roman numeral will appear here</span>
+                    </div>
+                    <div class="error-msg" id="decimalError"></div>
+                </div>
+
+                <div class="swap-col">
+                    <button class="swap-btn" onclick="swapValues()" title="Swap values">
+                        <i class="fas fa-right-left"></i>
+                    </button>
+                </div>
+
+                <div class="input-section">
+                    <h3><i class="fas fa-font"></i> Roman Numeral</h3>
+                    <input type="text" id="romanInput" placeholder="e.g. MMXXIV" autocomplete="off">
+                    <div class="result-display" id="decimalResult">
+                        <span class="placeholder-text">Decimal number will appear here</span>
+                    </div>
+                    <div class="error-msg" id="romanError"></div>
+                </div>
+            </div>
+
+            <div class="ref-section">
+                <div class="ref-title"><i class="fas fa-table"></i> Reference Table</div>
+                <div class="ref-grid">
+                    <div class="ref-item"><div class="roman">I</div><div class="decimal">1</div></div>
+                    <div class="ref-item"><div class="roman">V</div><div class="decimal">5</div></div>
+                    <div class="ref-item"><div class="roman">X</div><div class="decimal">10</div></div>
+                    <div class="ref-item"><div class="roman">L</div><div class="decimal">50</div></div>
+                    <div class="ref-item"><div class="roman">C</div><div class="decimal">100</div></div>
+                    <div class="ref-item"><div class="roman">D</div><div class="decimal">500</div></div>
+                    <div class="ref-item"><div class="roman">M</div><div class="decimal">1000</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const decimalInput = document.getElementById('decimalInput');
+        const romanInput = document.getElementById('romanInput');
+        const romanResult = document.getElementById('romanResult');
+        const decimalResult = document.getElementById('decimalResult');
+        const decimalError = document.getElementById('decimalError');
+        const romanError = document.getElementById('romanError');
+
+        const romanMap = [
+            [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+            [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+            [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+        ];
+
+        const romanValues = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+
+        function decimalToRoman(num) {
+            let result = '';
+            for (const [value, symbol] of romanMap) {
+                while (num >= value) {
+                    result += symbol;
+                    num -= value;
+                }
+            }
+            return result;
+        }
+
+        function romanToDecimal(roman) {
+            let result = 0;
+            for (let i = 0; i < roman.length; i++) {
+                const current = romanValues[roman[i]];
+                const next = romanValues[roman[i + 1]];
+                if (next && current < next) {
+                    result -= current;
+                } else {
+                    result += current;
+                }
+            }
+            return result;
+        }
+
+        function isValidRoman(str) {
+            if (!str) return false;
+            return /^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$/.test(str);
+        }
+
+        function setResult(el, value) {
+            el.innerHTML = `<span class="value">${value}</span>`;
+            el.style.animation = 'none';
+            el.offsetHeight;
+            el.style.animation = 'slideIn 0.3s ease';
+        }
+
+        function setPlaceholder(el, text) {
+            el.innerHTML = `<span class="placeholder-text">${text}</span>`;
+        }
+
+        let isUpdating = false;
+
+        decimalInput.addEventListener('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+            const val = this.value.trim();
+            decimalError.textContent = '';
+            romanInput.value = '';
+            setPlaceholder(decimalResult, 'Decimal number will appear here');
+
+            if (val === '') {
+                setPlaceholder(romanResult, 'Roman numeral will appear here');
+                isUpdating = false;
+                return;
+            }
+
+            const num = parseInt(val, 10);
+            if (isNaN(num) || val !== String(num)) {
+                decimalError.textContent = 'Please enter a valid whole number.';
+                setPlaceholder(romanResult, 'Roman numeral will appear here');
+            } else if (num < 1 || num > 3999) {
+                decimalError.textContent = 'Number must be between 1 and 3999.';
+                setPlaceholder(romanResult, 'Roman numeral will appear here');
+            } else {
+                setResult(romanResult, decimalToRoman(num));
+            }
+            isUpdating = false;
+        });
+
+        romanInput.addEventListener('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+            const val = this.value.trim().toUpperCase();
+            this.value = val;
+            romanError.textContent = '';
+            decimalInput.value = '';
+            setPlaceholder(romanResult, 'Roman numeral will appear here');
+
+            if (val === '') {
+                setPlaceholder(decimalResult, 'Decimal number will appear here');
+                isUpdating = false;
+                return;
+            }
+
+            if (!/^[IVXLCDM]+$/.test(val)) {
+                romanError.textContent = 'Only characters I, V, X, L, C, D, M are allowed.';
+                setPlaceholder(decimalResult, 'Decimal number will appear here');
+            } else if (!isValidRoman(val)) {
+                romanError.textContent = 'Invalid Roman numeral format.';
+                setPlaceholder(decimalResult, 'Decimal number will appear here');
+            } else {
+                setResult(decimalResult, romanToDecimal(val));
+            }
+            isUpdating = false;
+        });
+
+        function swapValues() {
+            const decVal = decimalInput.value.trim();
+            const romVal = romanInput.value.trim();
+
+            if (decVal) {
+                const num = parseInt(decVal, 10);
+                if (!isNaN(num) && num >= 1 && num <= 3999) {
+                    const roman = decimalToRoman(num);
+                    decimalInput.value = '';
+                    romanInput.value = roman;
+                    romanInput.dispatchEvent(new Event('input'));
+                    return;
+                }
+            }
+
+            if (romVal && isValidRoman(romVal)) {
+                const num = romanToDecimal(romVal);
+                romanInput.value = '';
+                decimalInput.value = num;
+                decimalInput.dispatchEvent(new Event('input'));
+                return;
+            }
+        }
+    </script>
+</body>
+</html>

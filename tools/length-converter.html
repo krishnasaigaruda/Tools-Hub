@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Length Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #fbbf24;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 24px;
+            align-items: flex-start;
+        }
+
+        .card {
+            width: 580px;
+            max-width: 100%;
+            background: var(--panel);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(217,119,6,0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent2);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title i { font-size: 1rem; color: var(--accent); }
+
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .value-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .value-input:focus { border-color: var(--accent); }
+        .value-input::placeholder { color: var(--dim); }
+
+        .selectors {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unit-select {
+            flex: 1;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+            transition: border-color 0.2s;
+        }
+        .unit-select:focus { border-color: var(--accent); }
+        .unit-select option { background: var(--panel); color: var(--text); }
+
+        .swap-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent2);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: #0f172a;
+            transform: rotate(180deg);
+        }
+
+        .result-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .result-label {
+            font-size: 0.78rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+        .result-unit {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .grid-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .conversions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .conv-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.15s;
+        }
+        .conv-item:hover { border-color: var(--accent); }
+        .conv-item.active {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .conv-unit {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .conv-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            .card { padding: 20px; }
+            .result-value { font-size: 1.5rem; }
+            .conversions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-ruler-combined"></i> Length Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-arrows-left-right"></i> Convert Length Units
+            </div>
+
+            <div class="input-row">
+                <input type="number" class="value-input" id="valueInput" placeholder="Enter value..." value="1">
+                <div class="selectors">
+                    <select class="unit-select" id="fromUnit"></select>
+                    <button class="swap-btn" id="swapBtn" title="Swap units">
+                        <i class="fas fa-right-left"></i>
+                    </button>
+                    <select class="unit-select" id="toUnit"></select>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Result</div>
+                <div class="result-value" id="resultValue">0</div>
+                <div class="result-unit" id="resultUnit"></div>
+            </div>
+
+            <div class="grid-title">All Conversions</div>
+            <div class="conversions-grid" id="conversionsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const units = [
+            { name: 'Meter', abbr: 'm', factor: 1 },
+            { name: 'Kilometer', abbr: 'km', factor: 1000 },
+            { name: 'Centimeter', abbr: 'cm', factor: 0.01 },
+            { name: 'Millimeter', abbr: 'mm', factor: 0.001 },
+            { name: 'Mile', abbr: 'mi', factor: 1609.344 },
+            { name: 'Yard', abbr: 'yd', factor: 0.9144 },
+            { name: 'Foot', abbr: 'ft', factor: 0.3048 },
+            { name: 'Inch', abbr: 'in', factor: 0.0254 },
+            { name: 'Nautical Mile', abbr: 'nmi', factor: 1852 },
+            { name: 'Micrometer', abbr: '\u00B5m', factor: 0.000001 },
+            { name: 'Light Year', abbr: 'ly', factor: 9.461e15 },
+            { name: 'Parsec', abbr: 'pc', factor: 3.086e16 },
+            { name: 'Fathom', abbr: 'ftm', factor: 1.8288 },
+            { name: 'Furlong', abbr: 'fur', factor: 201.168 },
+            { name: 'League', abbr: 'lea', factor: 4828.032 },
+            { name: 'Hand', abbr: 'hh', factor: 0.1016 },
+            { name: 'Chain', abbr: 'ch', factor: 20.1168 },
+            { name: 'Angstrom', abbr: '\u00C5', factor: 1e-10 },
+            { name: 'Nanometer', abbr: 'nm', factor: 1e-9 },
+            { name: 'Picometer', abbr: 'pm', factor: 1e-12 },
+            { name: 'Decimeter', abbr: 'dm', factor: 0.1 },
+            { name: 'Decameter', abbr: 'dam', factor: 10 },
+            { name: 'Hectometer', abbr: 'hm', factor: 100 },
+            { name: 'Megameter', abbr: 'Mm', factor: 1e6 },
+            { name: 'Gigameter', abbr: 'Gm', factor: 1e9 },
+            { name: 'Rod', abbr: 'rd', factor: 5.0292 },
+            { name: 'Cable', abbr: 'cbl', factor: 185.2 },
+            { name: 'Cubit', abbr: 'cu', factor: 0.4572 },
+            { name: 'Span', abbr: 'span', factor: 0.2286 },
+            { name: 'Smoot', abbr: 'smoot', factor: 1.7018 },
+            { name: 'Mil', abbr: 'mil', factor: 0.0000254 },
+            { name: 'Astronomical Unit', abbr: 'au', factor: 1.496e11 },
+            { name: 'Link', abbr: 'li', factor: 0.201168 }
+        ];
+
+        const fromUnit = document.getElementById('fromUnit');
+        const toUnit = document.getElementById('toUnit');
+        const valueInput = document.getElementById('valueInput');
+        const resultValue = document.getElementById('resultValue');
+        const resultUnit = document.getElementById('resultUnit');
+        const conversionsGrid = document.getElementById('conversionsGrid');
+        const swapBtn = document.getElementById('swapBtn');
+
+        // Populate dropdowns
+        units.forEach((u, i) => {
+            const optFrom = new Option(`${u.name} (${u.abbr})`, i);
+            const optTo = new Option(`${u.name} (${u.abbr})`, i);
+            fromUnit.add(optFrom);
+            toUnit.add(optTo);
+        });
+        toUnit.value = 1; // default: Meter -> Kilometer
+
+        function formatNumber(n) {
+            if (n === 0) return '0';
+            const abs = Math.abs(n);
+            if (abs >= 1e12 || (abs < 1e-8 && abs > 0)) return n.toExponential(6);
+            if (abs < 0.001) return n.toFixed(10).replace(/0+$/, '').replace(/\.$/, '');
+            if (abs < 1) return n.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
+            if (abs < 1000) return parseFloat(n.toFixed(6)).toString();
+            return n.toLocaleString('en-US', { maximumFractionDigits: 6 });
+        }
+
+        function convert() {
+            const val = parseFloat(valueInput.value);
+            if (isNaN(val)) {
+                resultValue.textContent = '—';
+                resultUnit.textContent = '';
+                conversionsGrid.innerHTML = '';
+                return;
+            }
+
+            const from = units[fromUnit.value];
+            const to = units[toUnit.value];
+            const meters = val * from.factor;
+            const result = meters / to.factor;
+
+            resultValue.textContent = formatNumber(result);
+            resultUnit.textContent = `${from.abbr} \u2192 ${to.abbr}`;
+
+            // Build all conversions grid
+            let html = '';
+            units.forEach((u, i) => {
+                const converted = meters / u.factor;
+                const isActive = i === parseInt(toUnit.value);
+                html += `<div class="conv-item${isActive ? ' active' : ''}">
+                    <span class="conv-unit">${u.name}</span>
+                    <span class="conv-val">${formatNumber(converted)} ${u.abbr}</span>
+                </div>`;
+            });
+            conversionsGrid.innerHTML = html;
+        }
+
+        valueInput.addEventListener('input', convert);
+        fromUnit.addEventListener('change', convert);
+        toUnit.addEventListener('change', convert);
+
+        swapBtn.addEventListener('click', () => {
+            const temp = fromUnit.value;
+            fromUnit.value = toUnit.value;
+            toUnit.value = temp;
+            convert();
+        });
+
+        // Initial conversion
+        convert();
+    </script>
+</body>
+</html>

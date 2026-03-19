@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #f59e0b;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+        .header i { color: var(--accent2); font-size: 1.2rem; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 24px;
+            align-items: flex-start;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+        .input-group input::placeholder {
+            color: var(--dim);
+        }
+
+        .selectors {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .selectors select {
+            flex: 1;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .selectors select:focus {
+            border-color: var(--accent);
+        }
+
+        .swap-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent2);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: rotate(180deg);
+        }
+
+        .result-box {
+            background: var(--accent-dim);
+            border: 1px solid rgba(217,119,6,0.25);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .grid-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        .all-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .grid-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: border-color 0.15s;
+        }
+        .grid-item.active {
+            border-color: var(--accent);
+        }
+        .grid-item .unit-name {
+            font-size: 0.72rem;
+            color: var(--dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .grid-item .unit-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        @media (max-width: 560px) {
+            .card { padding: 20px; }
+            .result-value { font-size: 1.6rem; }
+            .all-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <i class="fas fa-gauge-high"></i>
+        <h1>Speed Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <div class="input-group">
+                <label>Value</label>
+                <input type="number" id="valueInput" placeholder="Enter speed value" value="1">
+            </div>
+
+            <div class="selectors">
+                <select id="fromUnit"></select>
+                <button class="swap-btn" id="swapBtn" title="Swap units">
+                    <i class="fas fa-right-left"></i>
+                </button>
+                <select id="toUnit"></select>
+            </div>
+
+            <div class="result-box">
+                <div class="result-value" id="resultValue">0</div>
+                <div class="result-label" id="resultLabel">Converted value</div>
+            </div>
+
+            <div class="grid-title">All Conversions</div>
+            <div class="all-grid" id="allGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const units = [
+            { key: 'ms',    name: 'Meter/sec',      abbr: 'm/s',    factor: 1 },
+            { key: 'kmh',   name: 'Km/hour',        abbr: 'km/h',   factor: 0.277778 },
+            { key: 'mph',   name: 'Miles/hour',     abbr: 'mph',    factor: 0.44704 },
+            { key: 'knot',  name: 'Knot',           abbr: 'kn',     factor: 0.514444 },
+            { key: 'fps',   name: 'Feet/sec',       abbr: 'ft/s',   factor: 0.3048 },
+            { key: 'cms',   name: 'Centimeter/sec', abbr: 'cm/s',   factor: 0.01 },
+            { key: 'mms',   name: 'Millimeter/sec', abbr: 'mm/s',   factor: 0.001 },
+            { key: 'kms',   name: 'Kilometer/sec',  abbr: 'km/s',   factor: 1000 },
+            { key: 'mis',   name: 'Miles/sec',      abbr: 'mi/s',   factor: 1609.344 },
+            { key: 'ins',   name: 'Inches/sec',     abbr: 'in/s',   factor: 0.0254 },
+            { key: 'yds',   name: 'Yards/sec',      abbr: 'yd/s',   factor: 0.9144 },
+            { key: 'mach',  name: 'Mach',           abbr: 'Mach',   factor: 343 },
+            { key: 'c',     name: 'Speed of Light', abbr: 'c',      factor: 299792458 },
+            { key: 'mimin', name: 'Miles/minute',   abbr: 'mi/min', factor: 26.8224 },
+            { key: 'ftmin', name: 'Feet/minute',    abbr: 'ft/min', factor: 0.00508 }
+        ];
+
+        const fromSelect = document.getElementById('fromUnit');
+        const toSelect = document.getElementById('toUnit');
+        const valueInput = document.getElementById('valueInput');
+        const resultValue = document.getElementById('resultValue');
+        const resultLabel = document.getElementById('resultLabel');
+        const allGrid = document.getElementById('allGrid');
+        const swapBtn = document.getElementById('swapBtn');
+
+        // Populate dropdowns
+        units.forEach((u, i) => {
+            fromSelect.innerHTML += `<option value="${u.key}">${u.name} (${u.abbr})</option>`;
+            toSelect.innerHTML += `<option value="${u.key}" ${i === 1 ? 'selected' : ''}>${u.name} (${u.abbr})</option>`;
+        });
+
+        // Build grid items
+        units.forEach(u => {
+            allGrid.innerHTML += `
+                <div class="grid-item" data-key="${u.key}">
+                    <span class="unit-name">${u.name} (${u.abbr})</span>
+                    <span class="unit-val" id="grid-${u.key}">0</span>
+                </div>`;
+        });
+
+        function getUnit(key) {
+            return units.find(u => u.key === key);
+        }
+
+        function formatNum(n) {
+            if (n === 0) return '0';
+            if (Math.abs(n) >= 1e6 || (Math.abs(n) < 0.0001 && n !== 0)) {
+                return n.toExponential(4);
+            }
+            // Up to 6 decimal places, strip trailing zeros
+            return parseFloat(n.toFixed(6)).toString();
+        }
+
+        function convert() {
+            const val = parseFloat(valueInput.value);
+            if (isNaN(val)) {
+                resultValue.textContent = '—';
+                resultLabel.textContent = 'Enter a valid number';
+                units.forEach(u => {
+                    document.getElementById('grid-' + u.key).textContent = '—';
+                });
+                return;
+            }
+
+            const from = getUnit(fromSelect.value);
+            const to = getUnit(toSelect.value);
+
+            // Convert input to m/s, then to target
+            const inMs = val * from.factor;
+            const result = inMs / to.factor;
+
+            resultValue.textContent = formatNum(result);
+            resultLabel.textContent = `${formatNum(val)} ${from.abbr} = ${formatNum(result)} ${to.abbr}`;
+
+            // Update grid
+            units.forEach(u => {
+                const converted = inMs / u.factor;
+                document.getElementById('grid-' + u.key).textContent = formatNum(converted);
+                const item = document.querySelector(`.grid-item[data-key="${u.key}"]`);
+                item.classList.toggle('active', u.key === to.key);
+            });
+        }
+
+        // Event listeners
+        valueInput.addEventListener('input', convert);
+        fromSelect.addEventListener('change', convert);
+        toSelect.addEventListener('change', convert);
+
+        swapBtn.addEventListener('click', () => {
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            convert();
+        });
+
+        // Initial conversion
+        convert();
+    </script>
+</body>
+</html>

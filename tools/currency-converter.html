@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #fbbf24;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 24px;
+            align-items: flex-start;
+        }
+
+        .card {
+            width: 740px;
+            max-width: 100%;
+            background: var(--panel);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(217,119,6,0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent2);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title i { font-size: 1rem; color: var(--accent); }
+
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .value-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .value-input:focus { border-color: var(--accent); }
+        .value-input::placeholder { color: var(--dim); }
+
+        .selectors {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unit-select {
+            flex: 1;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+            transition: border-color 0.2s;
+        }
+        .unit-select:focus { border-color: var(--accent); }
+        .unit-select option { background: var(--panel); color: var(--text); }
+
+        .swap-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent2);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: #0f172a;
+            transform: rotate(180deg);
+        }
+
+        .result-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .result-label {
+            font-size: 0.78rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+        .result-unit {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .offline-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--dim);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .offline-note i { color: var(--accent); font-size: 0.7rem; }
+
+        .grid-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .conversions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            max-height: 520px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .conversions-grid::-webkit-scrollbar { width: 6px; }
+        .conversions-grid::-webkit-scrollbar-track { background: transparent; }
+        .conversions-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .conv-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.15s;
+        }
+        .conv-item:hover { border-color: var(--accent); }
+        .conv-item.active {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+        .conv-unit {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .conv-flag {
+            margin-right: 3px;
+        }
+        .conv-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            .card { padding: 20px; }
+            .result-value { font-size: 1.5rem; }
+            .conversions-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 420px) {
+            .conversions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-coins"></i> Currency Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-money-bill-transfer"></i> Convert Currencies
+            </div>
+
+            <div class="input-row">
+                <input type="number" class="value-input" id="valueInput" placeholder="Enter amount..." value="1">
+                <div class="selectors">
+                    <select class="unit-select" id="fromCurrency"></select>
+                    <button class="swap-btn" id="swapBtn" title="Swap currencies">
+                        <i class="fas fa-right-left"></i>
+                    </button>
+                    <select class="unit-select" id="toCurrency"></select>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Result</div>
+                <div class="result-value" id="resultValue">0</div>
+                <div class="result-unit" id="resultUnit"></div>
+            </div>
+
+            <div class="offline-note" id="rateStatus">
+                <i class="fas fa-spinner fa-spin" id="rateIcon"></i>
+                <span id="rateText">Fetching live rates...</span>
+            </div>
+
+            <div class="grid-title">All Conversions</div>
+            <div class="conversions-grid" id="conversionsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const currencies = [
+            { code: 'USD', name: 'US Dollar',           flag: '\u{1F1FA}\u{1F1F8}', rate: 1 },
+            { code: 'EUR', name: 'Euro',                flag: '\u{1F1EA}\u{1F1FA}', rate: 0.92 },
+            { code: 'GBP', name: 'British Pound',       flag: '\u{1F1EC}\u{1F1E7}', rate: 0.79 },
+            { code: 'JPY', name: 'Japanese Yen',        flag: '\u{1F1EF}\u{1F1F5}', rate: 149.50 },
+            { code: 'CAD', name: 'Canadian Dollar',     flag: '\u{1F1E8}\u{1F1E6}', rate: 1.36 },
+            { code: 'AUD', name: 'Australian Dollar',   flag: '\u{1F1E6}\u{1F1FA}', rate: 1.53 },
+            { code: 'CHF', name: 'Swiss Franc',         flag: '\u{1F1E8}\u{1F1ED}', rate: 0.88 },
+            { code: 'CNY', name: 'Chinese Yuan',        flag: '\u{1F1E8}\u{1F1F3}', rate: 7.24 },
+            { code: 'INR', name: 'Indian Rupee',        flag: '\u{1F1EE}\u{1F1F3}', rate: 83.12 },
+            { code: 'MXN', name: 'Mexican Peso',        flag: '\u{1F1F2}\u{1F1FD}', rate: 17.15 },
+            { code: 'BRL', name: 'Brazilian Real',      flag: '\u{1F1E7}\u{1F1F7}', rate: 4.97 },
+            { code: 'KRW', name: 'South Korean Won',    flag: '\u{1F1F0}\u{1F1F7}', rate: 1325 },
+            { code: 'SGD', name: 'Singapore Dollar',    flag: '\u{1F1F8}\u{1F1EC}', rate: 1.34 },
+            { code: 'HKD', name: 'Hong Kong Dollar',    flag: '\u{1F1ED}\u{1F1F0}', rate: 7.82 },
+            { code: 'SEK', name: 'Swedish Krona',       flag: '\u{1F1F8}\u{1F1EA}', rate: 10.42 },
+            { code: 'NOK', name: 'Norwegian Krone',     flag: '\u{1F1F3}\u{1F1F4}', rate: 10.55 },
+            { code: 'DKK', name: 'Danish Krone',        flag: '\u{1F1E9}\u{1F1F0}', rate: 6.88 },
+            { code: 'NZD', name: 'New Zealand Dollar',  flag: '\u{1F1F3}\u{1F1FF}', rate: 1.63 },
+            { code: 'ZAR', name: 'South African Rand',  flag: '\u{1F1FF}\u{1F1E6}', rate: 18.65 },
+            { code: 'THB', name: 'Thai Baht',           flag: '\u{1F1F9}\u{1F1ED}', rate: 35.20 },
+            { code: 'RUB', name: 'Russian Ruble',       flag: '\u{1F1F7}\u{1F1FA}', rate: 92.50 },
+            { code: 'TRY', name: 'Turkish Lira',        flag: '\u{1F1F9}\u{1F1F7}', rate: 30.25 },
+            { code: 'AED', name: 'UAE Dirham',           flag: '\u{1F1E6}\u{1F1EA}', rate: 3.67 },
+            { code: 'SAR', name: 'Saudi Riyal',          flag: '\u{1F1F8}\u{1F1E6}', rate: 3.75 },
+            { code: 'PLN', name: 'Polish Zloty',         flag: '\u{1F1F5}\u{1F1F1}', rate: 4.02 },
+            { code: 'EGP', name: 'Egyptian Pound',        flag: '\u{1F1EA}\u{1F1EC}', rate: 30.90 },
+            { code: 'NGN', name: 'Nigerian Naira',        flag: '\u{1F1F3}\u{1F1EC}', rate: 1550 },
+            { code: 'KES', name: 'Kenyan Shilling',       flag: '\u{1F1F0}\u{1F1EA}', rate: 153 },
+            { code: 'GHS', name: 'Ghanaian Cedi',         flag: '\u{1F1EC}\u{1F1ED}', rate: 12.50 },
+            { code: 'MAD', name: 'Moroccan Dirham',       flag: '\u{1F1F2}\u{1F1E6}', rate: 10.05 },
+            { code: 'PHP', name: 'Philippine Peso',       flag: '\u{1F1F5}\u{1F1ED}', rate: 56.20 },
+            { code: 'IDR', name: 'Indonesian Rupiah',     flag: '\u{1F1EE}\u{1F1E9}', rate: 15650 },
+            { code: 'VND', name: 'Vietnamese Dong',       flag: '\u{1F1FB}\u{1F1F3}', rate: 24500 },
+            { code: 'MYR', name: 'Malaysian Ringgit',     flag: '\u{1F1F2}\u{1F1FE}', rate: 4.72 },
+            { code: 'TWD', name: 'Taiwan Dollar',         flag: '\u{1F1F9}\u{1F1FC}', rate: 31.50 },
+            { code: 'CLP', name: 'Chilean Peso',          flag: '\u{1F1E8}\u{1F1F1}', rate: 925 },
+            { code: 'COP', name: 'Colombian Peso',        flag: '\u{1F1E8}\u{1F1F4}', rate: 3950 },
+            { code: 'ARS', name: 'Argentine Peso',        flag: '\u{1F1E6}\u{1F1F7}', rate: 870 },
+            { code: 'PEN', name: 'Peruvian Sol',          flag: '\u{1F1F5}\u{1F1EA}', rate: 3.72 },
+            { code: 'UYU', name: 'Uruguayan Peso',        flag: '\u{1F1FA}\u{1F1FE}', rate: 39.20 },
+            { code: 'CZK', name: 'Czech Koruna',          flag: '\u{1F1E8}\u{1F1FF}', rate: 22.85 },
+            { code: 'HUF', name: 'Hungarian Forint',      flag: '\u{1F1ED}\u{1F1FA}', rate: 355 },
+            { code: 'RON', name: 'Romanian Leu',          flag: '\u{1F1F7}\u{1F1F4}', rate: 4.57 },
+            { code: 'BGN', name: 'Bulgarian Lev',         flag: '\u{1F1E7}\u{1F1EC}', rate: 1.80 },
+            { code: 'HRK', name: 'Croatian Kuna',         flag: '\u{1F1ED}\u{1F1F7}', rate: 6.93 },
+            { code: 'ILS', name: 'Israeli Shekel',        flag: '\u{1F1EE}\u{1F1F1}', rate: 3.65 },
+            { code: 'PKR', name: 'Pakistani Rupee',       flag: '\u{1F1F5}\u{1F1F0}', rate: 278 },
+            { code: 'BDT', name: 'Bangladeshi Taka',      flag: '\u{1F1E7}\u{1F1E9}', rate: 110 },
+            { code: 'LKR', name: 'Sri Lankan Rupee',      flag: '\u{1F1F1}\u{1F1F0}', rate: 325 },
+            { code: 'NPR', name: 'Nepalese Rupee',        flag: '\u{1F1F3}\u{1F1F5}', rate: 133 },
+            { code: 'QAR', name: 'Qatari Riyal',          flag: '\u{1F1F6}\u{1F1E6}', rate: 3.64 },
+            { code: 'KWD', name: 'Kuwaiti Dinar',         flag: '\u{1F1F0}\u{1F1FC}', rate: 0.31 },
+            { code: 'BHD', name: 'Bahraini Dinar',        flag: '\u{1F1E7}\u{1F1ED}', rate: 0.38 },
+            { code: 'OMR', name: 'Omani Rial',            flag: '\u{1F1F4}\u{1F1F2}', rate: 0.38 },
+            { code: 'JOD', name: 'Jordanian Dinar',       flag: '\u{1F1EF}\u{1F1F4}', rate: 0.71 },
+            { code: 'ISK', name: 'Icelandic Krona',       flag: '\u{1F1EE}\u{1F1F8}', rate: 137 },
+            { code: 'UAH', name: 'Ukrainian Hryvnia',     flag: '\u{1F1FA}\u{1F1E6}', rate: 37.50 },
+            { code: 'FJD', name: 'Fiji Dollar',              flag: '\u{1F1EB}\u{1F1EF}', rate: 2.23 },
+            { code: 'XOF', name: 'West African CFA',         flag: '\u{1F30D}', rate: 605 },
+            { code: 'XAF', name: 'Central African CFA',      flag: '\u{1F30D}', rate: 605 },
+            { code: 'ETB', name: 'Ethiopian Birr',            flag: '\u{1F1EA}\u{1F1F9}', rate: 56.50 },
+            { code: 'TZS', name: 'Tanzanian Shilling',       flag: '\u{1F1F9}\u{1F1FF}', rate: 2510 },
+            { code: 'UGX', name: 'Ugandan Shilling',         flag: '\u{1F1FA}\u{1F1EC}', rate: 3780 },
+            { code: 'ZMW', name: 'Zambian Kwacha',           flag: '\u{1F1FF}\u{1F1F2}', rate: 25.50 },
+            { code: 'MZN', name: 'Mozambican Metical',       flag: '\u{1F1F2}\u{1F1FF}', rate: 63.50 },
+            { code: 'RWF', name: 'Rwandan Franc',            flag: '\u{1F1F7}\u{1F1FC}', rate: 1260 },
+            { code: 'DZD', name: 'Algerian Dinar',           flag: '\u{1F1E9}\u{1F1FF}', rate: 134.50 },
+            { code: 'TND', name: 'Tunisian Dinar',           flag: '\u{1F1F9}\u{1F1F3}', rate: 3.12 },
+            { code: 'LYD', name: 'Libyan Dinar',             flag: '\u{1F1F1}\u{1F1FE}', rate: 4.85 },
+            { code: 'MMK', name: 'Myanmar Kyat',             flag: '\u{1F1F2}\u{1F1F2}', rate: 2100 },
+            { code: 'KHR', name: 'Cambodian Riel',           flag: '\u{1F1F0}\u{1F1ED}', rate: 4100 },
+            { code: 'LAK', name: 'Lao Kip',                  flag: '\u{1F1F1}\u{1F1E6}', rate: 20800 },
+            { code: 'MNT', name: 'Mongolian Tugrik',         flag: '\u{1F1F2}\u{1F1F3}', rate: 3420 },
+            { code: 'KZT', name: 'Kazakh Tenge',             flag: '\u{1F1F0}\u{1F1FF}', rate: 450 },
+            { code: 'UZS', name: 'Uzbek Som',                flag: '\u{1F1FA}\u{1F1FF}', rate: 12350 },
+            { code: 'GEL', name: 'Georgian Lari',            flag: '\u{1F1EC}\u{1F1EA}', rate: 2.65 },
+            { code: 'AMD', name: 'Armenian Dram',            flag: '\u{1F1E6}\u{1F1F2}', rate: 385 },
+            { code: 'AZN', name: 'Azerbaijani Manat',        flag: '\u{1F1E6}\u{1F1FF}', rate: 1.70 },
+            { code: 'BOB', name: 'Bolivian Boliviano',       flag: '\u{1F1E7}\u{1F1F4}', rate: 6.91 },
+            { code: 'PYG', name: 'Paraguayan Guarani',       flag: '\u{1F1F5}\u{1F1FE}', rate: 7350 },
+            { code: 'VES', name: 'Venezuelan Bolivar',       flag: '\u{1F1FB}\u{1F1EA}', rate: 36.50 },
+            { code: 'GTQ', name: 'Guatemalan Quetzal',       flag: '\u{1F1EC}\u{1F1F9}', rate: 7.82 },
+            { code: 'HNL', name: 'Honduran Lempira',         flag: '\u{1F1ED}\u{1F1F3}', rate: 24.70 },
+            { code: 'NIO', name: 'Nicaraguan Cordoba',       flag: '\u{1F1F3}\u{1F1EE}', rate: 36.60 },
+            { code: 'CRC', name: 'Costa Rican Colon',        flag: '\u{1F1E8}\u{1F1F7}', rate: 520 },
+            { code: 'DOP', name: 'Dominican Peso',           flag: '\u{1F1E9}\u{1F1F4}', rate: 57.50 },
+            { code: 'JMD', name: 'Jamaican Dollar',          flag: '\u{1F1EF}\u{1F1F2}', rate: 155 },
+            { code: 'TTD', name: 'Trinidad Dollar',          flag: '\u{1F1F9}\u{1F1F9}', rate: 6.78 },
+            { code: 'BBD', name: 'Barbados Dollar',          flag: '\u{1F1E7}\u{1F1E7}', rate: 2.00 },
+            { code: 'BSD', name: 'Bahamian Dollar',          flag: '\u{1F1E7}\u{1F1F8}', rate: 1.00 },
+            { code: 'XCD', name: 'East Caribbean Dollar',    flag: '\u{1F30E}', rate: 2.70 },
+            { code: 'HTG', name: 'Haitian Gourde',           flag: '\u{1F1ED}\u{1F1F9}', rate: 132 },
+            { code: 'CUP', name: 'Cuban Peso',               flag: '\u{1F1E8}\u{1F1FA}', rate: 24 },
+            { code: 'PAB', name: 'Panamanian Balboa',        flag: '\u{1F1F5}\u{1F1E6}', rate: 1.00 },
+            { code: 'SRD', name: 'Surinamese Dollar',        flag: '\u{1F1F8}\u{1F1F7}', rate: 36.50 },
+            { code: 'GYD', name: 'Guyanese Dollar',          flag: '\u{1F1EC}\u{1F1FE}', rate: 209 },
+            { code: 'BZD', name: 'Belize Dollar',            flag: '\u{1F1E7}\u{1F1FF}', rate: 2.00 },
+            { code: 'BMD', name: 'Bermudian Dollar',         flag: '\u{1F1E7}\u{1F1F2}', rate: 1.00 },
+            { code: 'KYD', name: 'Cayman Dollar',            flag: '\u{1F1F0}\u{1F1FE}', rate: 0.82 },
+            { code: 'AWG', name: 'Aruban Florin',            flag: '\u{1F1E6}\u{1F1FC}', rate: 1.79 },
+            { code: 'ANG', name: 'Netherlands Antillean Guilder', flag: '\u{1F1E8}\u{1F1FC}', rate: 1.79 },
+            { code: 'IRR', name: 'Iranian Rial',             flag: '\u{1F1EE}\u{1F1F7}', rate: 42000 },
+            { code: 'IQD', name: 'Iraqi Dinar',              flag: '\u{1F1EE}\u{1F1F6}', rate: 1310 },
+            { code: 'SYP', name: 'Syrian Pound',             flag: '\u{1F1F8}\u{1F1FE}', rate: 13000 },
+            { code: 'LBP', name: 'Lebanese Pound',           flag: '\u{1F1F1}\u{1F1E7}', rate: 89500 },
+            { code: 'YER', name: 'Yemeni Rial',              flag: '\u{1F1FE}\u{1F1EA}', rate: 250 },
+            { code: 'AFN', name: 'Afghan Afghani',            flag: '\u{1F1E6}\u{1F1EB}', rate: 68.50 }
+        ];
+
+        const fromCurrency = document.getElementById('fromCurrency');
+        const toCurrency = document.getElementById('toCurrency');
+        const valueInput = document.getElementById('valueInput');
+        const resultValue = document.getElementById('resultValue');
+        const resultUnit = document.getElementById('resultUnit');
+        const conversionsGrid = document.getElementById('conversionsGrid');
+        const swapBtn = document.getElementById('swapBtn');
+
+        // Populate dropdowns
+        currencies.forEach((c, i) => {
+            const label = `${c.flag} ${c.code} - ${c.name}`;
+            fromCurrency.add(new Option(label, i));
+            toCurrency.add(new Option(label, i));
+        });
+        toCurrency.value = 1; // Default: USD -> EUR
+
+        function formatCurrency(n, code) {
+            if (n === 0) return '0.00';
+            const abs = Math.abs(n);
+            if (abs >= 1e12) return n.toExponential(4);
+            // For whole-number currencies (no minor units commonly used)
+            const wholeNumCurrencies = ['JPY', 'KRW', 'VND', 'IDR', 'CLP', 'COP', 'NGN', 'HUF', 'ISK', 'ARS'];
+            if (wholeNumCurrencies.includes(code) && abs >= 1) {
+                return Math.round(n).toLocaleString('en-US');
+            }
+            if (abs < 0.01) return n.toFixed(6);
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function convert() {
+            const val = parseFloat(valueInput.value);
+            if (isNaN(val) || val === '') {
+                resultValue.textContent = '\u2014';
+                resultUnit.textContent = '';
+                conversionsGrid.innerHTML = '';
+                return;
+            }
+
+            const from = currencies[fromCurrency.value];
+            const to = currencies[toCurrency.value];
+
+            // Convert: amount in "from" -> USD -> "to"
+            const usdAmount = val / from.rate;
+            const result = usdAmount * to.rate;
+
+            resultValue.textContent = `${to.flag} ${formatCurrency(result, to.code)}`;
+            resultUnit.textContent = `${from.code} \u2192 ${to.code}`;
+
+            // Build all conversions grid
+            let html = '';
+            currencies.forEach((c, i) => {
+                const converted = usdAmount * c.rate;
+                const isActive = i === parseInt(toCurrency.value);
+                html += `<div class="conv-item${isActive ? ' active' : ''}">
+                    <span class="conv-unit"><span class="conv-flag">${c.flag}</span> ${c.code}</span>
+                    <span class="conv-val">${formatCurrency(converted, c.code)}</span>
+                </div>`;
+            });
+            conversionsGrid.innerHTML = html;
+        }
+
+        valueInput.addEventListener('input', convert);
+        fromCurrency.addEventListener('change', convert);
+        toCurrency.addEventListener('change', convert);
+
+        swapBtn.addEventListener('click', () => {
+            const temp = fromCurrency.value;
+            fromCurrency.value = toCurrency.value;
+            toCurrency.value = temp;
+            convert();
+        });
+
+        // Live rates
+        let isLive = false;
+
+        async function fetchLiveRates() {
+            const rateIcon = document.getElementById('rateIcon');
+            const rateText = document.getElementById('rateText');
+            try {
+                const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                const rates = data.usd;
+                if (!rates) throw new Error('No rates data');
+
+                let updated = 0;
+                currencies.forEach(c => {
+                    const key = c.code.toLowerCase();
+                    if (rates[key] !== undefined) {
+                        c.rate = rates[key];
+                        updated++;
+                    }
+                });
+
+                if (updated > 0) {
+                    isLive = true;
+                    // Cache rates
+                    localStorage.setItem('cachedRates', JSON.stringify({ rates, time: Date.now() }));
+                    rateIcon.className = 'fas fa-wifi';
+                    rateIcon.style.color = '#22c55e';
+                    rateText.textContent = `Live rates (${updated} currencies updated)`;
+                    rateText.style.color = '#22c55e';
+                    convert();
+                } else {
+                    throw new Error('No matching currencies');
+                }
+            } catch (e) {
+                // Try cached rates
+                try {
+                    const cached = JSON.parse(localStorage.getItem('cachedRates'));
+                    if (cached && cached.rates) {
+                        let updated = 0;
+                        currencies.forEach(c => {
+                            const key = c.code.toLowerCase();
+                            if (cached.rates[key] !== undefined) {
+                                c.rate = cached.rates[key];
+                                updated++;
+                            }
+                        });
+                        if (updated > 0) {
+                            const age = Math.round((Date.now() - cached.time) / 3600000);
+                            rateIcon.className = 'fas fa-clock';
+                            rateIcon.style.color = 'var(--accent)';
+                            rateText.textContent = `Cached rates (${age}h old, ${updated} currencies)`;
+                            rateText.style.color = 'var(--accent)';
+                            convert();
+                            return;
+                        }
+                    }
+                } catch {}
+
+                // Fallback to hardcoded
+                rateIcon.className = 'fas fa-wifi-slash';
+                rateIcon.style.color = 'var(--dim)';
+                rateText.textContent = 'Offline \u2014 using approximate rates';
+                rateText.style.color = 'var(--dim)';
+            }
+        }
+
+        // Initial conversion with hardcoded rates, then fetch live
+        convert();
+        fetchLiveRates();
+    </script>
+</body>
+</html>

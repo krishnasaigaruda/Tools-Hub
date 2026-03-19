@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #f59e0b;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 24px;
+            align-items: flex-start;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .selectors {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .selectors select {
+            flex: 1;
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+        .selectors select:focus {
+            border-color: var(--accent);
+        }
+
+        .swap-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--accent-dim);
+            color: var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: rotate(180deg);
+        }
+
+        .result-box {
+            background: var(--accent-dim);
+            border: 1px solid rgba(217,119,6,0.2);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+        .result-label {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .grid-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .conversions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .conv-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: border-color 0.15s;
+        }
+        .conv-item:hover {
+            border-color: var(--accent);
+        }
+        .conv-item .unit-name {
+            font-size: 0.72rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+        .conv-item .unit-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 20px; }
+            .result-value { font-size: 1.4rem; }
+            .conversions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-vector-square"></i> Area Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <div class="input-group">
+                <label>Value</label>
+                <input type="number" id="inputValue" value="1" placeholder="Enter value..." oninput="convert()">
+            </div>
+
+            <div class="selectors">
+                <select id="fromUnit" onchange="convert()"></select>
+                <button class="swap-btn" onclick="swapUnits()" title="Swap units">
+                    <i class="fas fa-right-left"></i>
+                </button>
+                <select id="toUnit" onchange="convert()"></select>
+            </div>
+
+            <div class="result-box">
+                <div class="result-value" id="resultValue">1</div>
+                <div class="result-label" id="resultLabel">Square Meter to Square Meter</div>
+            </div>
+
+            <div class="grid-title">All Conversions</div>
+            <div class="conversions-grid" id="convGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const units = [
+            { name: 'Square Meter', abbr: 'sq m', factor: 1 },
+            { name: 'Square Kilometer', abbr: 'sq km', factor: 1e6 },
+            { name: 'Square Centimeter', abbr: 'sq cm', factor: 1e-4 },
+            { name: 'Square Foot', abbr: 'sq ft', factor: 0.092903 },
+            { name: 'Square Inch', abbr: 'sq in', factor: 0.00064516 },
+            { name: 'Square Mile', abbr: 'sq mi', factor: 2.59e6 },
+            { name: 'Hectare', abbr: 'ha', factor: 10000 },
+            { name: 'Acre', abbr: 'ac', factor: 4046.86 },
+            { name: 'Square Millimeter', abbr: 'sq mm', factor: 1e-6 },
+            { name: 'Square Yard', abbr: 'sq yd', factor: 0.836127 },
+            { name: 'Square Rod', abbr: 'sq rd', factor: 25.2929 },
+            { name: 'Rood', abbr: 'rood', factor: 1011.71 },
+            { name: 'Barn', abbr: 'b', factor: 1e-28 },
+            { name: 'Township', abbr: 'twp', factor: 93240000 },
+            { name: 'Section', abbr: 'sec', factor: 2590000 },
+            { name: 'Homestead', abbr: 'hmstd', factor: 647497 },
+            { name: 'Are', abbr: 'a', factor: 100 },
+            { name: 'Dunam', abbr: 'dunam', factor: 1000 },
+            { name: 'Square Chain', abbr: 'sq ch', factor: 404.686 },
+            { name: 'Square Link', abbr: 'sq li', factor: 0.040469 },
+        ];
+
+        const fromSel = document.getElementById('fromUnit');
+        const toSel = document.getElementById('toUnit');
+
+        units.forEach((u, i) => {
+            fromSel.innerHTML += `<option value="${i}">${u.name} (${u.abbr})</option>`;
+            toSel.innerHTML += `<option value="${i}">${u.name} (${u.abbr})</option>`;
+        });
+        toSel.value = '3'; // default to sq ft
+
+        function formatNumber(n) {
+            if (n === 0) return '0';
+            if (Math.abs(n) >= 1e12 || (Math.abs(n) < 1e-8 && Math.abs(n) > 0)) {
+                return n.toExponential(6);
+            }
+            if (Number.isInteger(n)) return n.toLocaleString();
+            const decimals = Math.abs(n) >= 1000 ? 4 : Math.abs(n) >= 1 ? 6 : 10;
+            return parseFloat(n.toPrecision(decimals)).toLocaleString(undefined, { maximumSignificantDigits: 10 });
+        }
+
+        function convert() {
+            const val = parseFloat(document.getElementById('inputValue').value);
+            const from = units[fromSel.value];
+            const to = units[toSel.value];
+
+            if (isNaN(val)) {
+                document.getElementById('resultValue').textContent = '--';
+                document.getElementById('resultLabel').textContent = '';
+                document.getElementById('convGrid').innerHTML = '';
+                return;
+            }
+
+            const sqMeters = val * from.factor;
+            const result = sqMeters / to.factor;
+
+            document.getElementById('resultValue').textContent = formatNumber(result);
+            document.getElementById('resultLabel').textContent = `${from.name} to ${to.name}`;
+
+            let grid = '';
+            units.forEach(u => {
+                const converted = sqMeters / u.factor;
+                grid += `
+                    <div class="conv-item">
+                        <span class="unit-name">${u.name} (${u.abbr})</span>
+                        <span class="unit-value">${formatNumber(converted)}</span>
+                    </div>`;
+            });
+            document.getElementById('convGrid').innerHTML = grid;
+        }
+
+        function swapUnits() {
+            const tmp = fromSel.value;
+            fromSel.value = toSel.value;
+            toSel.value = tmp;
+            convert();
+        }
+
+        convert();
+    </script>
+</body>
+</html>

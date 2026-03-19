@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight/Mass Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --accent: #d97706;
+            --accent2: #f59e0b;
+            --accent-dim: rgba(217,119,6,0.08);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --dim: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: var(--border); color: var(--text); }
+        .header h1 { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+        .header h1 i { margin-right: 8px; }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 40px 24px;
+            align-items: flex-start;
+        }
+
+        .converter-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+        }
+
+        .selectors {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .select-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .select-wrap span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .select-wrap select {
+            padding: 12px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .select-wrap select:focus {
+            border-color: var(--accent);
+        }
+
+        .swap-btn {
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-top: 18px;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .result-box {
+            background: var(--accent-dim);
+            border: 1px solid rgba(217,119,6,0.25);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .result-box .result-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .result-box .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent2);
+            word-break: break-all;
+        }
+        .result-box .result-unit {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .all-conversions h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .conv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
+        .conv-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: border-color 0.15s;
+        }
+        .conv-item:hover {
+            border-color: var(--accent);
+        }
+        .conv-item .unit-name {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .conv-item .unit-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        @media (max-width: 600px) {
+            .converter-card { padding: 20px; }
+            .result-box .result-value { font-size: 1.4rem; }
+            .conv-grid { grid-template-columns: 1fr; }
+            .selectors { flex-direction: column; }
+            .swap-btn { margin-top: 0; transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-weight-hanging"></i> Weight / Mass Converter</h1>
+    </div>
+
+    <div class="main-wrap">
+        <div class="converter-card">
+            <div class="input-group">
+                <label>Value</label>
+                <input type="number" id="inputValue" value="1" step="any" placeholder="Enter value...">
+            </div>
+
+            <div class="selectors">
+                <div class="select-wrap">
+                    <span>From</span>
+                    <select id="fromUnit"></select>
+                </div>
+                <button class="swap-btn" id="swapBtn" title="Swap units">
+                    <i class="fas fa-right-left"></i>
+                </button>
+                <div class="select-wrap">
+                    <span>To</span>
+                    <select id="toUnit"></select>
+                </div>
+            </div>
+
+            <div class="result-box">
+                <div class="result-label">Result</div>
+                <div class="result-value" id="resultValue">1</div>
+                <div class="result-unit" id="resultUnit">Kilogram</div>
+            </div>
+
+            <div class="all-conversions">
+                <h3>All Conversions</h3>
+                <div class="conv-grid" id="convGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const units = [
+            { name: 'Kilogram',    abbr: 'kg',  factor: 1 },
+            { name: 'Gram',        abbr: 'g',   factor: 0.001 },
+            { name: 'Milligram',   abbr: 'mg',  factor: 0.000001 },
+            { name: 'Pound',       abbr: 'lb',  factor: 0.453592 },
+            { name: 'Ounce',       abbr: 'oz',  factor: 0.0283495 },
+            { name: 'Metric Ton',  abbr: 't',   factor: 1000 },
+            { name: 'Stone',       abbr: 'st',  factor: 6.35029 },
+            { name: 'Microgram',   abbr: '\u00B5g', factor: 1e-9 },
+            { name: 'Carat',       abbr: 'ct', factor: 0.0002 },
+            { name: 'Short Ton',   abbr: 'US ton', factor: 907.185 },
+            { name: 'Long Ton',    abbr: 'imp ton', factor: 1016.05 },
+            { name: 'Grain',       abbr: 'gr', factor: 0.0000648 },
+            { name: 'Nanogram',    abbr: 'ng', factor: 1e-12 },
+            { name: 'Picogram',    abbr: 'pg', factor: 1e-15 },
+            { name: 'Centigram',   abbr: 'cg', factor: 0.00001 },
+            { name: 'Decigram',    abbr: 'dg', factor: 0.0001 },
+            { name: 'Dekagram',    abbr: 'dag', factor: 0.01 },
+            { name: 'Hectogram',   abbr: 'hg', factor: 0.1 },
+            { name: 'Quintal',     abbr: 'q', factor: 100 },
+            { name: 'Slug',        abbr: 'slug', factor: 14.5939 },
+            { name: 'Dram',        abbr: 'dr', factor: 0.001772 },
+            { name: 'Pennyweight', abbr: 'dwt', factor: 0.001555 },
+            { name: 'Troy Ounce',  abbr: 'oz t', factor: 0.031103 },
+            { name: 'Troy Pound',  abbr: 'lb t', factor: 0.373242 },
+            { name: 'Atomic Mass Unit', abbr: 'u', factor: 1.66054e-27 },
+            { name: 'Earth Mass',  abbr: 'M⊕', factor: 5.972e24 },
+            { name: 'Solar Mass',  abbr: 'M☉', factor: 1.989e30 }
+        ];
+
+        const fromUnit = document.getElementById('fromUnit');
+        const toUnit = document.getElementById('toUnit');
+        const inputValue = document.getElementById('inputValue');
+        const resultValue = document.getElementById('resultValue');
+        const resultUnit = document.getElementById('resultUnit');
+        const convGrid = document.getElementById('convGrid');
+        const swapBtn = document.getElementById('swapBtn');
+
+        // Populate dropdowns
+        units.forEach((u, i) => {
+            fromUnit.add(new Option(`${u.name} (${u.abbr})`, i));
+            toUnit.add(new Option(`${u.name} (${u.abbr})`, i));
+        });
+        toUnit.value = 3; // Default: kg -> lb
+
+        function formatNumber(n) {
+            if (n === 0) return '0';
+            if (Math.abs(n) >= 1e9 || (Math.abs(n) < 1e-6 && n !== 0)) {
+                return n.toExponential(6);
+            }
+            // Remove trailing zeros
+            return parseFloat(n.toPrecision(10)).toString();
+        }
+
+        function convert() {
+            const val = parseFloat(inputValue.value);
+            if (isNaN(val)) {
+                resultValue.textContent = '—';
+                resultUnit.textContent = '';
+                convGrid.innerHTML = '';
+                return;
+            }
+
+            const from = units[fromUnit.value];
+            const to = units[toUnit.value];
+
+            // Convert: value * fromFactor = kg, then kg / toFactor = result
+            const kg = val * from.factor;
+            const result = kg / to.factor;
+
+            resultValue.textContent = formatNumber(result);
+            resultUnit.textContent = `${to.name} (${to.abbr})`;
+
+            // Build all-conversions grid
+            let html = '';
+            units.forEach(u => {
+                const converted = kg / u.factor;
+                html += `<div class="conv-item">
+                    <span class="unit-name">${u.name} (${u.abbr})</span>
+                    <span class="unit-value">${formatNumber(converted)}</span>
+                </div>`;
+            });
+            convGrid.innerHTML = html;
+        }
+
+        inputValue.addEventListener('input', convert);
+        fromUnit.addEventListener('change', convert);
+        toUnit.addEventListener('change', convert);
+
+        swapBtn.addEventListener('click', () => {
+            const tmp = fromUnit.value;
+            fromUnit.value = toUnit.value;
+            toUnit.value = tmp;
+            convert();
+        });
+
+        // Initial conversion
+        convert();
+    </script>
+</body>
+</html>
