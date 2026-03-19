@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            gap: 16px;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .back-btn:hover { background: #334155; color: #e2e8f0; }
+        .header h1 { font-size: 1.3rem; color: #818cf8; font-weight: 700; }
+        .header h1 i { margin-right: 8px; }
+
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* Operations bar */
+        .ops-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .ops-bar button {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 9px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .ops-bar button:hover {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .ops-bar button.active {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: #fff;
+        }
+
+        /* Matrix panels */
+        .matrices-area {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .matrix-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(79,70,229,0.08);
+        }
+        .matrix-panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #818cf8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .matrix-panel-title span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Dimension controls */
+        .dim-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .dim-controls label {
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+        .dim-controls select {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .dim-controls select:focus { outline: none; border-color: #4f46e5; }
+
+        /* Action buttons row */
+        .matrix-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .matrix-actions button {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.72rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .matrix-actions button:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        /* Matrix grid with bracket styling */
+        .matrix-wrapper {
+            display: inline-flex;
+            align-items: stretch;
+            margin: 0 auto;
+        }
+        .matrix-bracket {
+            width: 6px;
+            border: 2px solid #818cf8;
+            flex-shrink: 0;
+        }
+        .matrix-bracket.left {
+            border-right: none;
+            border-radius: 6px 0 0 6px;
+        }
+        .matrix-bracket.right {
+            border-left: none;
+            border-radius: 0 6px 6px 0;
+        }
+        .matrix-grid-container {
+            display: flex;
+            justify-content: center;
+        }
+        .matrix-grid {
+            display: inline-grid;
+            gap: 4px;
+            padding: 6px 4px;
+        }
+        .matrix-grid input {
+            width: 54px;
+            height: 36px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: border-color 0.2s;
+        }
+        .matrix-grid input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79,70,229,0.2);
+        }
+
+        /* Result panel */
+        .result-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(79,70,229,0.15);
+            border: 1px solid rgba(79,70,229,0.2);
+        }
+        .result-panel .matrix-panel-title { color: #a78bfa; }
+        .result-cell {
+            width: 64px;
+            height: 36px;
+            background: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            color: #a78bfa;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: text;
+        }
+        .result-bracket { border-color: #a78bfa; }
+
+        /* Scalar input */
+        .scalar-section {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .scalar-section.visible { display: flex; }
+        .scalar-section label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .scalar-section input {
+            width: 80px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .scalar-section input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        /* Steps display */
+        .steps-panel {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        .steps-panel.visible { display: block; }
+        .steps-panel h3 {
+            font-size: 0.85rem;
+            color: #818cf8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+        }
+        .step-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a2332;
+            line-height: 1.6;
+        }
+        .step-line:last-child { border-bottom: none; }
+        .step-highlight { color: #a78bfa; font-weight: 600; }
+
+        /* Error / info message */
+        .message {
+            text-align: center;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .message.visible { display: block; }
+        .message.error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+        .message.success {
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.3);
+            color: #86efac;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            padding: 8px 24px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            font-size: 0.75rem;
+            color: #64748b;
+            gap: 16px;
+        }
+        .status-bar .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-bar .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .matrices-area { flex-direction: column; align-items: center; }
+            .matrix-panel, .result-panel { width: 100%; min-width: unset; }
+            .ops-bar { gap: 6px; }
+            .ops-bar button { padding: 7px 12px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="location.href='../Tools.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1><i class="fas fa-table-cells"></i> Matrix Calculator</h1>
+    </div>
+
+    <div class="main-content">
+        <!-- Operations bar -->
+        <div class="ops-bar">
+            <button onclick="setOp('add')" id="op-add"><i class="fas fa-plus"></i> A + B</button>
+            <button onclick="setOp('sub')" id="op-sub"><i class="fas fa-minus"></i> A - B</button>
+            <button onclick="setOp('mul')" id="op-mul"><i class="fas fa-xmark"></i> A &times; B</button>
+            <button onclick="setOp('scalar')" id="op-scalar"><i class="fas fa-hashtag"></i> Scalar</button>
+            <button onclick="setOp('transpose')" id="op-transpose"><i class="fas fa-rotate"></i> Transpose A</button>
+            <button onclick="setOp('det')" id="op-det"><i class="fas fa-calculator"></i> det(A)</button>
+            <button onclick="setOp('inverse')" id="op-inverse"><i class="fas fa-arrow-right-arrow-left"></i> A<sup>-1</sup></button>
+            <button onclick="setOp('identity')" id="op-identity"><i class="fas fa-border-all"></i> Identity</button>
+        </div>
+
+        <!-- Scalar input -->
+        <div class="scalar-section" id="scalarSection">
+            <label>Scalar (k):</label>
+            <input type="number" id="scalarValue" value="2" step="any">
+            <label>applied to Matrix A</label>
+        </div>
+
+        <!-- Message area -->
+        <div class="message" id="msg"></div>
+
+        <!-- Matrix inputs -->
+        <div class="matrices-area">
+            <div class="matrix-panel" id="panelA">
+                <div class="matrix-panel-title">
+                    <span><i class="fas fa-table-cells"></i> Matrix A</span>
+                </div>
+                <div class="dim-controls">
+                    <label>Rows:</label>
+                    <select id="rowsA" onchange="rebuildMatrix('A')">
+                        <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+                    </select>
+                    <label>Cols:</label>
+                    <select id="colsA" onchange="rebuildMatrix('A')">
+                        <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+                    </select>
+                </div>
+                <div class="matrix-actions">
+                    <button onclick="clearMatrix('A')"><i class="fas fa-eraser"></i> Clear</button>
+                    <button onclick="randomFill('A')"><i class="fas fa-dice"></i> Random</button>
+                    <button onclick="fillIdentity('A')"><i class="fas fa-border-all"></i> Identity</button>
+                </div>
+                <div class="matrix-grid-container" id="gridContainerA"></div>
+            </div>
+
+            <div class="matrix-panel" id="panelB">
+                <div class="matrix-panel-title">
+                    <span><i class="fas fa-table-cells"></i> Matrix B</span>
+                </div>
+                <div class="dim-controls">
+                    <label>Rows:</label>
+                    <select id="rowsB" onchange="rebuildMatrix('B')">
+                        <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+                    </select>
+                    <label>Cols:</label>
+                    <select id="colsB" onchange="rebuildMatrix('B')">
+                        <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option>
+                    </select>
+                </div>
+                <div class="matrix-actions">
+                    <button onclick="clearMatrix('B')"><i class="fas fa-eraser"></i> Clear</button>
+                    <button onclick="randomFill('B')"><i class="fas fa-dice"></i> Random</button>
+                    <button onclick="fillIdentity('B')"><i class="fas fa-border-all"></i> Identity</button>
+                </div>
+                <div class="matrix-grid-container" id="gridContainerB"></div>
+            </div>
+
+            <!-- Result -->
+            <div class="result-panel" id="resultPanel" style="display:none;">
+                <div class="matrix-panel-title">
+                    <span><i class="fas fa-equals"></i> Result</span>
+                    <button class="back-btn" style="padding:5px 10px;font-size:0.72rem;" onclick="copyResult()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div id="resultScalar" style="display:none; text-align:center; padding:16px 0;">
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:1.6rem; color:#a78bfa; font-weight:700;" id="scalarResult"></span>
+                </div>
+                <div class="matrix-grid-container" id="resultGridContainer"></div>
+            </div>
+        </div>
+
+        <!-- Calculate button -->
+        <div style="text-align:center; margin-bottom:20px;">
+            <button class="ops-bar" style="display:inline-flex;" onclick="calculate()">
+                <button style="background:#4f46e5;border:1px solid #4f46e5;color:#fff;padding:12px 32px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;transition:all 0.2s;display:flex;align-items:center;gap:8px;" onmouseenter="this.style.background='#4338ca'" onmouseleave="this.style.background='#4f46e5'" onclick="calculate()">
+                    <i class="fas fa-play"></i> Calculate
+                </button>
+            </button>
+        </div>
+
+        <!-- Steps -->
+        <div class="steps-panel" id="stepsPanel">
+            <h3><i class="fas fa-list-ol"></i> Step-by-Step</h3>
+            <div id="stepsContent"></div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot"></div>
+            <span>Matrix Calculator Ready</span>
+        </div>
+        <div class="status-item" id="statusInfo">
+            <i class="fas fa-info-circle"></i>
+            <span>Select an operation and click Calculate</span>
+        </div>
+    </div>
+
+    <script>
+        let currentOp = 'add';
+        let lastResult = null;
+
+        function setOp(op) {
+            currentOp = op;
+            document.querySelectorAll('.ops-bar button').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('op-' + op);
+            if (btn) btn.classList.add('active');
+
+            const scalarSec = document.getElementById('scalarSection');
+            scalarSec.classList.toggle('visible', op === 'scalar');
+
+            // Hide/show panel B based on operation
+            const panelB = document.getElementById('panelB');
+            const needsB = ['add', 'sub', 'mul'].includes(op);
+            panelB.style.display = needsB ? '' : 'none';
+
+            hideMsg();
+        }
+
+        function getDim(name) {
+            const r = parseInt(document.getElementById('rows' + name).value);
+            const c = parseInt(document.getElementById('cols' + name).value);
+            return { rows: r, cols: c };
+        }
+
+        function rebuildMatrix(name) {
+            const { rows, cols } = getDim(name);
+            const container = document.getElementById('gridContainer' + name);
+            // save old values
+            const old = getMatrixValues(name);
+            container.innerHTML = '';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'matrix-wrapper';
+
+            const bl = document.createElement('div');
+            bl.className = 'matrix-bracket left';
+            wrapper.appendChild(bl);
+
+            const grid = document.createElement('div');
+            grid.className = 'matrix-grid';
+            grid.id = 'grid' + name;
+            grid.style.gridTemplateColumns = `repeat(${cols}, 54px)`;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const inp = document.createElement('input');
+                    inp.type = 'number';
+                    inp.step = 'any';
+                    inp.id = `cell${name}_${i}_${j}`;
+                    inp.value = (old[i] && old[i][j] !== undefined) ? old[i][j] : 0;
+                    grid.appendChild(inp);
+                }
+            }
+
+            wrapper.appendChild(grid);
+
+            const br = document.createElement('div');
+            br.className = 'matrix-bracket right';
+            wrapper.appendChild(br);
+
+            container.appendChild(wrapper);
+        }
+
+        function getMatrixValues(name) {
+            const { rows, cols } = getDim(name);
+            const m = [];
+            for (let i = 0; i < rows; i++) {
+                m[i] = [];
+                for (let j = 0; j < cols; j++) {
+                    const el = document.getElementById(`cell${name}_${i}_${j}`);
+                    m[i][j] = el ? parseFloat(el.value) || 0 : 0;
+                }
+            }
+            return m;
+        }
+
+        function clearMatrix(name) {
+            const { rows, cols } = getDim(name);
+            for (let i = 0; i < rows; i++)
+                for (let j = 0; j < cols; j++) {
+                    const el = document.getElementById(`cell${name}_${i}_${j}`);
+                    if (el) el.value = 0;
+                }
+        }
+
+        function randomFill(name) {
+            const { rows, cols } = getDim(name);
+            for (let i = 0; i < rows; i++)
+                for (let j = 0; j < cols; j++) {
+                    const el = document.getElementById(`cell${name}_${i}_${j}`);
+                    if (el) el.value = Math.floor(Math.random() * 19) - 9;
+                }
+        }
+
+        function fillIdentity(name) {
+            const { rows, cols } = getDim(name);
+            for (let i = 0; i < rows; i++)
+                for (let j = 0; j < cols; j++) {
+                    const el = document.getElementById(`cell${name}_${i}_${j}`);
+                    if (el) el.value = (i === j) ? 1 : 0;
+                }
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('msg');
+            el.textContent = text;
+            el.className = 'message visible ' + type;
+        }
+
+        function hideMsg() {
+            document.getElementById('msg').className = 'message';
+        }
+
+        function showResult(matrix) {
+            lastResult = matrix;
+            const panel = document.getElementById('resultPanel');
+            panel.style.display = '';
+            const scalarDiv = document.getElementById('resultScalar');
+            const gridDiv = document.getElementById('resultGridContainer');
+
+            if (typeof matrix === 'number') {
+                // scalar result (determinant)
+                scalarDiv.style.display = '';
+                gridDiv.innerHTML = '';
+                document.getElementById('scalarResult').textContent = formatNum(matrix);
+                return;
+            }
+
+            scalarDiv.style.display = 'none';
+            gridDiv.innerHTML = '';
+
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'matrix-wrapper';
+
+            const bl = document.createElement('div');
+            bl.className = 'matrix-bracket left result-bracket';
+            wrapper.appendChild(bl);
+
+            const grid = document.createElement('div');
+            grid.className = 'matrix-grid';
+            grid.style.gridTemplateColumns = `repeat(${cols}, 64px)`;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'result-cell';
+                    cell.textContent = formatNum(matrix[i][j]);
+                    grid.appendChild(cell);
+                }
+            }
+
+            wrapper.appendChild(grid);
+
+            const br = document.createElement('div');
+            br.className = 'matrix-bracket right result-bracket';
+            wrapper.appendChild(br);
+
+            gridDiv.appendChild(wrapper);
+        }
+
+        function formatNum(n) {
+            if (Number.isInteger(n)) return n.toString();
+            return parseFloat(n.toFixed(4)).toString();
+        }
+
+        function showSteps(lines) {
+            const panel = document.getElementById('stepsPanel');
+            const content = document.getElementById('stepsContent');
+            content.innerHTML = '';
+            lines.forEach(l => {
+                const div = document.createElement('div');
+                div.className = 'step-line';
+                div.innerHTML = l;
+                content.appendChild(div);
+            });
+            panel.classList.add('visible');
+        }
+
+        function hideSteps() {
+            document.getElementById('stepsPanel').classList.remove('visible');
+        }
+
+        // ---- Math operations ----
+
+        function matAdd(a, b) {
+            return a.map((row, i) => row.map((v, j) => v + b[i][j]));
+        }
+
+        function matSub(a, b) {
+            return a.map((row, i) => row.map((v, j) => v - b[i][j]));
+        }
+
+        function matMul(a, b) {
+            const rA = a.length, cA = a[0].length, cB = b[0].length;
+            const res = Array.from({ length: rA }, () => Array(cB).fill(0));
+            for (let i = 0; i < rA; i++)
+                for (let j = 0; j < cB; j++)
+                    for (let k = 0; k < cA; k++)
+                        res[i][j] += a[i][k] * b[k][j];
+            return res;
+        }
+
+        function matTranspose(a) {
+            const r = a.length, c = a[0].length;
+            const res = Array.from({ length: c }, () => Array(r).fill(0));
+            for (let i = 0; i < r; i++)
+                for (let j = 0; j < c; j++)
+                    res[j][i] = a[i][j];
+            return res;
+        }
+
+        function matScalar(a, k) {
+            return a.map(row => row.map(v => v * k));
+        }
+
+        // Determinant with cofactor expansion and steps
+        function matDet(a, steps, depth) {
+            const n = a.length;
+            const indent = '&nbsp;'.repeat(depth * 4);
+            if (n === 1) {
+                steps.push(`${indent}<span class="step-highlight">det = ${formatNum(a[0][0])}</span>`);
+                return a[0][0];
+            }
+            if (n === 2) {
+                const d = a[0][0] * a[1][1] - a[0][1] * a[1][0];
+                steps.push(`${indent}det = (${formatNum(a[0][0])})(${formatNum(a[1][1])}) - (${formatNum(a[0][1])})(${formatNum(a[1][0])}) = <span class="step-highlight">${formatNum(d)}</span>`);
+                return d;
+            }
+            let det = 0;
+            steps.push(`${indent}Expanding along row 1 of ${n}x${n} matrix:`);
+            for (let j = 0; j < n; j++) {
+                const minor = a.slice(1).map(row => [...row.slice(0, j), ...row.slice(j + 1)]);
+                const sign = (j % 2 === 0) ? 1 : -1;
+                const cofactor = sign * a[0][j];
+                const subDet = matDet(minor, steps, depth + 1);
+                det += cofactor * subDet;
+                steps.push(`${indent}C(1,${j + 1}) = ${sign > 0 ? '+' : '-'}${formatNum(Math.abs(a[0][j]))} * ${formatNum(subDet)} = <span class="step-highlight">${formatNum(cofactor * subDet)}</span>`);
+            }
+            steps.push(`${indent}<span class="step-highlight">det = ${formatNum(det)}</span>`);
+            return det;
+        }
+
+        // Inverse using Gauss-Jordan
+        function matInverse(a) {
+            const n = a.length;
+            // augment with identity
+            const aug = a.map((row, i) => {
+                const idRow = Array(n).fill(0);
+                idRow[i] = 1;
+                return [...row.map(v => v), ...idRow];
+            });
+
+            for (let i = 0; i < n; i++) {
+                // partial pivot
+                let maxRow = i;
+                for (let k = i + 1; k < n; k++)
+                    if (Math.abs(aug[k][i]) > Math.abs(aug[maxRow][i])) maxRow = k;
+                [aug[i], aug[maxRow]] = [aug[maxRow], aug[i]];
+
+                if (Math.abs(aug[i][i]) < 1e-10) return null; // singular
+
+                const pivot = aug[i][i];
+                for (let j = 0; j < 2 * n; j++) aug[i][j] /= pivot;
+
+                for (let k = 0; k < n; k++) {
+                    if (k === i) continue;
+                    const factor = aug[k][i];
+                    for (let j = 0; j < 2 * n; j++) aug[k][j] -= factor * aug[i][j];
+                }
+            }
+
+            return aug.map(row => row.slice(n));
+        }
+
+        function identityMatrix(n) {
+            return Array.from({ length: n }, (_, i) =>
+                Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
+            );
+        }
+
+        // ---- Calculate ----
+
+        function calculate() {
+            hideMsg();
+            hideSteps();
+            const A = getMatrixValues('A');
+            const dimA = getDim('A');
+
+            try {
+                switch (currentOp) {
+                    case 'add':
+                    case 'sub': {
+                        const B = getMatrixValues('B');
+                        const dimB = getDim('B');
+                        if (dimA.rows !== dimB.rows || dimA.cols !== dimB.cols) {
+                            showMsg(`Dimensions must match for ${currentOp === 'add' ? 'addition' : 'subtraction'}. A is ${dimA.rows}x${dimA.cols}, B is ${dimB.rows}x${dimB.cols}.`, 'error');
+                            return;
+                        }
+                        const res = currentOp === 'add' ? matAdd(A, B) : matSub(A, B);
+                        showResult(res);
+                        updateStatus(`${currentOp === 'add' ? 'Addition' : 'Subtraction'} complete: ${dimA.rows}x${dimA.cols} result`);
+                        showMsg(`${currentOp === 'add' ? 'A + B' : 'A - B'} computed successfully.`, 'success');
+                        break;
+                    }
+                    case 'mul': {
+                        const B = getMatrixValues('B');
+                        const dimB = getDim('B');
+                        if (dimA.cols !== dimB.rows) {
+                            showMsg(`Cannot multiply: A columns (${dimA.cols}) must equal B rows (${dimB.rows}).`, 'error');
+                            return;
+                        }
+                        const res = matMul(A, B);
+                        showResult(res);
+                        updateStatus(`Multiplication complete: ${dimA.rows}x${dimB.cols} result`);
+                        showMsg(`A x B computed successfully (${dimA.rows}x${dimB.cols}).`, 'success');
+                        break;
+                    }
+                    case 'scalar': {
+                        const k = parseFloat(document.getElementById('scalarValue').value) || 0;
+                        const res = matScalar(A, k);
+                        showResult(res);
+                        updateStatus(`Scalar multiplication by ${k} complete`);
+                        showMsg(`${k} * A computed successfully.`, 'success');
+                        break;
+                    }
+                    case 'transpose': {
+                        const res = matTranspose(A);
+                        showResult(res);
+                        updateStatus(`Transpose complete: ${dimA.cols}x${dimA.rows} result`);
+                        showMsg(`Transpose of A computed (${dimA.cols}x${dimA.rows}).`, 'success');
+                        break;
+                    }
+                    case 'det': {
+                        if (dimA.rows !== dimA.cols) {
+                            showMsg(`Determinant requires a square matrix. A is ${dimA.rows}x${dimA.cols}.`, 'error');
+                            return;
+                        }
+                        const steps = [];
+                        const d = matDet(A, steps, 0);
+                        showResult(d);
+                        showSteps(steps);
+                        updateStatus(`Determinant = ${formatNum(d)}`);
+                        showMsg(`det(A) = ${formatNum(d)}`, 'success');
+                        break;
+                    }
+                    case 'inverse': {
+                        if (dimA.rows !== dimA.cols) {
+                            showMsg(`Inverse requires a square matrix. A is ${dimA.rows}x${dimA.cols}.`, 'error');
+                            return;
+                        }
+                        const inv = matInverse(A);
+                        if (!inv) {
+                            showMsg('Matrix is singular (determinant = 0). No inverse exists.', 'error');
+                            return;
+                        }
+                        showResult(inv);
+                        updateStatus(`Inverse computed: ${dimA.rows}x${dimA.cols}`);
+                        showMsg(`A\u207B\u00B9 computed successfully.`, 'success');
+                        break;
+                    }
+                    case 'identity': {
+                        const n = dimA.rows;
+                        const res = identityMatrix(n);
+                        showResult(res);
+                        updateStatus(`${n}x${n} identity matrix generated`);
+                        showMsg(`${n}x${n} identity matrix generated.`, 'success');
+                        break;
+                    }
+                }
+            } catch (e) {
+                showMsg('Calculation error: ' + e.message, 'error');
+            }
+        }
+
+        function copyResult() {
+            if (lastResult === null) return;
+            let text;
+            if (typeof lastResult === 'number') {
+                text = formatNum(lastResult);
+            } else {
+                text = lastResult.map(row => row.map(v => formatNum(v)).join('\t')).join('\n');
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showMsg('Result copied to clipboard!', 'success');
+            }).catch(() => {
+                showMsg('Copy failed. Please select and copy manually.', 'error');
+            });
+        }
+
+        function updateStatus(text) {
+            document.querySelector('#statusInfo span').textContent = text;
+        }
+
+        // Initialize
+        setOp('add');
+        rebuildMatrix('A');
+        rebuildMatrix('B');
+    </script>
+</body>
+</html>
