@@ -395,6 +395,39 @@
             }
         }
 
+        .note-editor img {
+            cursor: move;
+            max-width: 100%;
+            height: auto;
+            display: inline-block;
+            vertical-align: top;
+            border-radius: 8px;
+        }
+
+        .note-editor img.selected-img {
+            outline: 2px solid #eab308;
+            outline-offset: 2px;
+        }
+
+        .img-resize-wrapper {
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .img-resize-handle {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background: #eab308;
+            border: 1px solid white;
+            cursor: nwse-resize;
+            border-radius: 2px;
+            z-index: 10;
+        }
+
         /* Print Styles */
         @media print {
             .header, .notes-sidebar, .toolbar, .status-bar {
@@ -568,6 +601,7 @@
 
                 document.getElementById('noteTitleInput').value = note.title;
                 document.getElementById('noteContent').innerHTML = note.content;
+                setTimeout(setupImageHandlers, 100);
 
                 // Set color
                 setNoteColor(note.color, false);
@@ -697,9 +731,10 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px;">`;
+                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; cursor: move;" draggable="true">`;
                     document.execCommand('insertHTML', false, img);
                     updateNoteContent();
+                    setTimeout(setupImageHandlers, 100);
                 };
                 reader.readAsDataURL(file);
             }
@@ -979,6 +1014,144 @@
                     note.title = document.getElementById('noteTitleInput').value || 'Untitled Note';
                     saveNotes();
                 }
+            }
+        });
+
+        // Image resize and drag handlers
+        let selectedImg = null;
+        let isResizing = false;
+        let resizeStartX, resizeStartY, resizeStartW, resizeStartH, resizeImg;
+
+        function setupImageHandlers() {
+            document.querySelectorAll('.note-editor img').forEach(img => {
+                if (img.dataset.handlersAdded) return;
+                img.dataset.handlersAdded = 'true';
+
+                img.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectImg(this);
+                });
+
+                img.addEventListener('mousedown', function(e) {
+                    if (isResizing) return;
+                    if (!this.classList.contains('selected-img')) return;
+                    e.preventDefault();
+                    startDragImage(e, this);
+                });
+            });
+        }
+
+        function selectImg(img) {
+            deselectAllImages();
+            selectedImg = img;
+            img.classList.add('selected-img');
+
+            if (!img.parentElement.classList.contains('img-resize-wrapper')) {
+                const wrapper = document.createElement('span');
+                wrapper.className = 'img-resize-wrapper';
+                wrapper.contentEditable = 'false';
+                img.parentElement.insertBefore(wrapper, img);
+                wrapper.appendChild(img);
+
+                const handle = document.createElement('div');
+                handle.className = 'img-resize-handle';
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startResize(e, img);
+                });
+                wrapper.appendChild(handle);
+            }
+        }
+
+        function deselectAllImages() {
+            document.querySelectorAll('.note-editor img.selected-img').forEach(img => {
+                img.classList.remove('selected-img');
+            });
+            document.querySelectorAll('.img-resize-wrapper').forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                if (img) {
+                    wrapper.parentElement.insertBefore(img, wrapper);
+                    wrapper.remove();
+                }
+            });
+            selectedImg = null;
+        }
+
+        function startResize(e, img) {
+            isResizing = true;
+            resizeImg = img;
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            resizeStartW = img.offsetWidth;
+            resizeStartH = img.offsetHeight;
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            const dx = e.clientX - resizeStartX;
+            const newW = Math.max(30, resizeStartW + dx);
+            const ratio = resizeStartH / resizeStartW;
+            const newH = newW * ratio;
+            resizeImg.style.width = newW + 'px';
+            resizeImg.style.height = newH + 'px';
+            resizeImg.style.maxWidth = 'none';
+            if (resizeImg.parentElement.classList.contains('img-resize-wrapper')) {
+                resizeImg.parentElement.style.width = newW + 'px';
+            }
+        }
+
+        function stopResize() {
+            isResizing = false;
+            resizeImg = null;
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            updateNoteContent();
+        }
+
+        let isDragging = false;
+        let dragImg = null;
+
+        function startDragImage(e, img) {
+            isDragging = true;
+            dragImg = img;
+            img.style.opacity = '0.5';
+            document.addEventListener('mousemove', doDragImage);
+            document.addEventListener('mouseup', stopDragImage);
+        }
+
+        function doDragImage(e) {
+            if (!isDragging) return;
+        }
+
+        function stopDragImage(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            if (dragImg) {
+                dragImg.style.opacity = '1';
+                const target = document.elementFromPoint(e.clientX, e.clientY);
+                if (target && target.closest('.note-editor') && dragImg) {
+                    const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                    if (range) {
+                        const wrapper = dragImg.closest('.img-resize-wrapper');
+                        const el = wrapper || dragImg;
+                        el.remove();
+                        range.insertNode(el);
+                    }
+                }
+            }
+            dragImg = null;
+            document.removeEventListener('mousemove', doDragImage);
+            document.removeEventListener('mouseup', stopDragImage);
+            updateNoteContent();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('img') && !e.target.closest('.img-resize-handle') && !e.target.closest('.img-resize-wrapper')) {
+                deselectAllImages();
             }
         });
 

@@ -1540,28 +1540,51 @@
             window.print();
         }
 
-        // Export calendar
+        // Export calendar as visual grid CSV
         function exportCalendar() {
-            const data = events.map(e => ({
-                Title: e.title,
-                Type: e.type,
-                'Start Date': e.startDate,
-                'End Date': e.endDate,
-                'Start Time': e.startTime || '',
-                'End Time': e.endTime || '',
-                Location: e.location || '',
-                Description: e.description || ''
-            }));
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-            let csv = 'Title,Type,Start Date,End Date,Start Time,End Time,Location,Description\n';
-            data.forEach(row => {
-                csv += `"${row.Title}","${row.Type}","${row['Start Date']}","${row['End Date']}","${row['Start Time']}","${row['End Time']}","${row.Location}","${row.Description}"\n`;
-            });
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const monthLength = lastDay.getDate();
+
+            let csv = `" ","${monthName}"," "," "," "," "," "," "\n`;
+            csv += '" ",Sun,Mon,Tue,Wed,Thu,Fri,Sat\n';
+
+            let day = 1;
+            // Build rows week by week
+            for (let week = 0; week < 6; week++) {
+                if (day > monthLength) break;
+                const rowCells = [];
+                for (let dow = 0; dow < 7; dow++) {
+                    if ((week === 0 && dow < startingDayOfWeek) || day > monthLength) {
+                        rowCells.push('" "');
+                    } else {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const dayEvents = events.filter(e =>
+                            e.startDate <= dateStr && e.endDate >= dateStr
+                        );
+                        let cellText = String(day);
+                        if (dayEvents.length > 0) {
+                            const eventNames = dayEvents.map(e => e.title).join(' | ');
+                            cellText += ' - ' + eventNames;
+                        }
+                        // Escape quotes for CSV
+                        cellText = cellText.replace(/"/g, '""');
+                        rowCells.push('"' + cellText + '"');
+                        day++;
+                    }
+                }
+                csv += '" ",' + rowCells.join(',') + '\n';
+            }
 
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'calendar.csv';
+            a.download = monthName.replace(' ', '_') + '_Calendar.csv';
             a.click();
             URL.revokeObjectURL(a.href);
         }

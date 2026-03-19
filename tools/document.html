@@ -537,6 +537,54 @@
                 font-size: 1rem;
             }
         }
+        .editor img {
+            cursor: move;
+            max-width: 100%;
+            height: auto;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .editor img.selected-img {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        .img-resize-wrapper {
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .img-resize-handle {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background: #2563eb;
+            border: 1px solid white;
+            cursor: nwse-resize;
+            border-radius: 2px;
+            z-index: 10;
+        }
+
+        .img-drag-handle {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(37,99,235,0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            cursor: move;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
     </style>
 </head>
 <body>
@@ -690,9 +738,6 @@
                 <i class="fas fa-image"></i>
             </button>
             <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="insertImage(event)">
-            <button class="toolbar-btn" onclick="formatDoc('removeFormat')" title="Clear Formatting">
-                <i class="fas fa-eraser"></i>
-            </button>
         </div>
     </div>
 
@@ -744,6 +789,7 @@
 
             renderPages();
             renderPagesList();
+            setTimeout(setupImageHandlers, 100);
         }
 
         // Toggle documents menu
@@ -1079,6 +1125,7 @@
             });
 
             updateCounts();
+            setTimeout(setupImageHandlers, 50);
         }
 
         // Render pages list
@@ -1236,12 +1283,163 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto;">`;
+                    const img = `<img src="${e.target.result}" style="max-width: 100%; height: auto; cursor: move;" draggable="true">`;
                     document.execCommand('insertHTML', false, img);
+                    setupImageHandlers();
                 };
                 reader.readAsDataURL(file);
             }
             event.target.value = '';
+        }
+
+        // Setup image handlers for all images in editors
+        function setupImageHandlers() {
+            document.querySelectorAll('.editor img').forEach(img => {
+                if (img.dataset.handlersAdded) return;
+                img.dataset.handlersAdded = 'true';
+
+                img.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectImage(this);
+                });
+
+                img.addEventListener('mousedown', function(e) {
+                    if (e.target.classList.contains('img-resize-handle')) return;
+                    startDragImage(e, this);
+                });
+            });
+        }
+
+        let selectedImg = null;
+        let resizeWrapper = null;
+
+        function selectImage(img) {
+            deselectAllImages();
+            selectedImg = img;
+            img.classList.add('selected-img');
+
+            // Create resize wrapper if not exists
+            if (!img.parentElement.classList.contains('img-resize-wrapper')) {
+                const wrapper = document.createElement('span');
+                wrapper.className = 'img-resize-wrapper';
+                wrapper.contentEditable = 'false';
+                img.parentElement.insertBefore(wrapper, img);
+                wrapper.appendChild(img);
+
+                const handle = document.createElement('div');
+                handle.className = 'img-resize-handle';
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startResize(e, img);
+                });
+                wrapper.appendChild(handle);
+            }
+        }
+
+        function deselectAllImages() {
+            document.querySelectorAll('.editor img.selected-img').forEach(img => {
+                img.classList.remove('selected-img');
+            });
+            // Remove resize wrappers
+            document.querySelectorAll('.img-resize-wrapper').forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                if (img) {
+                    wrapper.parentElement.insertBefore(img, wrapper);
+                    wrapper.remove();
+                }
+            });
+            selectedImg = null;
+        }
+
+        // Resize functionality
+        let isResizing = false;
+        let resizeStartX, resizeStartY, resizeStartW, resizeStartH, resizeImg;
+
+        function startResize(e, img) {
+            isResizing = true;
+            resizeImg = img;
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            resizeStartW = img.offsetWidth;
+            resizeStartH = img.offsetHeight;
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            const dx = e.clientX - resizeStartX;
+            const dy = e.clientY - resizeStartY;
+            const newW = Math.max(30, resizeStartW + dx);
+            const ratio = resizeStartH / resizeStartW;
+            const newH = newW * ratio;
+            resizeImg.style.width = newW + 'px';
+            resizeImg.style.height = newH + 'px';
+            resizeImg.style.maxWidth = 'none';
+            if (resizeImg.parentElement.classList.contains('img-resize-wrapper')) {
+                resizeImg.parentElement.style.width = newW + 'px';
+            }
+        }
+
+        function stopResize(e) {
+            isResizing = false;
+            resizeImg = null;
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            autoSave();
+        }
+
+        // Drag functionality
+        let isDragging = false;
+        let dragImg = null;
+        let dragClone = null;
+
+        function startDragImage(e, img) {
+            if (isResizing) return;
+            if (!img.classList.contains('selected-img')) return;
+
+            e.preventDefault();
+            isDragging = true;
+            dragImg = img;
+
+            // Visual feedback
+            img.style.opacity = '0.5';
+
+            document.addEventListener('mousemove', doDragImage);
+            document.addEventListener('mouseup', stopDragImage);
+        }
+
+        function doDragImage(e) {
+            if (!isDragging) return;
+            // Just visual feedback during drag
+        }
+
+        function stopDragImage(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            if (dragImg) {
+                dragImg.style.opacity = '1';
+            }
+
+            // Find where to drop - get the element at the drop point
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            if (target && target.closest('.editor') && dragImg) {
+                // Move the image (or its wrapper) to the cursor position using insertNode
+                const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                if (range) {
+                    const wrapper = dragImg.closest('.img-resize-wrapper');
+                    const elementToMove = wrapper || dragImg;
+                    elementToMove.remove();
+                    range.insertNode(elementToMove);
+                }
+            }
+
+            dragImg = null;
+            document.removeEventListener('mousemove', doDragImage);
+            document.removeEventListener('mouseup', stopDragImage);
+            autoSave();
         }
 
         // Update word and character count
@@ -1408,6 +1606,11 @@
             // Check if click is outside menu and not on the button
             if (!menu.contains(target) && !target.closest('.header-btn')) {
                 menu.classList.remove('open');
+            }
+
+            // Deselect images when clicking outside of them
+            if (!e.target.closest('img') && !e.target.closest('.img-resize-handle') && !e.target.closest('.img-resize-wrapper')) {
+                deselectAllImages();
             }
         });
 

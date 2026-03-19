@@ -328,6 +328,25 @@
             margin-left: 8px;
         }
 
+        .slide-thumbnail-content div[contenteditable="false"] {
+            transform: scale(0.15) !important;
+            transform-origin: top left !important;
+            margin: 0 !important;
+            display: inline-block !important;
+            max-width: 20px !important;
+            max-height: 20px !important;
+            overflow: visible !important;
+        }
+
+        .slide-thumbnail-content .selected-shape {
+            outline: none !important;
+        }
+
+        .slide-thumbnail-content .img-resize-wrapper,
+        .slide-thumbnail-content .img-resize-handle {
+            display: none !important;
+        }
+
         .slide-number {
             position: absolute;
             bottom: 4px;
@@ -464,6 +483,7 @@
             justify-content: center;
             padding: 30px;
             overflow: auto;
+            position: relative;
         }
 
         .slide-canvas {
@@ -722,6 +742,160 @@
             display: none;
         }
 
+        .slide-content img {
+            cursor: move;
+            max-width: 100%;
+            height: auto;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .slide-content img.selected-img {
+            outline: 2px solid #7c3aed;
+            outline-offset: 2px;
+        }
+
+        .img-resize-wrapper {
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .img-resize-handle {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 10px;
+            height: 10px;
+            background: #7c3aed;
+            border: 1px solid white;
+            cursor: nwse-resize;
+            border-radius: 2px;
+            z-index: 10;
+        }
+
+        .shape-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1a1a2e;
+            border: 1px solid #2a3f5f;
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 100;
+            width: 220px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .shape-menu.open {
+            display: block;
+        }
+
+        .shape-menu-title {
+            font-size: 11px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+
+        .shape-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .shape-option {
+            background: #2a3f5f;
+            border: 1px solid #3a5080;
+            border-radius: 6px;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            transition: all 0.2s;
+        }
+
+        .shape-option:hover {
+            background: #3a5080;
+            border-color: #7c3aed;
+        }
+
+        /* Shape selection */
+        .slide-content .selected-shape {
+            outline: 2px solid #7c3aed !important;
+            outline-offset: 3px;
+            cursor: move;
+        }
+
+        .shape-color-picker {
+            display: none;
+            position: absolute;
+            background: #1a1a2e;
+            border: 1px solid #2a3f5f;
+            border-radius: 8px;
+            padding: 10px;
+            z-index: 200;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .shape-color-picker.open {
+            display: block;
+        }
+
+        .shape-color-picker-title {
+            font-size: 11px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .shape-color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .shape-color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .shape-color-swatch:hover {
+            transform: scale(1.15);
+            border-color: white;
+        }
+
+        .shape-color-custom {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shape-color-custom label {
+            font-size: 11px;
+            color: #a0a0a0;
+        }
+
+        .shape-color-custom input[type="color"] {
+            width: 32px;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
     </style>
 </head>
 <body>
@@ -862,9 +1036,55 @@
                         <i class="fas fa-image"></i>
                     </button>
                     <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="insertImage(event)">
-                    <button class="toolbar-btn" onclick="insertShape()" title="Insert Shape">
-                        <i class="fas fa-shapes"></i>
-                    </button>
+                    <div style="position: relative; display: inline-block;">
+                        <button class="toolbar-btn" onclick="toggleShapeMenu()" title="Insert Shape">
+                            <i class="fas fa-shapes"></i>
+                        </button>
+                        <div class="shape-menu" id="shapeMenu">
+                            <div class="shape-menu-title">Shapes</div>
+                            <div class="shape-grid">
+                                <button class="shape-option" onclick="insertShape('rectangle')" title="Rectangle">
+                                    <div style="width:28px;height:20px;background:#7c3aed;border-radius:2px;"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('rounded-rect')" title="Rounded Rectangle">
+                                    <div style="width:28px;height:20px;background:#7c3aed;border-radius:6px;"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('circle')" title="Circle">
+                                    <div style="width:24px;height:24px;background:#7c3aed;border-radius:50%;"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('oval')" title="Oval">
+                                    <div style="width:30px;height:20px;background:#7c3aed;border-radius:50%;"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('triangle')" title="Triangle">
+                                    <div style="width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:24px solid #7c3aed;"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('diamond')" title="Diamond">
+                                    <div style="width:20px;height:20px;background:#7c3aed;transform:rotate(45deg);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('pentagon')" title="Pentagon">
+                                    <div style="width:26px;height:26px;background:#7c3aed;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('hexagon')" title="Hexagon">
+                                    <div style="width:28px;height:24px;background:#7c3aed;clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('star')" title="Star">
+                                    <div style="width:26px;height:26px;background:#7c3aed;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('arrow-right')" title="Arrow Right">
+                                    <div style="width:28px;height:20px;background:#7c3aed;clip-path:polygon(0% 20%,60% 20%,60% 0%,100% 50%,60% 100%,60% 80%,0% 80%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('arrow-left')" title="Arrow Left">
+                                    <div style="width:28px;height:20px;background:#7c3aed;clip-path:polygon(40% 0%,40% 20%,100% 20%,100% 80%,40% 80%,40% 100%,0% 50%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('heart')" title="Heart">
+                                    <div style="width:26px;height:24px;background:#7c3aed;clip-path:polygon(50% 100%,0% 35%,0% 15%,15% 0%,35% 0%,50% 15%,65% 0%,85% 0%,100% 15%,100% 35%);"></div>
+                                </button>
+                                <button class="shape-option" onclick="insertShape('cross')" title="Cross">
+                                    <div style="width:24px;height:24px;background:#7c3aed;clip-path:polygon(35% 0%,65% 0%,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0% 65%,0% 35%,35% 35%);"></div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Themes -->
@@ -884,6 +1104,29 @@
             <div class="slide-canvas-container">
                 <div class="slide-canvas" id="slideCanvas">
                     <div class="slide-content" id="slideContent" contenteditable="true"></div>
+                </div>
+            </div>
+
+            <!-- Shape Color Picker -->
+            <div class="shape-color-picker" id="shapeColorPicker">
+                <div class="shape-color-picker-title">Shape Color</div>
+                <div class="shape-color-grid">
+                    <div class="shape-color-swatch" style="background:#7c3aed;" onclick="setShapeColor('#7c3aed')"></div>
+                    <div class="shape-color-swatch" style="background:#2563eb;" onclick="setShapeColor('#2563eb')"></div>
+                    <div class="shape-color-swatch" style="background:#0891b2;" onclick="setShapeColor('#0891b2')"></div>
+                    <div class="shape-color-swatch" style="background:#16a34a;" onclick="setShapeColor('#16a34a')"></div>
+                    <div class="shape-color-swatch" style="background:#eab308;" onclick="setShapeColor('#eab308')"></div>
+                    <div class="shape-color-swatch" style="background:#ea580c;" onclick="setShapeColor('#ea580c')"></div>
+                    <div class="shape-color-swatch" style="background:#ef4444;" onclick="setShapeColor('#ef4444')"></div>
+                    <div class="shape-color-swatch" style="background:#ec4899;" onclick="setShapeColor('#ec4899')"></div>
+                    <div class="shape-color-swatch" style="background:#8b5cf6;" onclick="setShapeColor('#8b5cf6')"></div>
+                    <div class="shape-color-swatch" style="background:#333333;" onclick="setShapeColor('#333333')"></div>
+                    <div class="shape-color-swatch" style="background:#666666;" onclick="setShapeColor('#666666')"></div>
+                    <div class="shape-color-swatch" style="background:#ffffff;border-color:#555;" onclick="setShapeColor('#ffffff')"></div>
+                </div>
+                <div class="shape-color-custom">
+                    <label>Custom:</label>
+                    <input type="color" id="shapeCustomColor" value="#7c3aed" onchange="setShapeColor(this.value)">
                 </div>
             </div>
 
@@ -961,6 +1204,7 @@
                 renderSlidesList();
             }
             initialized = true;
+            setTimeout(setupShapeHandlers, 100);
         }
 
         // Toggle presentations menu
@@ -1266,6 +1510,7 @@
 
             updateSlideInfo();
             autoSave();
+            setTimeout(setupShapeHandlers, 50);
         }
 
         // Update slide info
@@ -1303,6 +1548,7 @@
                 reader.onload = function(e) {
                     const img = `<img src="${e.target.result}" style="max-width: 100%; max-height: 400px; height: auto; display: block; margin: 10px auto;">`;
                     document.execCommand('insertHTML', false, img);
+                    setupImageHandlers();
                     autoSave();
                     renderSlidesList();
                 };
@@ -1311,24 +1557,406 @@
             event.target.value = '';
         }
 
-        // Insert shape
-        function insertShape() {
-            const shapes = ['rectangle', 'circle', 'triangle'];
-            const shape = prompt('Enter shape (rectangle, circle, triangle):', 'rectangle');
+        // Image resize and drag handlers
+        let selectedImage = null;
+        let isResizing = false;
+        let isDraggingImage = false;
+        let resizeStartX, resizeStartY, resizeStartWidth, resizeStartHeight;
+        let dragStartX, dragStartY, dragOffsetX, dragOffsetY;
 
+        function setupImageHandlers() {
+            const content = document.getElementById('slideContent');
+            const images = content.querySelectorAll('img');
+            images.forEach(img => {
+                if (!img.dataset.handlersAttached) {
+                    img.dataset.handlersAttached = 'true';
+                    img.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectImage(this);
+                    });
+                    img.addEventListener('mousedown', function(e) {
+                        if (this.classList.contains('selected-img') && !e.target.classList.contains('img-resize-handle')) {
+                            startDragImage(e, this);
+                        }
+                    });
+                }
+            });
+        }
+
+        function selectImage(img) {
+            deselectAllImages();
+            selectedImage = img;
+            img.classList.add('selected-img');
+
+            // Wrap image in resize wrapper if not already wrapped
+            if (!img.parentElement.classList.contains('img-resize-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'img-resize-wrapper';
+                wrapper.contentEditable = 'false';
+                img.parentNode.insertBefore(wrapper, img);
+                wrapper.appendChild(img);
+            }
+
+            // Add resize handle
+            const wrapper = img.parentElement;
+            if (!wrapper.querySelector('.img-resize-handle')) {
+                const handle = document.createElement('div');
+                handle.className = 'img-resize-handle';
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startResize(e, img);
+                });
+                wrapper.appendChild(handle);
+            }
+        }
+
+        function deselectAllImages() {
+            selectedImage = null;
+            const content = document.getElementById('slideContent');
+            content.querySelectorAll('img.selected-img').forEach(img => {
+                img.classList.remove('selected-img');
+            });
+            content.querySelectorAll('.img-resize-handle').forEach(handle => {
+                handle.remove();
+            });
+            content.querySelectorAll('.img-resize-wrapper').forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                if (img) {
+                    wrapper.parentNode.insertBefore(img, wrapper);
+                    wrapper.remove();
+                }
+            });
+        }
+
+        function startResize(e, img) {
+            isResizing = true;
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            resizeStartWidth = img.offsetWidth;
+            resizeStartHeight = img.offsetHeight;
+            selectedImage = img;
+
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function doResize(e) {
+            if (!isResizing || !selectedImage) return;
+            const dx = e.clientX - resizeStartX;
+            const aspectRatio = resizeStartWidth / resizeStartHeight;
+            const newWidth = Math.max(30, resizeStartWidth + dx);
+            const newHeight = newWidth / aspectRatio;
+            selectedImage.style.width = newWidth + 'px';
+            selectedImage.style.height = newHeight + 'px';
+            selectedImage.style.maxWidth = 'none';
+            selectedImage.style.maxHeight = 'none';
+        }
+
+        function stopResize(e) {
+            isResizing = false;
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            autoSave();
+            renderSlidesList();
+        }
+
+        function startDragImage(e, img) {
+            isDraggingImage = true;
+            selectedImage = img;
+            const rect = img.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+
+            // Make image absolutely positioned for free movement
+            if (img.style.position !== 'absolute') {
+                const slideContent = document.getElementById('slideContent');
+                const slideRect = slideContent.getBoundingClientRect();
+                const imgLeft = rect.left - slideRect.left;
+                const imgTop = rect.top - slideRect.top;
+                img.style.position = 'absolute';
+                img.style.left = imgLeft + 'px';
+                img.style.top = imgTop + 'px';
+                img.style.margin = '0';
+            }
+
+            document.addEventListener('mousemove', doDragImage);
+            document.addEventListener('mouseup', stopDragImage);
+            e.preventDefault();
+        }
+
+        function doDragImage(e) {
+            if (!isDraggingImage || !selectedImage) return;
+            const slideContent = document.getElementById('slideContent');
+            const slideRect = slideContent.getBoundingClientRect();
+            let newLeft = e.clientX - slideRect.left - dragOffsetX;
+            let newTop = e.clientY - slideRect.top - dragOffsetY;
+            selectedImage.style.left = newLeft + 'px';
+            selectedImage.style.top = newTop + 'px';
+        }
+
+        function stopDragImage(e) {
+            isDraggingImage = false;
+            document.removeEventListener('mousemove', doDragImage);
+            document.removeEventListener('mouseup', stopDragImage);
+            autoSave();
+            renderSlidesList();
+        }
+
+        // Deselect images when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('img') && !e.target.closest('.img-resize-handle') && !e.target.closest('.img-resize-wrapper')) {
+                deselectAllImages();
+            }
+        });
+
+        // Toggle shape menu
+        function toggleShapeMenu() {
+            const menu = document.getElementById('shapeMenu');
+            menu.classList.toggle('open');
+        }
+
+        // Close shape menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.shape-menu') && !e.target.closest('[onclick*="toggleShapeMenu"]')) {
+                const menu = document.getElementById('shapeMenu');
+                if (menu) menu.classList.remove('open');
+            }
+        });
+
+        // Insert shape
+        function insertShape(shape) {
             let html = '';
+            const color = '#7c3aed';
             switch(shape) {
+                case 'rectangle':
+                    html = `<div style="width:150px;height:100px;background:${color};display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'rounded-rect':
+                    html = `<div style="width:150px;height:100px;background:${color};border-radius:15px;display:inline-block;" contenteditable="false"></div>`;
+                    break;
                 case 'circle':
-                    html = '<div style="width: 100px; height: 100px; background: #7c3aed; border-radius: 50%; display: inline-block;"></div>';
+                    html = `<div style="width:100px;height:100px;background:${color};border-radius:50%;display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'oval':
+                    html = `<div style="width:150px;height:100px;background:${color};border-radius:50%;display:inline-block;" contenteditable="false"></div>`;
                     break;
                 case 'triangle':
-                    html = '<div style="width: 0; height: 0; border-left: 50px solid transparent; border-right: 50px solid transparent; border-bottom: 100px solid #7c3aed; display: inline-block;"></div>';
+                    html = `<div style="width:0;height:0;border-left:60px solid transparent;border-right:60px solid transparent;border-bottom:100px solid ${color};display:inline-block;" contenteditable="false"></div>`;
                     break;
-                default:
-                    html = '<div style="width: 150px; height: 100px; background: #7c3aed; display: inline-block;"></div>';
+                case 'diamond':
+                    html = `<div style="width:100px;height:100px;background:${color};transform:rotate(45deg);display:inline-block;margin:25px;" contenteditable="false"></div>`;
+                    break;
+                case 'pentagon':
+                    html = `<div style="width:120px;height:120px;background:${color};clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'hexagon':
+                    html = `<div style="width:120px;height:104px;background:${color};clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'star':
+                    html = `<div style="width:120px;height:120px;background:${color};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'arrow-right':
+                    html = `<div style="width:150px;height:80px;background:${color};clip-path:polygon(0% 20%,60% 20%,60% 0%,100% 50%,60% 100%,60% 80%,0% 80%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'arrow-left':
+                    html = `<div style="width:150px;height:80px;background:${color};clip-path:polygon(40% 0%,40% 20%,100% 20%,100% 80%,40% 80%,40% 100%,0% 50%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'heart':
+                    html = `<div style="width:120px;height:110px;background:${color};clip-path:polygon(50% 100%,0% 35%,0% 15%,15% 0%,35% 0%,50% 15%,65% 0%,85% 0%,100% 15%,100% 35%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
+                case 'cross':
+                    html = `<div style="width:100px;height:100px;background:${color};clip-path:polygon(35% 0%,65% 0%,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0% 65%,0% 35%,35% 35%);display:inline-block;" contenteditable="false"></div>`;
+                    break;
             }
             document.execCommand('insertHTML', false, html);
+            document.getElementById('shapeMenu').classList.remove('open');
+            setTimeout(setupShapeHandlers, 50);
+            autoSave();
+            renderSlidesList();
         }
+
+        // Shape selection and color
+        let selectedShape = null;
+
+        function setupShapeHandlers() {
+            const content = document.getElementById('slideContent');
+            content.querySelectorAll('div[contenteditable="false"]').forEach(shape => {
+                if (shape.dataset.shapeHandlers) return;
+                shape.dataset.shapeHandlers = 'true';
+                shape.style.cursor = 'pointer';
+                shape.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (this.classList.contains('selected-shape')) {
+                        startDragShape(e, this);
+                    } else {
+                        selectShape(this);
+                    }
+                });
+            });
+        }
+
+        function selectShape(shape) {
+            deselectAllShapes();
+            selectedShape = shape;
+            shape.classList.add('selected-shape');
+            showShapeColorPicker(shape);
+        }
+
+        function deselectAllShapes() {
+            if (selectedShape) {
+                selectedShape.classList.remove('selected-shape');
+                selectedShape = null;
+            }
+            const picker = document.getElementById('shapeColorPicker');
+            if (picker) picker.classList.remove('open');
+        }
+
+        function showShapeColorPicker(shape) {
+            const picker = document.getElementById('shapeColorPicker');
+            const rect = shape.getBoundingClientRect();
+            const container = document.querySelector('.slide-canvas-container').getBoundingClientRect();
+            picker.style.left = (rect.right - container.left + 8) + 'px';
+            picker.style.top = (rect.top - container.top) + 'px';
+            picker.classList.add('open');
+
+            const currentColor = shape.style.background || shape.style.backgroundColor || shape.style.borderBottomColor || '#7c3aed';
+            document.getElementById('shapeCustomColor').value = rgbToHex(currentColor);
+        }
+
+        function setShapeColor(color) {
+            if (!selectedShape) return;
+            if (selectedShape.style.borderBottomColor) {
+                selectedShape.style.borderBottomColor = color;
+            } else {
+                selectedShape.style.background = color;
+            }
+            autoSave();
+            renderSlidesList();
+        }
+
+        function rgbToHex(color) {
+            if (!color) return '#7c3aed';
+            if (color.startsWith('#')) return color;
+            const match = color.match(/\d+/g);
+            if (!match || match.length < 3) return '#7c3aed';
+            return '#' + match.slice(0, 3).map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+        }
+
+        // Shape dragging
+        let isDraggingShape = false;
+        let dragShapeOffsetX, dragShapeOffsetY;
+
+        function startDragShape(e, shape) {
+            isDraggingShape = true;
+            const rect = shape.getBoundingClientRect();
+            dragShapeOffsetX = e.clientX - rect.left;
+            dragShapeOffsetY = e.clientY - rect.top;
+
+            if (shape.style.position !== 'absolute') {
+                const slideContent = document.getElementById('slideContent');
+                const slideRect = slideContent.getBoundingClientRect();
+                shape.style.position = 'absolute';
+                shape.style.left = (rect.left - slideRect.left) + 'px';
+                shape.style.top = (rect.top - slideRect.top) + 'px';
+                shape.style.margin = '0';
+            }
+
+            document.addEventListener('mousemove', doDragShape);
+            document.addEventListener('mouseup', stopDragShape);
+        }
+
+        function doDragShape(e) {
+            if (!isDraggingShape || !selectedShape) return;
+            const slideContent = document.getElementById('slideContent');
+            const slideRect = slideContent.getBoundingClientRect();
+            selectedShape.style.left = (e.clientX - slideRect.left - dragShapeOffsetX) + 'px';
+            selectedShape.style.top = (e.clientY - slideRect.top - dragShapeOffsetY) + 'px';
+        }
+
+        function stopDragShape() {
+            isDraggingShape = false;
+            document.removeEventListener('mousemove', doDragShape);
+            document.removeEventListener('mouseup', stopDragShape);
+            if (selectedShape) showShapeColorPicker(selectedShape);
+            autoSave();
+            renderSlidesList();
+        }
+
+        // Deselect shapes when clicking elsewhere (use mousedown to fire before shape handlers)
+        document.addEventListener('mousedown', function(e) {
+            if (!selectedShape) return;
+            // Don't deselect if clicking on a shape, the color picker, or its swatches
+            if (e.target.closest('div[contenteditable="false"]')) return;
+            if (e.target.closest('#shapeColorPicker')) return;
+            deselectAllShapes();
+        });
+
+        // Handle shape deletion and background color cleanup
+        document.getElementById('slideContent').addEventListener('keydown', function(e) {
+            // If a shape is selected via our system, delete it
+            if (selectedShape && (e.key === 'Delete' || e.key === 'Backspace')) {
+                e.preventDefault();
+                const shapeEl = selectedShape;
+                deselectAllShapes();
+                shapeEl.remove();
+                document.execCommand('hiliteColor', false, 'transparent');
+                document.execCommand('backColor', false, 'transparent');
+                this.focus();
+                autoSave();
+                renderSlidesList();
+                return;
+            }
+            // If backspace/delete next to a shape, manually remove it
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && sel.isCollapsed) {
+                    const range = sel.getRangeAt(0);
+                    const node = range.startContainer;
+                    const offset = range.startOffset;
+
+                    if (e.key === 'Backspace') {
+                        // Check node before cursor
+                        let prev = null;
+                        if (node.nodeType === 1 && offset > 0) {
+                            prev = node.childNodes[offset - 1];
+                        } else if (node.nodeType === 3 && offset === 0) {
+                            prev = node.previousSibling;
+                        }
+                        if (prev && prev.nodeType === 1 && prev.getAttribute('contenteditable') === 'false') {
+                            e.preventDefault();
+                            prev.remove();
+                            document.execCommand('hiliteColor', false, 'transparent');
+                            document.execCommand('backColor', false, 'transparent');
+                            autoSave();
+                            renderSlidesList();
+                            return;
+                        }
+                    }
+
+                    if (e.key === 'Delete') {
+                        // Check node after cursor
+                        let next = null;
+                        if (node.nodeType === 1 && offset < node.childNodes.length) {
+                            next = node.childNodes[offset];
+                        } else if (node.nodeType === 3 && offset === node.length) {
+                            next = node.nextSibling;
+                        }
+                        if (next && next.nodeType === 1 && next.getAttribute('contenteditable') === 'false') {
+                            e.preventDefault();
+                            next.remove();
+                            document.execCommand('hiliteColor', false, 'transparent');
+                            document.execCommand('backColor', false, 'transparent');
+                            autoSave();
+                            renderSlidesList();
+                            return;
+                        }
+                    }
+                }
+            }
+        });
 
         // Set theme
         function setTheme(themeName) {
