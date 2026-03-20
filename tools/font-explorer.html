@@ -385,6 +385,247 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
+        /* Font Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(6px);
+            padding: 2rem;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+            animation: modalIn 0.25s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-track { background: transparent; }
+        .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .modal-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 1.5rem 1.75rem 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .modal-close {
+            background: var(--panel-light);
+            border: none;
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .modal-close:hover { background: var(--border); color: white; }
+
+        .modal-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0 1.75rem 1rem;
+        }
+
+        .modal-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .modal-preview-area {
+            padding: 0 1.75rem;
+        }
+
+        .modal-preview-input {
+            width: 100%;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.65rem 0.75rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 0.75rem;
+        }
+        .modal-preview-input:focus { border-color: #db2777; }
+
+        .modal-preview-box {
+            background: var(--bg);
+            border-radius: 14px;
+            padding: 2rem 1.5rem;
+            margin-bottom: 1rem;
+            min-height: 120px;
+            line-height: 1.5;
+            word-break: break-word;
+            color: var(--text);
+        }
+
+        .modal-sizes {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 0 1.75rem 1.25rem;
+        }
+
+        .modal-size-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+        }
+
+        .modal-size-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            min-width: 2.5rem;
+            text-align: right;
+        }
+
+        .modal-size-text {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            color: var(--text);
+        }
+
+        /* Modal chars */
+        .modal-chars-section {
+            padding: 0 1.75rem 1.25rem;
+        }
+
+        .modal-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-chars {
+            font-size: 1.5rem;
+            line-height: 2;
+            color: var(--text-muted);
+            word-spacing: 0.3rem;
+            letter-spacing: 0.05rem;
+        }
+
+        /* Modal info grid */
+        .modal-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            padding: 0 1.75rem 1.25rem;
+        }
+
+        .modal-info-item {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .modal-info-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-info-value {
+            font-size: 0.95rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Modal actions */
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 1rem 1.75rem 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .modal-btn:active { transform: scale(0.97); }
+
+        .modal-btn-primary {
+            background: #db2777;
+            color: white;
+            flex: 1;
+        }
+        .modal-btn-primary:hover { background: #be185d; }
+
+        .modal-btn-secondary {
+            background: var(--panel-light);
+            color: var(--text-muted);
+        }
+        .modal-btn-secondary:hover { background: var(--border); color: var(--text); }
+
+        .modal-btn-link {
+            background: rgba(219,39,119,0.12);
+            color: var(--pink);
+            border: 1px solid rgba(219,39,119,0.3);
+        }
+        .modal-btn-link:hover { background: rgba(219,39,119,0.25); }
+
+        @media (max-width: 700px) {
+            .modal { border-radius: 16px; }
+            .modal-top { padding: 1.25rem 1.25rem 0.75rem; }
+            .modal-title { font-size: 1.3rem; }
+            .modal-badges, .modal-preview-area, .modal-sizes, .modal-chars-section, .modal-info, .modal-actions { padding-left: 1.25rem; padding-right: 1.25rem; }
+            .modal-info { grid-template-columns: 1fr; }
+        }
+
         @media (max-width: 700px) {
             .toolbar { padding: 1rem; }
             .fonts-container { padding: 1rem; }
@@ -442,6 +683,11 @@
     <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
         <button class="load-more-btn" id="loadMoreBtn">Load More Fonts</button>
     </div>
+</div>
+
+<!-- Font Detail Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -528,6 +774,12 @@
     function createCard(font) {
         const card = document.createElement('div');
         card.className = 'font-card';
+        card.style.cursor = 'pointer';
+        card.onclick = (e) => {
+            // Don't open modal if clicking buttons
+            if (e.target.closest('.card-btn') || e.target.closest('.dl-btn')) return;
+            openModal(font);
+        };
 
         const catClass = 'cat-' + (font.category || 'sans-serif').replace(' ', '-');
         const preview = previewText.value || 'The quick brown fox jumps over the lazy dog';
@@ -552,8 +804,8 @@
                     ${font.hasItalic ? '<span><i class="fas fa-italic"></i> Italic</span>' : ''}
                     <span><i class="fas fa-layer-group"></i> ${font.subsets} subsets</span>
                 </div>
-                <button class="dl-btn" onclick="downloadFont('${escAttr(font.id)}', '${escAttr(font.family)}', this)">
-                    <i class="fas fa-download"></i> Get
+                <button class="dl-btn" onclick="event.stopPropagation(); downloadFont('${escAttr(font.id)}', '${escAttr(font.family)}', this)">
+                    <i class="fas fa-download"></i> TTF
                 </button>
             </div>`;
 
@@ -591,6 +843,111 @@
         btn.classList.remove('downloading');
         btn.innerHTML = '<i class="fas fa-download"></i> TTF';
     }
+
+    // --- Modal ---
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById('modal');
+
+    function openModal(font) {
+        const fStyle = `font-family:'${font.family}',${font.category}`;
+        const catClass = 'cat-' + (font.category || 'sans-serif').replace(' ', '-');
+        const googleUrl = `https://fonts.google.com/specimen/${encodeURIComponent(font.family)}`;
+        const hasTTF = !!TTF_URLS[font.id];
+
+        modal.innerHTML = `
+            <div class="modal-top">
+                <div class="modal-title" style="${fStyle}">${esc(font.family)}</div>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+            </div>
+
+            <div class="modal-badges">
+                <span class="modal-badge ${catClass}">${esc(font.category)}</span>
+                <span class="modal-badge" style="background:rgba(255,255,255,0.08);color:var(--text-muted);">${font.weights} weight${font.weights !== 1 ? 's' : ''}</span>
+                ${font.hasItalic ? '<span class="modal-badge" style="background:rgba(255,255,255,0.08);color:var(--text-muted);"><i class="fas fa-italic" style="margin-right:3px;font-size:0.6rem;"></i> Italic</span>' : ''}
+                <span class="modal-badge" style="background:rgba(255,255,255,0.08);color:var(--text-muted);">${font.subsets} subset${font.subsets !== 1 ? 's' : ''}</span>
+            </div>
+
+            <div class="modal-preview-area">
+                <input type="text" class="modal-preview-input" id="modalPreviewInput" value="The quick brown fox jumps over the lazy dog" placeholder="Type to preview..." oninput="updateModalPreview('${escAttr(font.family)}','${font.category}')">
+                <div class="modal-preview-box" id="modalPreviewBox" style="${fStyle};font-size:36px;">
+                    The quick brown fox jumps over the lazy dog
+                </div>
+            </div>
+
+            <div class="modal-section-title" style="padding:0 1.75rem;margin-top:0.5rem;">Size samples</div>
+            <div class="modal-sizes">
+                ${[12,16,20,24,32,48].map(s => `
+                    <div class="modal-size-row">
+                        <span class="modal-size-label">${s}px</span>
+                        <span class="modal-size-text" style="${fStyle};font-size:${s}px;">Almost before we knew it, we had left the ground.</span>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="modal-chars-section">
+                <div class="modal-section-title">Characters</div>
+                <div class="modal-chars" style="${fStyle}">
+                    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z<br>
+                    a b c d e f g h i j k l m n o p q r s t u v w x y z<br>
+                    0 1 2 3 4 5 6 7 8 9<br>
+                    ! @ # $ % ^ & * ( ) - + = [ ] { } | ; : ' " , . < > ? /
+                </div>
+            </div>
+
+            <div class="modal-info">
+                <div class="modal-info-item">
+                    <div class="modal-info-label">Font ID</div>
+                    <div class="modal-info-value" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${esc(font.id)}</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="modal-info-label">Category</div>
+                    <div class="modal-info-value">${esc(font.category)}</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="modal-info-label">Weights</div>
+                    <div class="modal-info-value">${font.weights} weight${font.weights !== 1 ? 's' : ''}${font.hasItalic ? ' + Italic' : ''}</div>
+                </div>
+                <div class="modal-info-item">
+                    <div class="modal-info-label">Subsets</div>
+                    <div class="modal-info-value">${font.subsets} subset${font.subsets !== 1 ? 's' : ''}</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                ${hasTTF ? `<button class="modal-btn modal-btn-primary" id="modalDlBtn" onclick="downloadFont('${escAttr(font.id)}','${escAttr(font.family)}',this)"><i class="fas fa-download"></i> Download TTF</button>` : ''}
+                <button class="modal-btn modal-btn-secondary" onclick="copyFontName('${escAttr(font.family)}')"><i class="fas fa-copy"></i> Copy Name</button>
+                <button class="modal-btn modal-btn-secondary" onclick="copyCSSImport('${escAttr(font.family)}')"><i class="fas fa-code"></i> CSS Import</button>
+                <a class="modal-btn modal-btn-link" href="${googleUrl}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Google Fonts</a>
+            </div>
+        `;
+
+        modalOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Focus preview input
+        setTimeout(() => document.getElementById('modalPreviewInput')?.focus(), 100);
+    }
+
+    function updateModalPreview(family, category) {
+        const input = document.getElementById('modalPreviewInput');
+        const box = document.getElementById('modalPreviewBox');
+        if (input && box) {
+            box.textContent = input.value || 'The quick brown fox jumps over the lazy dog';
+        }
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
+    });
 
     // --- Copy helpers ---
     function copyFontName(family) {
