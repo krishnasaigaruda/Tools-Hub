@@ -178,8 +178,8 @@
             background: #0891b2;
         }
 
-        /* Image Tools - Classic Pink */
-        .image-resizer, .image-cropper {
+        /* Fonts - Classic Pink */
+        .font-explorer, .handwriting-font {
             background: #db2777;
         }
 
@@ -332,10 +332,10 @@
             <button class="tool-btn speech-to-text" onclick="openTool('speech-to-text')"><span class="tool-icon"><i class="fas fa-microphone"></i></span><span class="tool-name">Speech to Text</span></button>
         </div>
 
-        <h2 class="category-title">Image Tools</h2>
+        <h2 class="category-title">Fonts</h2>
         <div class="tools-grid">
-            <button class="tool-btn image-resizer" onclick="openTool('image-resizer')"><span class="tool-icon"><i class="fas fa-expand-arrows-alt"></i></span><span class="tool-name">Image Resizer</span></button>
-            <button class="tool-btn image-cropper" onclick="openTool('image-cropper')"><span class="tool-icon"><i class="fas fa-crop-alt"></i></span><span class="tool-name">Image Cropper</span></button>
+            <button class="tool-btn font-explorer" onclick="openTool('font-explorer')"><span class="tool-icon"><i class="fas fa-font"></i></span><span class="tool-name">Font Explorer</span></button>
+            <button class="tool-btn handwriting-font" onclick="openTool('handwriting-font')"><span class="tool-icon"><i class="fas fa-pen-fancy"></i></span><span class="tool-name">Handwriting to Font</span></button>
         </div>
 
         <h2 class="category-title">Document Tools</h2>
@@ -429,7 +429,8 @@
                 'dictionary': 'tools/dictionary.html',
                 'thesaurus': 'tools/thesaurus.html',
                 'text-to-speech': 'tools/text-to-speech.html',
-                'speech-to-text': 'tools/speech-to-text.html'
+                'speech-to-text': 'tools/speech-to-text.html',
+                'font-explorer': 'tools/font-explorer.html'
             };
 
             if (availableTools[toolName]) {

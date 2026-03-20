@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Explorer | Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #0891b2;
+            --cyan-light: #22d3ee;
+            --cyan-dark: #0e7490;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-light: #334155;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --orange: #fb923c;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #be185d, #db2777, #f472b6);
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(219, 39, 119, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .header-title { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+        .header-title i { font-size: 1.5rem; color: white; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: white; }
+
+        .header-stat {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.12);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        .search-wrap {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-wrap i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.7rem 1rem 0.7rem 2.5rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #db2777; }
+        .search-input::placeholder { color: var(--text-dim); }
+
+        .filter-select {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.7rem 0.75rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+        .filter-select:focus { border-color: #db2777; }
+
+        .preview-input {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.7rem 0.75rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            min-width: 180px;
+        }
+        .preview-input:focus { border-color: #db2777; }
+        .preview-input::placeholder { color: var(--text-dim); }
+
+        .size-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            padding: 0.4rem 0.75rem;
+            border-radius: 10px;
+        }
+
+        .size-wrap label { font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; }
+
+        .size-slider {
+            width: 80px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+        }
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #db2777;
+            cursor: pointer;
+        }
+
+        .size-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--pink);
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        /* Grid */
+        .fonts-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 2rem;
+        }
+
+        .fonts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Font Card */
+        .font-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .font-card:hover { border-color: rgba(219,39,119,0.4); transform: translateY(-2px); }
+
+        .font-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .font-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .font-category {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .cat-sans-serif { background: rgba(139,92,246,0.2); color: var(--purple); }
+        .cat-serif { background: rgba(251,146,60,0.2); color: var(--orange); }
+        .cat-display { background: rgba(244,114,182,0.2); color: var(--pink); }
+        .cat-handwriting { background: rgba(16,185,129,0.2); color: var(--success); }
+        .cat-monospace { background: rgba(34,211,238,0.2); color: var(--cyan-light); }
+
+        .font-card-actions {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .card-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+        }
+        .card-btn:hover { background: var(--panel-light); color: var(--pink); }
+
+        .font-preview {
+            padding: 1.25rem 1rem;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            word-break: break-word;
+            line-height: 1.4;
+            color: var(--text);
+        }
+
+        .font-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.15);
+        }
+
+        .font-meta {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .font-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .dl-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #db2777;
+            color: white;
+            border: none;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .dl-btn:hover { background: #be185d; }
+
+        .dl-btn.downloading {
+            background: var(--panel-light);
+            pointer-events: none;
+        }
+
+        /* Format toggle */
+        .format-toggle {
+            display: flex;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .format-opt {
+            padding: 0.55rem 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            transition: all 0.15s;
+        }
+        .format-opt:hover { color: var(--text); }
+        .format-opt.active { background: #db2777; color: white; }
+
+        /* Loading / Empty */
+        .loading-state, .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-dim);
+        }
+        .loading-state i, .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .loading-state i { color: #db2777; animation: spin 1s linear infinite; }
+        .empty-state i { color: var(--border); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Load more */
+        .load-more-wrap {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .load-more-btn {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .load-more-btn:hover { border-color: #db2777; color: var(--pink); }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            border: 1px solid #db2777;
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 700px) {
+            .toolbar { padding: 1rem; }
+            .fonts-container { padding: 1rem; }
+            .fonts-grid { grid-template-columns: 1fr; }
+            .header { padding: 1rem; }
+            .header-title h1 { font-size: 1.2rem; }
+            .header-stat { display: none; }
+            .preview-input { display: none; }
+            .size-wrap { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="header-title">
+        <i class="fas fa-font"></i>
+        <h1>Font Explorer</h1>
+    </div>
+    <span class="header-stat" id="fontCount">Loading...</span>
+</div>
+
+<div class="toolbar">
+    <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search fonts..." autocomplete="off">
+    </div>
+    <select class="filter-select" id="categoryFilter">
+        <option value="all">All Categories</option>
+        <option value="sans-serif">Sans Serif</option>
+        <option value="serif">Serif</option>
+        <option value="display">Display</option>
+        <option value="handwriting">Handwriting</option>
+        <option value="monospace">Monospace</option>
+    </select>
+    <input type="text" class="preview-input" id="previewText" placeholder="Preview text..." value="The quick brown fox jumps over the lazy dog">
+    <div class="size-wrap">
+        <label>Size</label>
+        <input type="range" class="size-slider" id="sizeSlider" min="12" max="72" value="28">
+        <span class="size-val" id="sizeVal">28px</span>
+    </div>
+</div>
+
+<div class="fonts-container">
+    <div id="fontsGrid" class="fonts-grid"></div>
+    <div id="loadingState" class="loading-state">
+        <i class="fas fa-spinner"></i>
+        <p>Loading fonts...</p>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fas fa-font"></i>
+        <p>No fonts match your search</p>
+    </div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+        <button class="load-more-btn" id="loadMoreBtn">Load More Fonts</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Embedded font data (top 150 Google Fonts by popularity)
+    const FONT_DATA = [{"id":"roboto","f":"Roboto","c":"sans-serif","v":9,"i":true,"s":9},{"id":"open-sans","f":"Open Sans","c":"sans-serif","v":6,"i":true,"s":10},{"id":"noto-sans-jp","f":"Noto Sans JP","c":"sans-serif","v":9,"i":false,"s":5},{"id":"inter","f":"Inter","c":"sans-serif","v":9,"i":true,"s":7},{"id":"montserrat","f":"Montserrat","c":"sans-serif","v":9,"i":true,"s":5},{"id":"poppins","f":"Poppins","c":"sans-serif","v":9,"i":true,"s":3},{"id":"lato","f":"Lato","c":"sans-serif","v":5,"i":true,"s":2},{"id":"roboto-condensed","f":"Roboto Condensed","c":"sans-serif","v":9,"i":true,"s":7},{"id":"roboto-mono","f":"Roboto Mono","c":"monospace","v":7,"i":true,"s":6},{"id":"oswald","f":"Oswald","c":"sans-serif","v":6,"i":false,"s":5},{"id":"noto-sans","f":"Noto Sans","c":"sans-serif","v":9,"i":true,"s":8},{"id":"raleway","f":"Raleway","c":"sans-serif","v":9,"i":true,"s":5},{"id":"nunito","f":"Nunito","c":"sans-serif","v":8,"i":true,"s":5},{"id":"nunito-sans","f":"Nunito Sans","c":"sans-serif","v":8,"i":true,"s":5},{"id":"dm-sans","f":"DM Sans","c":"sans-serif","v":9,"i":true,"s":2},{"id":"playfair-display","f":"Playfair Display","c":"serif","v":6,"i":true,"s":4},{"id":"rubik","f":"Rubik","c":"sans-serif","v":7,"i":true,"s":6},{"id":"ubuntu","f":"Ubuntu","c":"sans-serif","v":4,"i":true,"s":6},{"id":"roboto-slab","f":"Roboto Slab","c":"serif","v":9,"i":false,"s":7},{"id":"noto-sans-kr","f":"Noto Sans KR","c":"sans-serif","v":9,"i":false,"s":5},{"id":"merriweather","f":"Merriweather","c":"serif","v":7,"i":true,"s":5},{"id":"work-sans","f":"Work Sans","c":"sans-serif","v":9,"i":true,"s":3},{"id":"pt-sans","f":"PT Sans","c":"sans-serif","v":2,"i":true,"s":4},{"id":"kanit","f":"Kanit","c":"sans-serif","v":9,"i":true,"s":4},{"id":"mulish","f":"Mulish","c":"sans-serif","v":8,"i":true,"s":5},{"id":"manrope","f":"Manrope","c":"sans-serif","v":7,"i":false,"s":6},{"id":"lora","f":"Lora","c":"serif","v":4,"i":true,"s":7},{"id":"quicksand","f":"Quicksand","c":"sans-serif","v":5,"i":false,"s":3},{"id":"fjalla-one","f":"Fjalla One","c":"sans-serif","v":1,"i":false,"s":4},{"id":"noto-sans-tc","f":"Noto Sans TC","c":"sans-serif","v":9,"i":false,"s":5},{"id":"inconsolata","f":"Inconsolata","c":"monospace","v":8,"i":false,"s":3},{"id":"outfit","f":"Outfit","c":"sans-serif","v":9,"i":false,"s":2},{"id":"archivo","f":"Archivo","c":"sans-serif","v":9,"i":true,"s":3},{"id":"figtree","f":"Figtree","c":"sans-serif","v":7,"i":true,"s":2},{"id":"fira-sans","f":"Fira Sans","c":"sans-serif","v":9,"i":true,"s":7},{"id":"barlow","f":"Barlow","c":"sans-serif","v":9,"i":true,"s":3},{"id":"ibm-plex-sans","f":"IBM Plex Sans","c":"sans-serif","v":7,"i":true,"s":6},{"id":"bebas-neue","f":"Bebas Neue","c":"sans-serif","v":1,"i":false,"s":2},{"id":"titillium-web","f":"Titillium Web","c":"sans-serif","v":6,"i":true,"s":2},{"id":"prompt","f":"Prompt","c":"sans-serif","v":9,"i":true,"s":4},{"id":"heebo","f":"Heebo","c":"sans-serif","v":9,"i":false,"s":5},{"id":"karla","f":"Karla","c":"sans-serif","v":7,"i":true,"s":2},{"id":"noto-serif","f":"Noto Serif","c":"serif","v":9,"i":true,"s":8},{"id":"jost","f":"Jost","c":"sans-serif","v":9,"i":true,"s":3},{"id":"pt-serif","f":"PT Serif","c":"serif","v":2,"i":true,"s":4},{"id":"source-code-pro","f":"Source Code Pro","c":"monospace","v":8,"i":true,"s":7},{"id":"dancing-script","f":"Dancing Script","c":"handwriting","v":4,"i":false,"s":3},{"id":"source-sans-3","f":"Source Sans 3","c":"sans-serif","v":8,"i":true,"s":7},{"id":"plus-jakarta-sans","f":"Plus Jakarta Sans","c":"sans-serif","v":7,"i":true,"s":4},{"id":"libre-baskerville","f":"Libre Baskerville","c":"serif","v":4,"i":true,"s":2},{"id":"josefin-sans","f":"Josefin Sans","c":"sans-serif","v":7,"i":true,"s":3},{"id":"noto-sans-sc","f":"Noto Sans SC","c":"sans-serif","v":9,"i":false,"s":5},{"id":"libre-franklin","f":"Libre Franklin","c":"sans-serif","v":9,"i":true,"s":5},{"id":"cairo","f":"Cairo","c":"sans-serif","v":8,"i":false,"s":3},{"id":"public-sans","f":"Public Sans","c":"sans-serif","v":9,"i":true,"s":3},{"id":"eb-garamond","f":"EB Garamond","c":"serif","v":5,"i":true,"s":7},{"id":"gravitas-one","f":"Gravitas One","c":"display","v":1,"i":false,"s":1},{"id":"nanum-gothic","f":"Nanum Gothic","c":"sans-serif","v":3,"i":false,"s":2},{"id":"anton","f":"Anton","c":"sans-serif","v":1,"i":false,"s":3},{"id":"dosis","f":"Dosis","c":"sans-serif","v":7,"i":false,"s":3},{"id":"barlow-condensed","f":"Barlow Condensed","c":"sans-serif","v":9,"i":true,"s":3},{"id":"bitter","f":"Bitter","c":"serif","v":9,"i":true,"s":5},{"id":"cabin","f":"Cabin","c":"sans-serif","v":4,"i":true,"s":3},{"id":"space-grotesk","f":"Space Grotesk","c":"sans-serif","v":5,"i":false,"s":3},{"id":"bungee","f":"Bungee","c":"display","v":1,"i":false,"s":3},{"id":"assistant","f":"Assistant","c":"sans-serif","v":7,"i":false,"s":3},{"id":"mukta","f":"Mukta","c":"sans-serif","v":7,"i":false,"s":3},{"id":"bricolage-grotesque","f":"Bricolage Grotesque","c":"sans-serif","v":7,"i":false,"s":3},{"id":"alfa-slab-one","f":"Alfa Slab One","c":"display","v":1,"i":false,"s":3},{"id":"hind","f":"Hind","c":"sans-serif","v":5,"i":false,"s":3},{"id":"red-hat-display","f":"Red Hat Display","c":"sans-serif","v":7,"i":true,"s":2},{"id":"pacifico","f":"Pacifico","c":"handwriting","v":1,"i":false,"s":5},{"id":"oxygen","f":"Oxygen","c":"sans-serif","v":3,"i":false,"s":2},{"id":"lexend","f":"Lexend","c":"sans-serif","v":9,"i":false,"s":3},{"id":"cormorant-garamond","f":"Cormorant Garamond","c":"serif","v":5,"i":true,"s":5},{"id":"instrument-serif","f":"Instrument Serif","c":"serif","v":1,"i":true,"s":2},{"id":"exo-2","f":"Exo 2","c":"sans-serif","v":9,"i":true,"s":5},{"id":"lobster","f":"Lobster","c":"display","v":1,"i":false,"s":5},{"id":"urbanist","f":"Urbanist","c":"sans-serif","v":9,"i":true,"s":2},{"id":"pt-sans-narrow","f":"PT Sans Narrow","c":"sans-serif","v":2,"i":false,"s":4},{"id":"caveat","f":"Caveat","c":"handwriting","v":4,"i":false,"s":4},{"id":"inter-tight","f":"Inter Tight","c":"sans-serif","v":9,"i":true,"s":7},{"id":"arvo","f":"Arvo","c":"serif","v":2,"i":true,"s":1},{"id":"comfortaa","f":"Comfortaa","c":"display","v":5,"i":false,"s":6},{"id":"rajdhani","f":"Rajdhani","c":"sans-serif","v":5,"i":false,"s":3},{"id":"dm-serif-display","f":"DM Serif Display","c":"serif","v":1,"i":true,"s":2},{"id":"sora","f":"Sora","c":"sans-serif","v":8,"i":false,"s":2},{"id":"crimson-text","f":"Crimson Text","c":"serif","v":3,"i":true,"s":3},{"id":"overpass","f":"Overpass","c":"sans-serif","v":9,"i":true,"s":5},{"id":"jetbrains-mono","f":"JetBrains Mono","c":"monospace","v":8,"i":true,"s":6},{"id":"abel","f":"Abel","c":"sans-serif","v":1,"i":false,"s":1},{"id":"asap","f":"Asap","c":"sans-serif","v":9,"i":true,"s":3},{"id":"source-serif-4","f":"Source Serif 4","c":"serif","v":8,"i":true,"s":6},{"id":"merriweather-sans","f":"Merriweather Sans","c":"sans-serif","v":6,"i":true,"s":4},{"id":"barlow-semi-condensed","f":"Barlow Semi Condensed","c":"sans-serif","v":9,"i":true,"s":3},{"id":"teko","f":"Teko","c":"sans-serif","v":5,"i":false,"s":3},{"id":"orbitron","f":"Orbitron","c":"sans-serif","v":6,"i":false,"s":1},{"id":"fredoka","f":"Fredoka","c":"sans-serif","v":5,"i":false,"s":3},{"id":"ibm-plex-mono","f":"IBM Plex Mono","c":"monospace","v":7,"i":true,"s":5},{"id":"exo","f":"Exo","c":"sans-serif","v":9,"i":true,"s":3},{"id":"domine","f":"Domine","c":"serif","v":4,"i":false,"s":2},{"id":"lexend-deca","f":"Lexend Deca","c":"sans-serif","v":9,"i":false,"s":3},{"id":"cinzel","f":"Cinzel","c":"serif","v":6,"i":false,"s":2},{"id":"shadows-into-light","f":"Shadows Into Light","c":"handwriting","v":1,"i":false,"s":2},{"id":"lilita-one","f":"Lilita One","c":"display","v":1,"i":false,"s":2},{"id":"satisfy","f":"Satisfy","c":"handwriting","v":1,"i":false,"s":1},{"id":"indie-flower","f":"Indie Flower","c":"handwriting","v":1,"i":false,"s":2},{"id":"varela-round","f":"Varela Round","c":"sans-serif","v":1,"i":false,"s":4},{"id":"play","f":"Play","c":"sans-serif","v":2,"i":false,"s":6},{"id":"bodoni-moda","f":"Bodoni Moda","c":"serif","v":6,"i":true,"s":4},{"id":"dm-mono","f":"DM Mono","c":"monospace","v":3,"i":true,"s":2},{"id":"abril-fatface","f":"Abril Fatface","c":"display","v":1,"i":false,"s":2},{"id":"questrial","f":"Questrial","c":"sans-serif","v":1,"i":false,"s":3},{"id":"maven-pro","f":"Maven Pro","c":"sans-serif","v":6,"i":false,"s":3},{"id":"ibm-plex-serif","f":"IBM Plex Serif","c":"serif","v":7,"i":true,"s":5},{"id":"chakra-petch","f":"Chakra Petch","c":"sans-serif","v":5,"i":true,"s":4},{"id":"geist","f":"Geist","c":"sans-serif","v":9,"i":false,"s":3},{"id":"fira-sans-condensed","f":"Fira Sans Condensed","c":"sans-serif","v":9,"i":true,"s":7}];
+
+    const BATCH = 30;
+
+    // Sort: handwriting & display first, then serif, monospace, sans-serif last
+    const CAT_ORDER = { handwriting: 0, display: 1, serif: 2, monospace: 3, 'sans-serif': 4 };
+    let allFonts = FONT_DATA
+        .map(f => ({ id: f.id, family: f.f, category: f.c, weights: f.v, hasItalic: f.i, subsets: f.s }))
+        .sort((a, b) => (CAT_ORDER[a.category] ?? 5) - (CAT_ORDER[b.category] ?? 5));
+    let filtered = [];
+    let shown = 0;
+    let previewSize = 28;
+    let loadedStylesheets = new Set();
+
+    const fontsGrid = document.getElementById('fontsGrid');
+    const loadingState = document.getElementById('loadingState');
+    const emptyState = document.getElementById('emptyState');
+    const loadMoreWrap = document.getElementById('loadMoreWrap');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const previewText = document.getElementById('previewText');
+    const sizeSlider = document.getElementById('sizeSlider');
+    const sizeVal = document.getElementById('sizeVal');
+    const fontCount = document.getElementById('fontCount');
+
+    // --- Init ---
+    fontCount.textContent = `${allFonts.length} fonts`;
+    loadingState.style.display = 'none';
+    applyFilters();
+
+    // --- Filters ---
+    function applyFilters() {
+        const q = searchInput.value.toLowerCase().trim();
+        const cat = categoryFilter.value;
+
+        filtered = allFonts.filter(f => {
+            if (q && !f.family.toLowerCase().includes(q) && !f.id.includes(q)) return false;
+            if (cat !== 'all' && f.category !== cat) return false;
+            return true;
+        });
+
+        shown = 0;
+        fontsGrid.innerHTML = '';
+
+        if (!filtered.length) {
+            emptyState.style.display = '';
+            loadMoreWrap.style.display = 'none';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        showMore();
+    }
+
+    function showMore() {
+        const batch = filtered.slice(shown, shown + BATCH);
+        batch.forEach(f => fontsGrid.appendChild(createCard(f)));
+        shown += batch.length;
+
+        // Load fonts for this batch
+        batch.forEach(f => loadFontCSS(f.family));
+
+        loadMoreWrap.style.display = shown < filtered.length ? '' : 'none';
+    }
+
+    // --- Load font CSS from Google ---
+    function loadFontCSS(family) {
+        if (loadedStylesheets.has(family)) return;
+        loadedStylesheets.add(family);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&display=swap`;
+        document.head.appendChild(link);
+    }
+
+    // --- Create card ---
+    function createCard(font) {
+        const card = document.createElement('div');
+        card.className = 'font-card';
+
+        const catClass = 'cat-' + (font.category || 'sans-serif').replace(' ', '-');
+        const preview = previewText.value || 'The quick brown fox jumps over the lazy dog';
+
+        card.innerHTML = `
+            <div class="font-card-header">
+                <div class="font-name">
+                    ${esc(font.family)}
+                    <span class="font-category ${catClass}">${esc(font.category)}</span>
+                </div>
+                <div class="font-card-actions">
+                    <button class="card-btn" onclick="copyFontName('${escAttr(font.family)}')" title="Copy font name"><i class="fas fa-copy"></i></button>
+                    <button class="card-btn" onclick="copyCSSImport('${escAttr(font.family)}')" title="Copy CSS import"><i class="fas fa-code"></i></button>
+                </div>
+            </div>
+            <div class="font-preview" style="font-family:'${escAttr(font.family)}',${font.category};font-size:${previewSize}px;">
+                ${esc(preview)}
+            </div>
+            <div class="font-card-footer">
+                <div class="font-meta">
+                    <span><i class="fas fa-weight-hanging"></i> ${font.weights} weight${font.weights !== 1 ? 's' : ''}</span>
+                    ${font.hasItalic ? '<span><i class="fas fa-italic"></i> Italic</span>' : ''}
+                    <span><i class="fas fa-layer-group"></i> ${font.subsets} subsets</span>
+                </div>
+                <button class="dl-btn" onclick="downloadFont('${escAttr(font.id)}', '${escAttr(font.family)}', this)">
+                    <i class="fas fa-download"></i> Get
+                </button>
+            </div>`;
+
+        return card;
+    }
+
+    // Pre-fetched full TTF URLs from Google Fonts (fonts.gstatic.com, CORS enabled)
+    const TTF_URLS = {"dancing-script":"https://fonts.gstatic.com/s/dancingscript/v29/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7BMSoHTeB9ptDqpw.ttf","pacifico":"https://fonts.gstatic.com/s/pacifico/v23/FwZY7-Qmy14u9lezJ96A4sijpFu_.ttf","caveat":"https://fonts.gstatic.com/s/caveat/v23/WnznHAc5bAfYB2QRah7pcpNvOx-pjfJ9SIKjYBxPigs.ttf","satisfy":"https://fonts.gstatic.com/s/satisfy/v22/rP2Hp2yn6lkG50LoOZSCHBeHFl0.ttf","indie-flower":"https://fonts.gstatic.com/s/indieflower/v24/m8JVjfNVeKWVnh3QMuKkFcZlbkGG1dKEDw.ttf","shadows-into-light":"https://fonts.gstatic.com/s/shadowsintolight/v22/UqyNK9UOIntux_czAvDQx_ZcHqZXBNQDcsr4xzSMYA.ttf","gravitas-one":"https://fonts.gstatic.com/s/gravitasone/v21/5h1diZ4hJ3cblKy3LWakKQmaDWRNr3DzbQ.ttf","bungee":"https://fonts.gstatic.com/s/bungee/v17/N0bU2SZBIuF2PU_ECn50Kd_PmA.ttf","alfa-slab-one":"https://fonts.gstatic.com/s/alfaslabone/v21/6NUQ8FmMKwSEKjnm5-4v-4Jh6dVretWvYmE.ttf","lobster":"https://fonts.gstatic.com/s/lobster/v32/neILzCirqoswsqX9_oWsMqEzSJQ.ttf","comfortaa":"https://fonts.gstatic.com/s/comfortaa/v47/1Pt_g8LJRfWJmhDAuUsSQamb1W0lwk4S4WjMPrQVIT9c2c8.ttf","lilita-one":"https://fonts.gstatic.com/s/lilitaone/v17/i7dPIFZ9Zz-WBtRtedDbUEZ2RFq7AwU.ttf","abril-fatface":"https://fonts.gstatic.com/s/abrilfatface/v25/zOL64pLDlL1D99S8g8PtiKchm-BsjOLhZBY.ttf","playfair-display":"https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvUDQZNLo_U2r.ttf","lora":"https://fonts.gstatic.com/s/lora/v37/0QI6MX1D_JOuGQbT0gvTJPa787weuyJGmKxemMeZ.ttf","merriweather":"https://fonts.gstatic.com/s/merriweather/v33/u-4D0qyriQwlOrhSvowK_l5UcA6zuSYEqOzpPb3HOZJ5eX1WtLaQwmZFScCmDxhtNOKl8yDr3icqE1f0KvXKYQ.ttf","roboto-slab":"https://fonts.gstatic.com/s/robotoslab/v36/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjojISWaG5iddG-1A.ttf","noto-serif":"https://fonts.gstatic.com/s/notoserif/v33/ga6iaw1J5X9T9RW6j9bNVls-hfgvz8JcModqTa32J4wsL2JAlAhZqFCjwM0Lhq_Szw.ttf","pt-serif":"https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvDFRxL6ddjb-.ttf","eb-garamond":"https://fonts.gstatic.com/s/ebgaramond/v32/SlGDmQSNjdsmc35JDF1K5E55YMjF_7DPuGi-6_RUA4V-e6yHgQ.ttf","bitter":"https://fonts.gstatic.com/s/bitter/v40/raxhHiqOu8IVPmnRc6SY1KXhnF_Y8fbfCL_EXFh2reU.ttf","cormorant-garamond":"https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86GnPEi_s4Mfs.ttf","instrument-serif":"https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-2zIZj1bIkNo.ttf","arvo":"https://fonts.gstatic.com/s/arvo/v23/tDbD2oWUg0MKmSAa7Lzr7vs.ttf","dm-serif-display":"https://fonts.gstatic.com/s/dmserifdisplay/v17/-nFnOHM81r4j6k0gjAW3mujVU2B2K_d709jy92k.ttf","crimson-text":"https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJvaAJSA_JN3Q.ttf","bodoni-moda":"https://fonts.gstatic.com/s/bodonimoda/v28/aFT67PxzY382XsXX63LUYL6GYFcan6NJrKp-dPjfJMShrpsGFUt8oU7awIBytVjMYwE.ttf","source-serif-4":"https://fonts.gstatic.com/s/sourceserif4/v14/vEFy2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6OAVIJmeUDygwjihdqrhxXD-wGvjU.ttf","libre-baskerville":"https://fonts.gstatic.com/s/librebaskerville/v24/kmKUZrc3Hgbbcjq75U4uslyuy4kn0olVQ-LglH6T17uj8Q4SCQlOvuPCfQ.ttf","ibm-plex-serif":"https://fonts.gstatic.com/s/ibmplexserif/v20/jizDREVNn1dOx-zrZ2X3pZvkThUY0TY7ikbI.ttf","cinzel":"https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-tbnTYrvDE5ZdqU.ttf","domine":"https://fonts.gstatic.com/s/domine/v25/L0xhDFMnlVwD4h3Lt9JWnbX3jG-2X3LAI10VErGuW8Q.ttf","roboto-mono":"https://fonts.gstatic.com/s/robotomono/v31/L0xuDF4xlVMF-BfR8bXMIhJHg45mwgGEFl0_3vqPQ--5Ip2sSQ.ttf","inconsolata":"https://fonts.gstatic.com/s/inconsolata/v37/QldgNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmgwLYxYWI2qfdm7Lpp4U8aRr8lleY2co.ttf","source-code-pro":"https://fonts.gstatic.com/s/sourcecodepro/v31/HI_diYsKILxRpg3hIP6sJ7fM7PqPMcMnZFqUwX28DMyQhM5hTXUcdJg.ttf","jetbrains-mono":"https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjPVmUsaaDhw.ttf","ibm-plex-mono":"https://fonts.gstatic.com/s/ibmplexmono/v20/-F63fjptAgt5VM-kVkqdyU8n5igg1l9kn-s.ttf","dm-mono":"https://fonts.gstatic.com/s/dmmono/v16/aFTU7PB1QTsUX8KYhh2aBYyMcKw.ttf","roboto":"https://fonts.gstatic.com/s/roboto/v51/KFOMCnqEu92Fr1ME7kSn66aGLdTylR4MQXC89YmC2DPNWubEbWmTggvWl0Qn.ttf","open-sans":"https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObjz2VZyOOSr4dVJWUgsjZ0C4nY1M2xLER.ttf","inter":"https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50ujIw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf","montserrat":"https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Ew-Y3tcoqK5.ttf","poppins":"https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrFJDUc1NECPY.ttf","lato":"https://fonts.gstatic.com/s/lato/v25/S6uyw4BMUTPHvxk6XweuBCY.ttf","oswald":"https://fonts.gstatic.com/s/oswald/v57/TK3_WkUHHAIjg75cFRf3bXL8LICs1_FvgUFoZAaRliE.ttf","noto-sans":"https://fonts.gstatic.com/s/notosans/v42/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPMrcz6L1SoM-jCpoiyD9A99d41P6zHtY.ttf","raleway":"https://fonts.gstatic.com/s/raleway/v37/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaooCPNLA3JC9c.ttf","nunito":"https://fonts.gstatic.com/s/nunito/v32/XRXI3I6Li01BKofiOc5wtlZ2di8HDLshRTM9jo7eTWk.ttf","nunito-sans":"https://fonts.gstatic.com/s/nunitosans/v19/pe0qMImSLYBIv1o4X1M8cfe6Kdpickwp.ttf","dm-sans":"https://fonts.gstatic.com/s/dmsans/v17/rP2tp2ywxg089UriI5-g4vlH9VoD8CmcqZG40F9JadbnoEwAopxhTmf3ZGMZpg.ttf","rubik":"https://fonts.gstatic.com/s/rubik/v31/iJWZBXyIfDnIV5PNhY1KTN7Z-Yh-B4i1UE80V4bVkA.ttf","ubuntu":"https://fonts.gstatic.com/s/ubuntu/v21/4iCs6KVjbNBYlgo6eAT3v02QFg.ttf","work-sans":"https://fonts.gstatic.com/s/worksans/v24/QGY_z_wNahGAdqQ43RhVcIgYT2Xz5u32K0nXNigDp6_cOyA.ttf","pt-sans":"https://fonts.gstatic.com/s/ptsans/v18/jizaRExUiTo99u79P0WOxOGMMDQ.ttf","kanit":"https://fonts.gstatic.com/s/kanit/v17/nKKZ-Go6G5tXcoaSEQGodLxA.ttf","mulish":"https://fonts.gstatic.com/s/mulish/v18/1Ptyg83HX_SGhgqO0yLcmjzUAuWexZNRwaClGrw-PTY.ttf","manrope":"https://fonts.gstatic.com/s/manrope/v20/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk79FO_F87jxeN7B.ttf","quicksand":"https://fonts.gstatic.com/s/quicksand/v37/6xK-dSZaM9iE8KbpRA_LJ3z8mH9BOJvgkP8o18G0wx40QDw.ttf","fjalla-one":"https://fonts.gstatic.com/s/fjallaone/v16/Yq6R-LCAWCX3-6Ky7FAFnOZwkxgtUb8.ttf","outfit":"https://fonts.gstatic.com/s/outfit/v15/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4G-EiAou6Y.ttf","archivo":"https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q-EsJaRE-NWIDdgffTTNDNp8B1oJ0vyVQ.ttf","figtree":"https://fonts.gstatic.com/s/figtree/v9/_Xmz-HUzqDCFdgfMsYiV_F7wfS-Bs_d_QF5ewkEU4HTy.ttf","fira-sans":"https://fonts.gstatic.com/s/firasans/v18/va9E4kDNxMZdWfMOD5VfkILKSTbndQ.ttf","barlow":"https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7EPC8E46HsxnA.ttf","ibm-plex-sans":"https://fonts.gstatic.com/s/ibmplexsans/v23/zYXGKVElMYYaJe8bpLHnCwDKr932-G7dytD-DmvrswZSAXcomDVmadSD6llzAKI5loa26g.ttf","bebas-neue":"https://fonts.gstatic.com/s/bebasneue/v16/JTUSjIg69CK48gW7PXooxW5rygbi49c.ttf","titillium-web":"https://fonts.gstatic.com/s/titilliumweb/v19/NaPecZTIAOhVxoMyOr9n_E7fRMTsDIRSfr0.ttf","prompt":"https://fonts.gstatic.com/s/prompt/v12/-W__XJnvUD7dzB26Z9AcZkIzeg.ttf","heebo":"https://fonts.gstatic.com/s/heebo/v28/NGSpv5_NC0k9P_v6ZUCbLRAHxK1EiSycckOnz02SXQ.ttf","karla":"https://fonts.gstatic.com/s/karla/v33/qkBIXvYC6trAT55ZBi1ueQVIjQTD-JqqFENLR7fHGw.ttf","jost":"https://fonts.gstatic.com/s/jost/v20/92zPtBhPNqw79Ij1E865zBUv7myjJQVGPokMmuHL.ttf","source-sans-3":"https://fonts.gstatic.com/s/sourcesans3/v19/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky461EN_io6npfB.ttf","plus-jakarta-sans":"https://fonts.gstatic.com/s/plusjakartasans/v12/LDIbaomQNQcsA88c7O9yZ4KMCoOg4IA6-91aHEjcWuA_qU7NShXUEKi4Rw.ttf","josefin-sans":"https://fonts.gstatic.com/s/josefinsans/v34/Qw3PZQNVED7rKGKxtqIqX5E-AVSJrOCfjY46_DjQXMFrLgTsQV0.ttf","libre-franklin":"https://fonts.gstatic.com/s/librefranklin/v20/jizOREVItHgc8qDIbSTKq4XkRg8T88bjFuXOnduhLsWUB9rIb-JH1g.ttf","cairo":"https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hOA-W1ToLQ-HmkA.ttf","public-sans":"https://fonts.gstatic.com/s/publicsans/v21/ijwGs572Xtc6ZYQws9YVwllKVG8qX1oyOymuFpm5ww0pX189fg.ttf","anton":"https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm0K08i4gS7lu.ttf","dosis":"https://fonts.gstatic.com/s/dosis/v34/HhyJU5sn9vOmLxNkIwRSjTVNWLEJN7MV3BkFTq4EPw.ttf","barlow-condensed":"https://fonts.gstatic.com/s/barlowcondensed/v13/HTx3L3I-JCGChYJ8VI-L6OO_au7B2xbZ23n3pKg.ttf","cabin":"https://fonts.gstatic.com/s/cabin/v35/u-4X0qWljRw-PfU81xCKCpdpbgZJyaXFpfEd7eA9BIxxkV2EL7Gvxm7rE_s.ttf","space-grotesk":"https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsjNsFjTDJK.ttf","assistant":"https://fonts.gstatic.com/s/assistant/v24/2sDPZGJYnIjSi6H75xkZZE1I0yCmYzzQtuZnEGGf3qGuvM4.ttf","mukta":"https://fonts.gstatic.com/s/mukta/v17/iJWKBXyXfDDVXYnGp32S0H3f.ttf","bricolage-grotesque":"https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9U6as8bTXq_nANBjzKo3IeZx8z6up5BeSl5jBNz_19PpbpMXuECpwUxJBOm_OJBCaaD30YfKfjZZoLvRviyM0vs-wJDtw.ttf","hind":"https://fonts.gstatic.com/s/hind/v18/5aU69_a8oxmIRG5yBROzkDM.ttf","red-hat-display":"https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbmyWckg5-Xecg3w.ttf","oxygen":"https://fonts.gstatic.com/s/oxygen/v16/2sDfZG1Wl4Lcnbu6iUcnZ0SkAg.ttf","lexend":"https://fonts.gstatic.com/s/lexend/v26/wlptgwvFAVdoq2_F94zlCfv0bz1WCzsW_LBte6KuGEo.ttf","exo-2":"https://fonts.gstatic.com/s/exo2/v26/7cH1v4okm5zmbvwkAx_sfcEuiD8jvvKcPtq-rpvLpQ.ttf","urbanist":"https://fonts.gstatic.com/s/urbanist/v18/L0xjDF02iFML4hGCyOCpRdycFsGxSrqDyx4fFpOrS8SlKw.ttf","pt-sans-narrow":"https://fonts.gstatic.com/s/ptsansnarrow/v19/BngRUXNadjH0qYEzV7ab-oWlsYCByxyKeuDp.ttf","inter-tight":"https://fonts.gstatic.com/s/intertight/v9/NGSnv5HMAFg6IuGlBNMjxJEL2VmU3NS7Z2mjDw-qXCRToK8EPg.ttf","rajdhani":"https://fonts.gstatic.com/s/rajdhani/v17/LDIxapCSOBg7S-QT7q4AOeekWPrP.ttf","sora":"https://fonts.gstatic.com/s/sora/v17/xMQOuFFYT72X5wkB_18qmnndmSdSnn-KIwNhBti0.ttf","overpass":"https://fonts.gstatic.com/s/overpass/v19/qFda35WCmI96Ajtm83upeyoaX6QPnlo6_PPrOZCLtce-og.ttf","abel":"https://fonts.gstatic.com/s/abel/v18/MwQ5bhbm2POE6VhLPJp6qGI.ttf","asap":"https://fonts.gstatic.com/s/asap/v34/KFOOCniXp96a4Tc2DaTeuDAoKsFk17JFc49knOIYdjTYkqUsLmOXoA7Glw.ttf","merriweather-sans":"https://fonts.gstatic.com/s/merriweathersans/v28/2-cO9IRs1JiJN1FRAMjTN5zd9vgsFF_5asQTb6hZ2JKZou4ljuEG7xFHnQ.ttf","barlow-semi-condensed":"https://fonts.gstatic.com/s/barlowsemicondensed/v16/wlpvgxjLBV1hqnzfr-F8sEYMB0Yybp0mudRnf4CrCEo4gg.ttf","teko":"https://fonts.gstatic.com/s/teko/v23/LYjYdG7kmE0gV69VVPPdFl06VN8XG7Sy3TKEvkCF.ttf","orbitron":"https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyGy6xpmIyXjU1pg.ttf","fredoka":"https://fonts.gstatic.com/s/fredoka/v17/X7nP4b87HvSqjb_WIi2yDCRwoQ_k737l_B-i2yQag0-mac3O8SLMFuOLlNldbw.ttf","exo":"https://fonts.gstatic.com/s/exo/v25/4UaZrEtFpBI4f1ZSIK9d4LjJ4lM3CwNsOl4p5Is.ttf","lexend-deca":"https://fonts.gstatic.com/s/lexenddeca/v25/K2FifZFYk-dHSE0UPPuwQ7CrD94i-NCKm-U48M1ArBPCqLNflg.ttf","varela-round":"https://fonts.gstatic.com/s/varelaround/v21/w8gdH283Tvk__Lua32TysjIvoMGOD9gxZw.ttf","play":"https://fonts.gstatic.com/s/play/v21/6aez4K2oVqwIjtI8Hp8Tx3A.ttf","questrial":"https://fonts.gstatic.com/s/questrial/v19/QdVUSTchPBm7nuUeVf7EuStkm20oJA.ttf","maven-pro":"https://fonts.gstatic.com/s/mavenpro/v40/7Auup_AqnyWWAxW2Wk3swUz56MS91Eww8SX25nCpozp5GvU.ttf","chakra-petch":"https://fonts.gstatic.com/s/chakrapetch/v13/cIf6MapbsEk7TDLdtEz1BwkmmKBhSL7Y1Q.ttf","geist":"https://fonts.gstatic.com/s/geist/v4/gyBhhwUxId8gMGYQMKR3pzfaWI_RnOM4nZPby1QNtA.ttf","fira-sans-condensed":"https://fonts.gstatic.com/s/firasanscondensed/v11/wEOhEADFm8hSaQTFG18FErVhsC9x-tarYfHnrMtVbx8.ttf","noto-sans-jp":"https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75vY0rw-oME.ttf","noto-sans-kr":"https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.ttf","noto-sans-tc":"https://fonts.gstatic.com/s/notosanstc/v39/-nFuOG829Oofr2wohFbTp9ifNAn722rq0MXz76Cy_CpOtma3uNQ.ttf","noto-sans-sc":"https://fonts.gstatic.com/s/notosanssc/v40/k3kCo84MPvpLmixcA63oeAL7Iqp5IZJF9bmaG9_FnYxNbPzS5HE.ttf","nanum-gothic":"https://fonts.gstatic.com/s/nanumgothic/v26/PN_3Rfi-oW3hYwmKDpxS7F_z_tLfxno73g.ttf","roboto-condensed":"https://fonts.gstatic.com/s/robotocondensed/v31/ieVo2ZhZI2eCN5jzbjEETS9weq8-_d6T_POl0fRJeyWyovBJ731BKMSK.ttf","roboto-flex":"https://fonts.gstatic.com/s/robotoflex/v30/NaPccZLOBv5T3oB7Cb4i0wu9TsDOCZRS.ttf"};
+
+    // --- Download font ---
+    async function downloadFont(id, family, btn) {
+        const url = TTF_URLS[id];
+        if (!url) {
+            showToast('Download not available for this font');
+            return;
+        }
+
+        btn.classList.add('downloading');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+
+        try {
+            const resp = await fetch(url);
+            const blob = await resp.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = `${family.replace(/\s+/g, '_')}.ttf`;
+            a.click();
+            URL.revokeObjectURL(blobUrl);
+            showToast(`Downloaded ${family}.ttf`);
+        } catch (err) {
+            showToast('Download failed. Try again.');
+        }
+
+        btn.classList.remove('downloading');
+        btn.innerHTML = '<i class="fas fa-download"></i> TTF';
+    }
+
+    // --- Copy helpers ---
+    function copyFontName(family) {
+        navigator.clipboard.writeText(family).then(() => showToast(`Copied: ${family}`));
+    }
+
+    function copyCSSImport(family) {
+        const css = `@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}&display=swap');\nfont-family: '${family}', sans-serif;`;
+        navigator.clipboard.writeText(css).then(() => showToast('CSS import copied!'));
+    }
+
+    // --- Events ---
+    let searchTimer;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilters, 250);
+    });
+
+    categoryFilter.addEventListener('change', applyFilters);
+
+    previewText.addEventListener('input', () => {
+        const text = previewText.value || 'The quick brown fox jumps over the lazy dog';
+        document.querySelectorAll('.font-preview').forEach(el => {
+            el.textContent = text;
+        });
+    });
+
+    sizeSlider.addEventListener('input', () => {
+        previewSize = parseInt(sizeSlider.value);
+        sizeVal.textContent = previewSize + 'px';
+        document.querySelectorAll('.font-preview').forEach(el => {
+            el.style.fontSize = previewSize + 'px';
+        });
+    });
+
+    loadMoreBtn.addEventListener('click', showMore);
+
+    // Infinite scroll
+    window.addEventListener('scroll', () => {
+        if (shown >= filtered.length) return;
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 400) {
+            showMore();
+        }
+    });
+
+    // --- Helpers ---
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function escAttr(s) {
+        return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+</script>
+
+</body>
+</html>
