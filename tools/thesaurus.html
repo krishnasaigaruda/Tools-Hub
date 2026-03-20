@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thesaurus | Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #0891b2;
+            --cyan-light: #22d3ee;
+            --cyan-dark: #0e7490;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-light: #334155;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --indigo: #818cf8;
+            --emerald: #34d399;
+            --rose: #fb7185;
+            --amber: #fbbf24;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--cyan-dark), var(--cyan), var(--cyan-light));
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .header-title i { font-size: 1.5rem; color: white; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: white; }
+
+        .kbd-hint {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.12);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 2rem;
+        }
+
+        /* Search */
+        .search-area { display: flex; flex-direction: column; gap: 1rem; }
+
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+        .search-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrap i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus { border-color: var(--cyan); }
+        .search-input::placeholder { color: var(--text-dim); }
+
+        .search-btn {
+            background: var(--cyan);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .search-btn:hover { background: var(--cyan-dark); }
+        .search-btn:active { transform: scale(0.97); }
+
+        /* Content */
+        .content-area { min-height: 400px; }
+
+        /* Loading */
+        .loader { display: none; text-align: center; padding: 3rem; }
+        .loader.active { display: block; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-card {
+            background: var(--panel);
+            border: 2px solid var(--error);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-card i { font-size: 2.5rem; color: var(--error); margin-bottom: 1rem; }
+        .error-card h3 { margin-bottom: 0.5rem; }
+        .error-card p { color: var(--text-muted); }
+
+        /* Result Card */
+        .result-card {
+            background: var(--panel);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .result-word {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .result-lang {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-light);
+            font-size: 0.95rem;
+        }
+
+        .result-actions { display: flex; gap: 0.5rem; }
+
+        .icon-btn {
+            background: var(--panel-light);
+            color: var(--text-muted);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover { color: var(--cyan-light); background: var(--border); }
+
+        /* Section */
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section:last-child { margin-bottom: 0; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-count {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+            margin-left: auto;
+        }
+
+        .syn-icon { background: var(--cyan-dark); }
+        .ant-icon { background: #be185d; }
+        .sim-icon { background: #7c3aed; }
+        .rhy-icon { background: var(--orange); }
+        .trg-icon { background: var(--success); }
+        .nrhy-icon { background: var(--indigo); }
+
+        .syn-title { color: var(--cyan-light); }
+        .ant-title { color: var(--pink); }
+        .sim-title { color: var(--purple); }
+        .rhy-title { color: var(--orange); }
+        .trg-title { color: var(--emerald); }
+        .nrhy-title { color: var(--indigo); }
+
+        /* Word Tags */
+        .word-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .word-tag {
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            position: relative;
+        }
+
+        .word-tag:hover { transform: translateY(-1px); }
+
+        .word-tag .tag-def {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .word-tag:hover .tag-def { display: block; }
+
+        .syn-tag {
+            background: rgba(8, 145, 178, 0.12);
+            color: var(--cyan-light);
+            border-color: rgba(8, 145, 178, 0.3);
+        }
+        .syn-tag:hover { background: rgba(8, 145, 178, 0.25); }
+
+        .ant-tag {
+            background: rgba(244, 114, 182, 0.12);
+            color: var(--pink);
+            border-color: rgba(244, 114, 182, 0.3);
+        }
+        .ant-tag:hover { background: rgba(244, 114, 182, 0.25); }
+
+        .sim-tag {
+            background: rgba(167, 139, 250, 0.12);
+            color: var(--purple);
+            border-color: rgba(167, 139, 250, 0.3);
+        }
+        .sim-tag:hover { background: rgba(167, 139, 250, 0.25); }
+
+        .rhy-tag {
+            background: rgba(251, 146, 60, 0.12);
+            color: var(--orange);
+            border-color: rgba(251, 146, 60, 0.3);
+        }
+        .rhy-tag:hover { background: rgba(251, 146, 60, 0.25); }
+
+        .trg-tag {
+            background: rgba(52, 211, 153, 0.12);
+            color: var(--emerald);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .trg-tag:hover { background: rgba(52, 211, 153, 0.25); }
+
+        .nrhy-tag {
+            background: rgba(129, 140, 248, 0.12);
+            color: var(--indigo);
+            border-color: rgba(129, 140, 248, 0.3);
+        }
+        .nrhy-tag:hover { background: rgba(129, 140, 248, 0.25); }
+
+        /* Wiktionary result sections */
+        .wikt-section {
+            margin-bottom: 1rem;
+        }
+
+        .wikt-header {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            color: white;
+            background: var(--panel-light);
+        }
+
+        .wikt-defs {
+            list-style: none;
+            padding: 0;
+        }
+
+        .wikt-def {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        .wikt-def:last-child { border-bottom: none; }
+
+        .wikt-num {
+            color: var(--cyan);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            min-width: 1.2rem;
+            padding-top: 2px;
+        }
+
+        .wikt-text { color: var(--text-muted); line-height: 1.5; }
+
+        /* Source */
+        .source-links {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .source-link {
+            color: var(--cyan);
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        .source-link:hover { text-decoration: underline; }
+
+        /* Sidebar */
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .sidebar-card {
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-header h3 i { color: var(--cyan); }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Outfit', sans-serif;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .clear-btn:hover { color: var(--error); }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .sidebar-list::-webkit-scrollbar { width: 4px; }
+        .sidebar-list::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-item:hover { background: var(--panel-light); }
+        .sidebar-item .word-label { flex: 1; }
+
+        .sidebar-item .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0.2rem;
+            opacity: 0;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .sidebar-item:hover .remove-btn { opacity: 1; }
+        .sidebar-item .remove-btn:hover { color: var(--error); }
+
+        .sidebar-empty {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Explore card */
+        .explore-card {
+            background: linear-gradient(135deg, rgba(8,145,178,0.15), rgba(34,211,238,0.08));
+            border: 1px solid rgba(8,145,178,0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .explore-card:hover { transform: translateY(-2px); border-color: var(--cyan); }
+
+        .explore-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--cyan);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .explore-word {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .explore-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            border: 1px solid var(--cyan);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            .sidebar { order: -1; }
+            .search-row { flex-direction: column; }
+            .result-word { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 500px) {
+            .header { padding: 1rem; }
+            .header-title h1 { font-size: 1.2rem; }
+            .kbd-hint { display: none; }
+            .result-header { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="header-title">
+        <i class="fas fa-scroll"></i>
+        <h1>Thesaurus</h1>
+    </div>
+    <span class="kbd-hint"><i class="fas fa-globe" style="margin-right:4px;"></i> All languages &middot; Auto-detect</span>
+    <span class="kbd-hint">Cmd+K to search</span>
+</div>
+
+<div class="main-container">
+    <div class="left-col">
+        <div class="search-area">
+            <div class="search-row">
+                <div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Type a word to find synonyms, antonyms..." autocomplete="off">
+                </div>
+                <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p style="color: var(--text-muted);">Finding related words...</p>
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <!-- Explore word card -->
+        <div class="explore-card" id="exploreCard" style="display:none;">
+            <div class="explore-label"><i class="fas fa-wand-magic-sparkles"></i> Explore a word</div>
+            <div class="explore-word" id="exploreWord"></div>
+            <div class="explore-hint">Click to explore</div>
+        </div>
+
+        <!-- History -->
+        <div class="sidebar-card">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-clock-rotate-left"></i> History</h3>
+                <button class="clear-btn" onclick="clearHistory()">Clear</button>
+            </div>
+            <ul class="sidebar-list" id="historyList">
+                <li class="sidebar-empty">No search history</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // --- State ---
+    const DATAMUSE = 'https://api.datamuse.com/words';
+    const DICT_API = 'https://api.dictionaryapi.dev/api/v2/entries';
+    const WIKT_API = 'https://en.wiktionary.org/api/rest_v1/page/definition';
+    let history = JSON.parse(localStorage.getItem('thes_history') || '[]');
+
+    const EXPLORE_WORDS = [
+        'serendipity','ephemeral','luminous','mellifluous','resilience',
+        'ubiquitous','cascade','paradox','harmony','enigma',
+        'tranquil','vivacious','eloquent','ethereal','nostalgia',
+        'euphoria','whimsical','catalyst','reverie','wanderlust',
+        'brilliant','courage','wisdom','flourish','radiant',
+        'serene','fierce','graceful','vibrant','profound'
+    ];
+
+    // --- Elements ---
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultsDiv = document.getElementById('results');
+    const loader = document.getElementById('loader');
+    const historyList = document.getElementById('historyList');
+    const exploreCard = document.getElementById('exploreCard');
+    const exploreWord = document.getElementById('exploreWord');
+
+    // --- Init ---
+    renderHistory();
+    initExploreWord();
+
+    // --- Event Listeners ---
+    searchBtn.addEventListener('click', () => doSearch());
+    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+    document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            searchInput.blur();
+        }
+    });
+
+    exploreCard.addEventListener('click', () => {
+        searchInput.value = exploreWord.textContent;
+        doSearch();
+    });
+
+    // --- Detect if word is English (ASCII letters only) ---
+    function isLikelyEnglish(word) {
+        return /^[a-zA-Z\s'-]+$/.test(word);
+    }
+
+    // --- Search ---
+    async function doSearch(word) {
+        const query = (word || searchInput.value).trim();
+        if (!query) return;
+        searchInput.value = query;
+
+        resultsDiv.innerHTML = '';
+        loader.classList.add('active');
+        addToHistory(query);
+
+        if (isLikelyEnglish(query)) {
+            await searchEnglish(query);
+        } else {
+            await searchMultilingual(query);
+        }
+    }
+
+    // --- English search: Datamuse API (rich thesaurus data) ---
+    async function searchEnglish(query) {
+        try {
+            const [synRes, antRes, simRes, rhyRes, trgRes, nrhyRes] = await Promise.all([
+                fetch(`${DATAMUSE}?rel_syn=${enc(query)}&max=20&md=d`).then(r => r.json()),
+                fetch(`${DATAMUSE}?rel_ant=${enc(query)}&max=15&md=d`).then(r => r.json()),
+                fetch(`${DATAMUSE}?ml=${enc(query)}&max=20&md=dp`).then(r => r.json()),
+                fetch(`${DATAMUSE}?rel_rhy=${enc(query)}&max=15`).then(r => r.json()),
+                fetch(`${DATAMUSE}?rel_trg=${enc(query)}&max=15`).then(r => r.json()),
+                fetch(`${DATAMUSE}?rel_nry=${enc(query)}&max=15`).then(r => r.json()),
+            ]);
+
+            // Filter "similar meaning" to exclude exact synonyms already shown
+            const synWords = new Set(synRes.map(w => w.word));
+            const filteredSim = simRes.filter(w => !synWords.has(w.word) && w.word !== query);
+
+            loader.classList.remove('active');
+
+            if (!synRes.length && !antRes.length && !filteredSim.length && !rhyRes.length && !trgRes.length) {
+                showNotFound(query);
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            let html = `
+                <div class="result-header">
+                    <div>
+                        <span class="result-word">${esc(query)}</span>
+                        <span class="result-lang">English</span>
+                    </div>
+                    <div class="result-actions">
+                        <button class="icon-btn" onclick="copyResults()" title="Copy all"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>`;
+
+            if (synRes.length) {
+                html += buildSection('Synonyms', 'fas fa-equals', 'syn', synRes);
+            }
+            if (antRes.length) {
+                html += buildSection('Antonyms', 'fas fa-not-equal', 'ant', antRes);
+            }
+            if (filteredSim.length) {
+                html += buildSection('Similar Meaning', 'fas fa-arrows-left-right', 'sim', filteredSim);
+            }
+            if (trgRes.length) {
+                html += buildSection('Associated Words', 'fas fa-link', 'trg', trgRes);
+            }
+            if (rhyRes.length) {
+                html += buildSection('Rhymes', 'fas fa-music', 'rhy', rhyRes);
+            }
+            if (nrhyRes.length) {
+                html += buildSection('Near Rhymes', 'fas fa-wave-square', 'nrhy', nrhyRes);
+            }
+
+            card.innerHTML = html;
+            resultsDiv.appendChild(card);
+        } catch (err) {
+            loader.classList.remove('active');
+            showNotFound(query);
+        }
+    }
+
+    // --- Multilingual search: Wiktionary ---
+    async function searchMultilingual(query) {
+        try {
+            // Try Wiktionary for definitions + synonyms/related
+            const wiktResp = await fetch(`${WIKT_API}/${enc(query)}`);
+            if (!wiktResp.ok) throw new Error('Not found');
+            const wiktData = await wiktResp.json();
+
+            const firstKey = Object.keys(wiktData).find(k => k !== '__meta');
+            const entries = firstKey ? wiktData[firstKey] : null;
+            if (!entries || !entries.length) throw new Error('No data');
+
+            loader.classList.remove('active');
+
+            const langLabel = entries[0]?.language || '';
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            let html = `
+                <div class="result-header">
+                    <div>
+                        <span class="result-word">${esc(query)}</span>
+                        ${langLabel ? `<span class="result-lang">${esc(langLabel)}</span>` : ''}
+                    </div>
+                    <div class="result-actions">
+                        <button class="icon-btn" onclick="copyResults()" title="Copy all"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>`;
+
+            // Extract definitions and any synonyms/related from Wiktionary
+            let allSyns = [];
+            let allAnts = [];
+
+            entries.forEach(entry => {
+                const pos = entry.partOfSpeech || 'unknown';
+                html += `<div class="wikt-section">
+                    <div class="wikt-header">${esc(pos)}</div>
+                    <ol class="wikt-defs">`;
+
+                if (entry.definitions) {
+                    entry.definitions.forEach((def, i) => {
+                        const cleanDef = stripHtml(def.definition || '');
+                        html += `<li class="wikt-def">
+                            <span class="wikt-num">${i + 1}.</span>
+                            <span class="wikt-text">${cleanDef}</span>
+                        </li>`;
+
+                        // Extract synonyms from definition links
+                        if (def.synonyms) allSyns.push(...def.synonyms);
+                        if (def.antonyms) allAnts.push(...def.antonyms);
+                    });
+                }
+
+                html += `</ol></div>`;
+            });
+
+            // Show extracted synonyms/antonyms if any
+            if (allSyns.length) {
+                html += `<div class="section">
+                    <div class="section-header">
+                        <div class="section-icon syn-icon"><i class="fas fa-equals"></i></div>
+                        <span class="section-title syn-title">Synonyms</span>
+                    </div>
+                    <div class="word-cloud">`;
+                allSyns.forEach(s => {
+                    html += `<button class="word-tag syn-tag" onclick="doSearch('${escAttr(s)}')">${esc(s)}</button>`;
+                });
+                html += `</div></div>`;
+            }
+
+            if (allAnts.length) {
+                html += `<div class="section">
+                    <div class="section-header">
+                        <div class="section-icon ant-icon"><i class="fas fa-not-equal"></i></div>
+                        <span class="section-title ant-title">Antonyms</span>
+                    </div>
+                    <div class="word-cloud">`;
+                allAnts.forEach(a => {
+                    html += `<button class="word-tag ant-tag" onclick="doSearch('${escAttr(a)}')">${esc(a)}</button>`;
+                });
+                html += `</div></div>`;
+            }
+
+            html += `<div class="source-links">
+                <a href="https://en.wiktionary.org/wiki/${enc(query)}" target="_blank" rel="noopener" class="source-link"><i class="fas fa-external-link-alt"></i> Wiktionary</a>
+            </div>`;
+
+            card.innerHTML = html;
+            resultsDiv.appendChild(card);
+        } catch (err) {
+            loader.classList.remove('active');
+            showNotFound(query);
+        }
+    }
+
+    // --- Build section with word tags ---
+    function buildSection(title, icon, type, words) {
+        const iconClass = type + '-icon';
+        const titleClass = type + '-title';
+        const tagClass = type + '-tag';
+
+        let html = `<div class="section">
+            <div class="section-header">
+                <div class="section-icon ${iconClass}"><i class="${icon}"></i></div>
+                <span class="section-title ${titleClass}">${title}</span>
+                <span class="section-count">${words.length} words</span>
+            </div>
+            <div class="word-cloud">`;
+
+        words.forEach(w => {
+            const def = w.defs && w.defs[0] ? w.defs[0].split('\t')[1] || '' : '';
+            html += `<button class="word-tag ${tagClass}" onclick="doSearch('${escAttr(w.word)}')">
+                ${esc(w.word)}
+                ${def ? `<span class="tag-def">${esc(def.trim())}</span>` : ''}
+            </button>`;
+        });
+
+        html += `</div></div>`;
+        return html;
+    }
+
+    // --- Error ---
+    function showNotFound(query) {
+        resultsDiv.innerHTML = `
+            <div class="error-card">
+                <i class="fas fa-circle-exclamation"></i>
+                <h3>No results found</h3>
+                <p>Could not find synonyms or related words for "<strong>${esc(query)}</strong>".<br>Check the spelling and try again.</p>
+                <p style="margin-top:12px;"><a href="https://en.wiktionary.org/wiki/${enc(query)}" target="_blank" style="color:#0891b2;text-decoration:none;font-weight:600;"><i class="fas fa-external-link-alt"></i> Try Wiktionary</a></p>
+            </div>`;
+    }
+
+    // --- Copy ---
+    function copyResults() {
+        const card = document.querySelector('.result-card');
+        if (!card) return;
+        const word = card.querySelector('.result-word')?.textContent || '';
+        const sections = [];
+        card.querySelectorAll('.section').forEach(sec => {
+            const title = sec.querySelector('.section-title')?.textContent || '';
+            const words = [];
+            sec.querySelectorAll('.word-tag').forEach(tag => {
+                words.push(tag.textContent.trim());
+            });
+            if (words.length) sections.push(`${title}: ${words.join(', ')}`);
+        });
+        const text = `${word}\n${sections.join('\n')}`;
+        navigator.clipboard.writeText(text)
+            .then(() => showToast('Copied to clipboard!'))
+            .catch(() => showToast('Failed to copy'));
+    }
+
+    // --- History ---
+    function addToHistory(word) {
+        history = history.filter(w => w.toLowerCase() !== word.toLowerCase());
+        history.unshift(word);
+        if (history.length > 30) history.pop();
+        localStorage.setItem('thes_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        if (!history.length) {
+            historyList.innerHTML = '<li class="sidebar-empty">No search history</li>';
+            return;
+        }
+        historyList.innerHTML = history.map(w => `
+            <li class="sidebar-item" onclick="doSearch('${escAttr(w)}')">
+                <span class="word-label">${esc(w)}</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); removeHistory('${escAttr(w)}')"><i class="fas fa-xmark"></i></button>
+            </li>`).join('');
+    }
+
+    function removeHistory(word) {
+        history = history.filter(w => w !== word);
+        localStorage.setItem('thes_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function clearHistory() {
+        history = [];
+        localStorage.setItem('thes_history', '[]');
+        renderHistory();
+    }
+
+    // --- Explore word ---
+    function initExploreWord() {
+        const today = new Date().toDateString();
+        const seed = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        const idx = seed % EXPLORE_WORDS.length;
+        exploreWord.textContent = EXPLORE_WORDS[idx];
+        exploreCard.style.display = '';
+    }
+
+    // --- Toast ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Helpers ---
+    function esc(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    function escAttr(s) {
+        return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function enc(s) {
+        return encodeURIComponent(s);
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+</script>
+
+</body>
+</html>
