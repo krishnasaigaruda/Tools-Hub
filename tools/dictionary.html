@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary | Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #0891b2;
+            --cyan-light: #22d3ee;
+            --cyan-dark: #0e7490;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-light: #334155;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --orange: #fb923c;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--cyan-dark), var(--cyan), var(--cyan-light));
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .header-title i { font-size: 1.5rem; color: white; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: white; }
+
+        .kbd-hint {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.12);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 2rem;
+        }
+
+        /* Search Area */
+        .search-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+
+.search-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input-wrap i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--panel);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus { border-color: var(--cyan); }
+        .search-input::placeholder { color: var(--text-dim); }
+
+        .search-btn {
+            background: var(--cyan);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .search-btn:hover { background: var(--cyan-dark); }
+        .search-btn:active { transform: scale(0.97); }
+
+        /* Content area */
+        .content-area { min-height: 400px; }
+
+        /* Loading */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loader.active { display: block; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-card {
+            background: var(--panel);
+            border: 2px solid var(--error);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-card i { font-size: 2.5rem; color: var(--error); margin-bottom: 1rem; }
+        .error-card h3 { margin-bottom: 0.5rem; }
+        .error-card p { color: var(--text-muted); }
+
+        /* Word Card */
+        .word-card {
+            background: var(--panel);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .word-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .word-main { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+        .word-text {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .phonetic {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-light);
+            font-size: 1.1rem;
+        }
+
+        .audio-btn {
+            background: var(--cyan);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .audio-btn:hover { background: var(--cyan-dark); transform: scale(1.1); }
+
+        .word-actions { display: flex; gap: 0.5rem; }
+
+        .icon-btn {
+            background: var(--panel-light);
+            color: var(--text-muted);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover { color: var(--cyan-light); background: var(--border); }
+        .icon-btn.bookmarked { color: var(--warning); }
+
+        /* POS sections */
+        .pos-section { margin-bottom: 1.5rem; }
+
+        .pos-header {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .pos-noun { background: var(--cyan-dark); }
+        .pos-verb { background: #7c3aed; }
+        .pos-adjective { background: var(--pink); color: #1e293b; }
+        .pos-adverb { background: var(--orange); color: #1e293b; }
+        .pos-pronoun { background: var(--success); }
+        .pos-preposition { background: #6366f1; }
+        .pos-conjunction { background: #f43f5e; }
+        .pos-interjection { background: var(--warning); color: #1e293b; }
+        .pos-default { background: var(--panel-light); }
+
+        .def-list { list-style: none; padding: 0; }
+
+        .def-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .def-item:last-child { border-bottom: none; }
+
+        .def-num {
+            color: var(--cyan);
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            min-width: 1.5rem;
+            padding-top: 2px;
+        }
+
+        .def-content { flex: 1; }
+        .def-text { line-height: 1.6; }
+
+        .def-example {
+            font-style: italic;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+            padding-left: 0.75rem;
+            border-left: 2px solid var(--cyan-dark);
+        }
+
+        .related-words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .related-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-right: 0.25rem;
+            align-self: center;
+        }
+
+        .related-tag {
+            background: rgba(8, 145, 178, 0.15);
+            color: var(--cyan-light);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid rgba(8, 145, 178, 0.3);
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .related-tag:hover { background: rgba(8, 145, 178, 0.3); }
+
+        .antonym-tag {
+            background: rgba(244, 114, 182, 0.15);
+            color: var(--pink);
+            border-color: rgba(244, 114, 182, 0.3);
+        }
+
+        .antonym-tag:hover { background: rgba(244, 114, 182, 0.3); }
+
+        /* Origin */
+        .origin-section {
+            background: rgba(8, 145, 178, 0.08);
+            border: 1px solid rgba(8, 145, 178, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .origin-section h4 {
+            color: var(--cyan-light);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .origin-section p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
+
+        .source-links {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .source-link {
+            color: var(--cyan);
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+
+        .source-link:hover { text-decoration: underline; }
+
+        /* Sidebar */
+        .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .sidebar-card {
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-header h3 i { color: var(--cyan); }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Outfit', sans-serif;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .clear-btn:hover { color: var(--error); }
+
+        .sidebar-list {
+            list-style: none;
+            padding: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .sidebar-list::-webkit-scrollbar { width: 4px; }
+        .sidebar-list::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-item:hover { background: var(--panel-light); }
+
+        .sidebar-item .word-label { flex: 1; }
+
+        .sidebar-item .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0.2rem;
+            opacity: 0;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .sidebar-item:hover .remove-btn { opacity: 1; }
+        .sidebar-item .remove-btn:hover { color: var(--error); }
+
+        .sidebar-empty {
+            padding: 1.5rem;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Word of the Day */
+        .wotd-card {
+            background: linear-gradient(135deg, rgba(8,145,178,0.15), rgba(34,211,238,0.08));
+            border: 1px solid rgba(8,145,178,0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .wotd-card:hover { transform: translateY(-2px); border-color: var(--cyan); }
+
+        .wotd-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--cyan);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .wotd-word {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .wotd-hint { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            border: 1px solid var(--cyan);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            .sidebar { order: -1; }
+            .search-row { flex-direction: column; }
+.word-text { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 500px) {
+            .header { padding: 1rem; }
+            .header-title h1 { font-size: 1.2rem; }
+            .kbd-hint { display: none; }
+            .word-header { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="header-title">
+        <i class="fas fa-book"></i>
+        <h1>Dictionary</h1>
+    </div>
+    <span class="kbd-hint"><i class="fas fa-globe" style="margin-right:4px;"></i> All languages · Auto-detect</span>
+    <span class="kbd-hint">Cmd+K to search</span>
+</div>
+
+<div class="main-container">
+    <div class="left-col">
+        <div class="search-area">
+            <div class="search-row">
+<div class="search-input-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Type a word to look up..." autocomplete="off">
+                </div>
+                <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p style="color: var(--text-muted);">Looking up word...</p>
+            </div>
+            <div id="results"></div>
+            <div id="wotdSection"></div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <!-- Word of the Day card -->
+        <div class="wotd-card" id="wotdCard" style="display:none;">
+            <div class="wotd-label"><i class="fas fa-star"></i> Word of the Day</div>
+            <div class="wotd-word" id="wotdWord"></div>
+            <div class="wotd-hint">Click to explore</div>
+        </div>
+
+        <!-- Bookmarks -->
+        <div class="sidebar-card">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-bookmark"></i> Bookmarks</h3>
+                <button class="clear-btn" onclick="clearBookmarks()">Clear</button>
+            </div>
+            <ul class="sidebar-list" id="bookmarksList">
+                <li class="sidebar-empty">No bookmarks yet</li>
+            </ul>
+        </div>
+
+        <!-- History -->
+        <div class="sidebar-card">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-clock-rotate-left"></i> History</h3>
+                <button class="clear-btn" onclick="clearHistory()">Clear</button>
+            </div>
+            <ul class="sidebar-list" id="historyList">
+                <li class="sidebar-empty">No search history</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // --- State ---
+    const API_BASE = 'https://api.dictionaryapi.dev/api/v2/entries';
+    let history = JSON.parse(localStorage.getItem('dict_history') || '[]');
+    let bookmarks = JSON.parse(localStorage.getItem('dict_bookmarks') || '[]');
+    let currentAudio = null;
+
+    const INTERESTING_WORDS = [
+        'serendipity','ephemeral','luminous','quintessential','mellifluous',
+        'sonder','petrichor','effervescent','ethereal','eloquent',
+        'resilience','ubiquitous','epiphany','labyrinth','cascade',
+        'nebula','paradox','symphony','zenith','reverie',
+        'solitude','wanderlust','nostalgia','silhouette','aurora',
+        'euphoria','halcyon','iridescent','vivacious','enigma',
+        'tranquil','whimsical','kaleidoscope','catalyst','harmony',
+        'velvet','obsidian','gossamer','cerulean','vermillion',
+        'clandestine','aplomb','sagacious','ebullient','perspicacity',
+        'magnanimous','surreptitious','loquacious','pulchritude','ineffable'
+    ];
+
+    const POS_CLASSES = {
+        noun: 'pos-noun', verb: 'pos-verb', adjective: 'pos-adjective',
+        adverb: 'pos-adverb', pronoun: 'pos-pronoun', preposition: 'pos-preposition',
+        conjunction: 'pos-conjunction', interjection: 'pos-interjection'
+    };
+
+    // --- Elements ---
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const contentArea = document.getElementById('contentArea');
+    const resultsDiv = document.getElementById('results');
+    const loader = document.getElementById('loader');
+    const historyList = document.getElementById('historyList');
+    const bookmarksList = document.getElementById('bookmarksList');
+    const wotdCard = document.getElementById('wotdCard');
+    const wotdWord = document.getElementById('wotdWord');
+
+    // --- Init ---
+    renderHistory();
+    renderBookmarks();
+    initWordOfTheDay();
+
+
+    // --- Event Listeners ---
+    searchBtn.addEventListener('click', () => doSearch());
+    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+    document.addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            searchInput.blur();
+        }
+    });
+
+    wotdCard.addEventListener('click', () => {
+        searchInput.value = wotdWord.textContent;
+        doSearch();
+    });
+
+    // --- Search ---
+    async function doSearch(word) {
+        const query = (word || searchInput.value).trim();
+        if (!query) return;
+        searchInput.value = query;
+
+        resultsDiv.innerHTML = '';
+        loader.classList.add('active');
+
+        addToHistory(query);
+
+        // Try Free Dictionary API first (English words)
+        try {
+            const resp = await fetch(`${API_BASE}/en/${encodeURIComponent(query)}`);
+            if (!resp.ok) throw new Error('Not found');
+            const data = await resp.json();
+            loader.classList.remove('active');
+            renderResults(data);
+            return;
+        } catch (err) {
+            // Fall through to Wiktionary
+        }
+
+        // Fallback: Wiktionary REST API (auto-detects language)
+        try {
+            const wiktResp = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(query)}`);
+            if (!wiktResp.ok) throw new Error('Not found on Wiktionary');
+            const wiktData = await wiktResp.json();
+
+            // Use first available language entry
+            const firstKey = Object.keys(wiktData).find(k => k !== '__meta');
+            const matchedEntries = firstKey ? wiktData[firstKey] : null;
+
+            if (!matchedEntries || !matchedEntries.length) throw new Error('No definitions');
+
+            loader.classList.remove('active');
+            renderWiktionaryResults(query, matchedEntries);
+        } catch (wiktErr) {
+            loader.classList.remove('active');
+            resultsDiv.innerHTML = `
+                <div class="error-card">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <h3>Word not found</h3>
+                    <p>Could not find a definition for "<strong>${escapeHtml(query)}</strong>".<br>Check the spelling and try again.</p>
+                    <p style="margin-top:12px;"><a href="https://en.wiktionary.org/wiki/${encodeURIComponent(query)}" target="_blank" style="color:#0891b2;text-decoration:none;font-weight:600;"><i class="fas fa-external-link-alt"></i> Try Wiktionary</a></p>
+                </div>`;
+        }
+    }
+
+    // --- Render Wiktionary Results ---
+    function renderWiktionaryResults(word, entries) {
+        resultsDiv.innerHTML = '';
+        const card = document.createElement('div');
+        card.className = 'word-card';
+
+        const isBookmarked = bookmarks.includes(word);
+        const langLabel = entries[0]?.language || '';
+
+        let headerHTML = `
+            <div class="word-header">
+                <div class="word-main">
+                    <span class="word-text">${escapeHtml(word)}</span>
+                    ${langLabel ? `<span class="phonetic">${escapeHtml(langLabel)}</span>` : ''}
+                </div>
+                <div class="word-actions">
+                    <button class="icon-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${escapeAttr(word)}', this)" title="Bookmark">
+                        <i class="fas fa-star"></i>
+                    </button>
+                    <button class="icon-btn" onclick="copyDefinition(this.closest('.word-card'))" title="Copy"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>`;
+
+        let meaningsHTML = '';
+        entries.forEach(entry => {
+            const pos = entry.partOfSpeech || 'unknown';
+            const posClass = POS_CLASSES[pos.toLowerCase()] || 'pos-default';
+            meaningsHTML += `<div class="pos-section">
+                <div class="pos-header ${posClass}">${escapeHtml(pos)}</div>
+                <ol class="def-list">`;
+
+            if (entry.definitions) {
+                entry.definitions.forEach((def, i) => {
+                    // Wiktionary returns HTML in definitions — strip tags for clean display
+                    const cleanDef = stripHtml(def.definition || '');
+                    const cleanExample = def.examples ? stripHtml(def.examples[0]) : '';
+                    meaningsHTML += `<li class="def-item">
+                        <span class="def-num">${i + 1}.</span>
+                        <div class="def-content">
+                            <div class="def-text">${cleanDef}</div>
+                            ${cleanExample ? `<div class="def-example">"${cleanExample}"</div>` : ''}
+                        </div>
+                    </li>`;
+                });
+            }
+
+            meaningsHTML += `</ol></div>`;
+        });
+
+        const sourceHTML = `<div class="source-links">
+            <a href="https://en.wiktionary.org/wiki/${encodeURIComponent(word)}" target="_blank" rel="noopener" class="source-link"><i class="fas fa-external-link-alt"></i> Wiktionary</a>
+        </div>`;
+
+        card.innerHTML = headerHTML + meaningsHTML + sourceHTML;
+        resultsDiv.appendChild(card);
+    }
+
+    function stripHtml(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    // --- Render Results ---
+    function renderResults(entries) {
+        resultsDiv.innerHTML = '';
+        entries.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+
+            // Find phonetic & audio
+            let phoneticText = entry.phonetic || '';
+            let audioUrl = '';
+            if (entry.phonetics) {
+                for (const p of entry.phonetics) {
+                    if (p.text && !phoneticText) phoneticText = p.text;
+                    if (p.audio && !audioUrl) audioUrl = p.audio;
+                }
+            }
+
+            const word = entry.word;
+            const isBookmarked = bookmarks.includes(word);
+
+            // Header
+            let headerHTML = `
+                <div class="word-header">
+                    <div class="word-main">
+                        <span class="word-text">${escapeHtml(word)}</span>
+                        ${phoneticText ? `<span class="phonetic">${escapeHtml(phoneticText)}</span>` : ''}
+                        ${audioUrl ? `<button class="audio-btn" onclick="playAudio('${audioUrl}')" title="Listen"><i class="fas fa-volume-high"></i></button>` : ''}
+                    </div>
+                    <div class="word-actions">
+                        <button class="icon-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${escapeHtml(word)}', this)" title="Bookmark">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="icon-btn" onclick="copyDefinition(this.closest('.word-card'))" title="Copy"><i class="fas fa-copy"></i></button>
+                        <button class="icon-btn" onclick="shareWord('${escapeHtml(word)}')" title="Share"><i class="fas fa-share-nodes"></i></button>
+                    </div>
+                </div>`;
+
+            // Meanings
+            let meaningsHTML = '';
+            if (entry.meanings) {
+                entry.meanings.forEach(m => {
+                    const posClass = POS_CLASSES[m.partOfSpeech] || 'pos-default';
+                    meaningsHTML += `<div class="pos-section">
+                        <div class="pos-header ${posClass}">${escapeHtml(m.partOfSpeech)}</div>
+                        <ol class="def-list">`;
+
+                    m.definitions.forEach((def, i) => {
+                        meaningsHTML += `<li class="def-item">
+                            <span class="def-num">${i + 1}.</span>
+                            <div class="def-content">
+                                <div class="def-text">${escapeHtml(def.definition)}</div>
+                                ${def.example ? `<div class="def-example">"${escapeHtml(def.example)}"</div>` : ''}`;
+
+                        if (def.synonyms && def.synonyms.length) {
+                            meaningsHTML += `<div class="related-words"><span class="related-label">Syn:</span>`;
+                            def.synonyms.forEach(s => {
+                                meaningsHTML += `<button class="related-tag" onclick="doSearch('${escapeAttr(s)}')">${escapeHtml(s)}</button>`;
+                            });
+                            meaningsHTML += `</div>`;
+                        }
+                        if (def.antonyms && def.antonyms.length) {
+                            meaningsHTML += `<div class="related-words"><span class="related-label">Ant:</span>`;
+                            def.antonyms.forEach(a => {
+                                meaningsHTML += `<button class="related-tag antonym-tag" onclick="doSearch('${escapeAttr(a)}')">${escapeHtml(a)}</button>`;
+                            });
+                            meaningsHTML += `</div>`;
+                        }
+
+                        meaningsHTML += `</div></li>`;
+                    });
+
+                    meaningsHTML += `</ol>`;
+
+                    // Top-level synonyms/antonyms
+                    if (m.synonyms && m.synonyms.length) {
+                        meaningsHTML += `<div class="related-words" style="margin-top:0.5rem;"><span class="related-label">Synonyms:</span>`;
+                        m.synonyms.forEach(s => {
+                            meaningsHTML += `<button class="related-tag" onclick="doSearch('${escapeAttr(s)}')">${escapeHtml(s)}</button>`;
+                        });
+                        meaningsHTML += `</div>`;
+                    }
+                    if (m.antonyms && m.antonyms.length) {
+                        meaningsHTML += `<div class="related-words" style="margin-top:0.5rem;"><span class="related-label">Antonyms:</span>`;
+                        m.antonyms.forEach(a => {
+                            meaningsHTML += `<button class="related-tag antonym-tag" onclick="doSearch('${escapeAttr(a)}')">${escapeHtml(a)}</button>`;
+                        });
+                        meaningsHTML += `</div>`;
+                    }
+
+                    meaningsHTML += `</div>`;
+                });
+            }
+
+            // Origin
+            let originHTML = '';
+            if (entry.origin) {
+                originHTML = `<div class="origin-section"><h4><i class="fas fa-scroll"></i> Origin</h4><p>${escapeHtml(entry.origin)}</p></div>`;
+            }
+
+            // Source URLs
+            let sourceHTML = '';
+            if (entry.sourceUrls && entry.sourceUrls.length) {
+                sourceHTML = `<div class="source-links">`;
+                entry.sourceUrls.forEach(url => {
+                    sourceHTML += `<a href="${escapeAttr(url)}" target="_blank" rel="noopener" class="source-link"><i class="fas fa-external-link-alt"></i> ${escapeHtml(url)}</a>`;
+                });
+                sourceHTML += `</div>`;
+            }
+
+            card.innerHTML = headerHTML + meaningsHTML + originHTML + sourceHTML;
+            resultsDiv.appendChild(card);
+        });
+    }
+
+    // --- Audio ---
+    function playAudio(url) {
+        if (currentAudio) { currentAudio.pause(); }
+        currentAudio = new Audio(url);
+        currentAudio.play().catch(() => showToast('Could not play audio'));
+    }
+
+    // --- History ---
+    function addToHistory(word) {
+        history = history.filter(w => w.toLowerCase() !== word.toLowerCase());
+        history.unshift(word);
+        if (history.length > 30) history.pop();
+        localStorage.setItem('dict_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        if (!history.length) {
+            historyList.innerHTML = '<li class="sidebar-empty">No search history</li>';
+            return;
+        }
+        historyList.innerHTML = history.map(w => `
+            <li class="sidebar-item" onclick="doSearch('${escapeAttr(w)}')">
+                <span class="word-label">${escapeHtml(w)}</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); removeHistory('${escapeAttr(w)}')"><i class="fas fa-xmark"></i></button>
+            </li>`).join('');
+    }
+
+    function removeHistory(word) {
+        history = history.filter(w => w !== word);
+        localStorage.setItem('dict_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function clearHistory() {
+        history = [];
+        localStorage.setItem('dict_history', '[]');
+        renderHistory();
+    }
+
+    // --- Bookmarks ---
+    function toggleBookmark(word, btn) {
+        const idx = bookmarks.indexOf(word);
+        if (idx > -1) {
+            bookmarks.splice(idx, 1);
+            btn.classList.remove('bookmarked');
+            showToast('Bookmark removed');
+        } else {
+            bookmarks.push(word);
+            btn.classList.add('bookmarked');
+            showToast('Bookmarked!');
+        }
+        localStorage.setItem('dict_bookmarks', JSON.stringify(bookmarks));
+        renderBookmarks();
+    }
+
+    function renderBookmarks() {
+        if (!bookmarks.length) {
+            bookmarksList.innerHTML = '<li class="sidebar-empty">No bookmarks yet</li>';
+            return;
+        }
+        bookmarksList.innerHTML = bookmarks.map(w => `
+            <li class="sidebar-item" onclick="doSearch('${escapeAttr(w)}')">
+                <span class="word-label"><i class="fas fa-star" style="color:var(--warning);margin-right:0.4rem;font-size:0.7rem;"></i>${escapeHtml(w)}</span>
+                <button class="remove-btn" onclick="event.stopPropagation(); removeBookmark('${escapeAttr(w)}')"><i class="fas fa-xmark"></i></button>
+            </li>`).join('');
+    }
+
+    function removeBookmark(word) {
+        bookmarks = bookmarks.filter(w => w !== word);
+        localStorage.setItem('dict_bookmarks', JSON.stringify(bookmarks));
+        renderBookmarks();
+        // Update any visible bookmark buttons
+        document.querySelectorAll('.word-card').forEach(card => {
+            const wt = card.querySelector('.word-text');
+            if (wt && wt.textContent === word) {
+                const btn = card.querySelector('.icon-btn');
+                if (btn) btn.classList.remove('bookmarked');
+            }
+        });
+    }
+
+    function clearBookmarks() {
+        bookmarks = [];
+        localStorage.setItem('dict_bookmarks', '[]');
+        renderBookmarks();
+        document.querySelectorAll('.icon-btn.bookmarked').forEach(b => b.classList.remove('bookmarked'));
+    }
+
+    // --- Copy & Share ---
+    function copyDefinition(card) {
+        const word = card.querySelector('.word-text')?.textContent || '';
+        const phonetic = card.querySelector('.phonetic')?.textContent || '';
+        const defs = [];
+        card.querySelectorAll('.pos-section').forEach(sec => {
+            const pos = sec.querySelector('.pos-header')?.textContent || '';
+            defs.push(`\n[${pos}]`);
+            sec.querySelectorAll('.def-item').forEach(item => {
+                const num = item.querySelector('.def-num')?.textContent || '';
+                const text = item.querySelector('.def-text')?.textContent || '';
+                const example = item.querySelector('.def-example')?.textContent || '';
+                defs.push(`  ${num} ${text}`);
+                if (example) defs.push(`     ${example}`);
+            });
+        });
+        const full = `${word} ${phonetic}\n${defs.join('\n')}`;
+        navigator.clipboard.writeText(full).then(() => showToast('Copied to clipboard!')).catch(() => showToast('Failed to copy'));
+    }
+
+    function shareWord(word) {
+        if (navigator.share) {
+            navigator.share({
+                title: `Definition of "${word}"`,
+                text: `Look up "${word}" in the dictionary!`,
+                url: window.location.href
+            }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(window.location.href).then(() => showToast('Link copied!')).catch(() => {});
+        }
+    }
+
+    // --- Word of the Day ---
+    function initWordOfTheDay() {
+        const today = new Date().toDateString();
+        const seed = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        const idx = seed % INTERESTING_WORDS.length;
+        const word = INTERESTING_WORDS[idx];
+        wotdWord.textContent = word;
+        wotdCard.style.display = '';
+    }
+
+    // --- Toast ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Helpers ---
+    function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+    }
+
+    function escapeAttr(s) {
+        return s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+</script>
+
+</body>
+</html>
