@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech | Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan: #0891b2;
+            --cyan-light: #22d3ee;
+            --cyan-dark: #0e7490;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-light: #334155;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --orange: #fb923c;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--cyan-dark), var(--cyan), var(--cyan-light));
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 20px rgba(8, 145, 178, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .header-title i { font-size: 1.5rem; color: white; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: white; }
+
+        .kbd-hint {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255,255,255,0.12);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Text Area */
+        .text-panel {
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .text-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .text-panel-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .text-panel-header h3 i { color: var(--cyan); }
+
+        .char-count {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .text-area {
+            width: 100%;
+            min-height: 200px;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 1.25rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            resize: vertical;
+            outline: none;
+        }
+
+        .text-area::placeholder { color: var(--text-dim); }
+
+        /* Controls */
+        .controls-panel {
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+        .control-group.full { grid-column: 1 / -1; }
+
+        .control-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .control-label i { color: var(--cyan); font-size: 0.75rem; }
+
+        .control-select {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 0.65rem 0.75rem;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .control-select:focus { border-color: var(--cyan); }
+
+        /* Sliders */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .slider-input {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--cyan);
+            cursor: pointer;
+            border: 2px solid var(--bg);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.15s;
+        }
+
+        .slider-input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--cyan-light);
+            min-width: 2.5rem;
+            text-align: right;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: white;
+            flex: 1;
+            min-width: 140px;
+        }
+        .btn-primary:hover { background: var(--cyan-dark); }
+        .btn-primary.speaking {
+            background: var(--error);
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.2); }
+        }
+
+        .btn-secondary {
+            background: var(--panel-light);
+            color: var(--text-muted);
+        }
+        .btn-secondary:hover { background: var(--border); color: var(--text); }
+
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            min-width: unset;
+            flex: none;
+        }
+
+        /* Visualizer */
+        .visualizer-wrap {
+            background: var(--panel);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .visualizer-wrap.active { display: block; }
+
+        .visualizer-bar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            height: 60px;
+        }
+
+        .viz-bar {
+            width: 4px;
+            background: var(--cyan);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+            opacity: 0.7;
+        }
+
+        .viz-bar:nth-child(odd) { background: var(--cyan-light); }
+
+        .speaking-status {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .speaking-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Presets */
+        .presets-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .preset-chip {
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .preset-chip:hover { border-color: var(--cyan); color: var(--cyan-light); }
+        .preset-chip.active { background: var(--cyan); color: white; border-color: var(--cyan); }
+
+        .btn.downloading {
+            background: var(--warning);
+            color: #1e293b;
+            pointer-events: none;
+        }
+
+        .btn.downloading i { animation: spin-dl 1s linear infinite; }
+
+        @keyframes spin-dl { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .main-container { padding: 1rem; }
+            .header { padding: 1rem; }
+            .header-title h1 { font-size: 1.2rem; }
+            .kbd-hint { display: none; }
+            .controls-grid { grid-template-columns: 1fr; }
+            .btn-row { flex-direction: column; }
+            .btn { min-width: unset; }
+        }
+
+        @media print {
+            .header, .controls-panel, .btn-row, .visualizer-wrap, .kbd-hint { display: none !important; }
+            body { background: white; color: #1a1a1a; }
+            .text-panel { border: 1px solid #ddd; }
+            .text-area { color: #1a1a1a; min-height: auto; }
+            .main-container { max-width: 100%; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="header-title">
+        <i class="fas fa-volume-up"></i>
+        <h1>Text to Speech</h1>
+    </div>
+    <span class="kbd-hint"><i class="fas fa-globe" style="margin-right:4px;"></i> All languages</span>
+</div>
+
+<div class="main-container">
+    <!-- Text Input -->
+    <div class="text-panel">
+        <div class="text-panel-header">
+            <h3><i class="fas fa-keyboard"></i> Enter Text</h3>
+            <span class="char-count" id="charCount">0 characters</span>
+        </div>
+        <textarea class="text-area" id="textInput" placeholder="Type or paste text here to convert to speech..."></textarea>
+    </div>
+
+    <!-- Visualizer -->
+    <div class="visualizer-wrap" id="visualizer">
+        <div class="visualizer-bar" id="vizBars"></div>
+        <div class="speaking-status">
+            <span class="speaking-dot"></span>
+            <span id="speakingLabel">Speaking...</span>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-panel">
+        <!-- Presets -->
+        <div class="presets-row" id="presetsRow">
+            <span style="font-size:0.75rem;color:var(--text-dim);align-self:center;margin-right:0.25rem;">Presets:</span>
+        </div>
+
+        <div class="controls-grid">
+            <div class="control-group full">
+                <label class="control-label"><i class="fas fa-user"></i> Voice</label>
+                <select class="control-select" id="voiceSelect">
+                    <option>Loading voices...</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label class="control-label"><i class="fas fa-gauge-high"></i> Speed</label>
+                <div class="slider-row">
+                    <input type="range" class="slider-input" id="rateSlider" min="0.25" max="3" step="0.05" value="1">
+                    <span class="slider-value" id="rateValue">1.0x</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label"><i class="fas fa-music"></i> Pitch</label>
+                <div class="slider-row">
+                    <input type="range" class="slider-input" id="pitchSlider" min="0" max="2" step="0.05" value="1">
+                    <span class="slider-value" id="pitchValue">1.0</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label"><i class="fas fa-volume-high"></i> Volume</label>
+                <div class="slider-row">
+                    <input type="range" class="slider-input" id="volumeSlider" min="0" max="1" step="0.05" value="1">
+                    <span class="slider-value" id="volumeValue">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+            <button class="btn btn-primary" id="speakBtn"><i class="fas fa-play"></i> Speak</button>
+            <button class="btn btn-secondary" id="pauseBtn" style="display:none;"><i class="fas fa-pause"></i> Pause</button>
+            <button class="btn btn-secondary" id="downloadBtn" onclick="downloadAudio()"><i class="fas fa-download"></i> Download MP3</button>
+            <span style="font-size:0.7rem;color:var(--text-dim);align-self:center;margin-left:-0.25rem;" title="Browser voices can't be saved as files. Download uses a Google voice in the same language instead."><i class="fas fa-info-circle"></i> Google voice</span>
+            <button class="btn btn-secondary btn-icon" onclick="printText()" title="Print"><i class="fas fa-print"></i></button>
+            <button class="btn btn-secondary btn-icon" onclick="copyText()" title="Copy"><i class="fas fa-copy"></i></button>
+            <button class="btn btn-secondary btn-icon" onclick="shareText()" title="Share"><i class="fas fa-share-nodes"></i></button>
+            <button class="btn btn-secondary btn-icon" onclick="clearText()" title="Clear"><i class="fas fa-trash"></i></button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast" style="position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--cyan);color:var(--text);padding:0.75rem 1.5rem;border-radius:12px;font-family:'Outfit',sans-serif;font-size:0.9rem;z-index:1000;transition:transform 0.3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.4);"></div>
+
+<script>
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let speaking = false;
+    let paused = false;
+    let vizInterval = null;
+
+    const textInput = document.getElementById('textInput');
+    const charCount = document.getElementById('charCount');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSlider = document.getElementById('rateSlider');
+    const pitchSlider = document.getElementById('pitchSlider');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const rateValue = document.getElementById('rateValue');
+    const pitchValue = document.getElementById('pitchValue');
+    const volumeValue = document.getElementById('volumeValue');
+    const speakBtn = document.getElementById('speakBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const visualizer = document.getElementById('visualizer');
+    const vizBars = document.getElementById('vizBars');
+    const presetsRow = document.getElementById('presetsRow');
+
+    // --- Init visualizer bars ---
+    for (let i = 0; i < 40; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'viz-bar';
+        bar.style.height = '4px';
+        vizBars.appendChild(bar);
+    }
+
+    // --- Character count ---
+    textInput.addEventListener('input', () => {
+        const len = textInput.value.length;
+        charCount.textContent = `${len.toLocaleString()} character${len !== 1 ? 's' : ''}`;
+    });
+
+    // --- Sliders ---
+    rateSlider.addEventListener('input', () => {
+        rateValue.textContent = parseFloat(rateSlider.value).toFixed(1) + 'x';
+    });
+    pitchSlider.addEventListener('input', () => {
+        pitchValue.textContent = parseFloat(pitchSlider.value).toFixed(1);
+    });
+    volumeSlider.addEventListener('input', () => {
+        volumeValue.textContent = Math.round(volumeSlider.value * 100) + '%';
+    });
+
+    // --- Voices ---
+    function loadVoices() {
+        voices = synth.getVoices();
+        if (!voices.length) return;
+
+        // Group by language
+        const grouped = {};
+        voices.forEach((v, i) => {
+            const lang = v.lang.split('-')[0].toUpperCase();
+            if (!grouped[lang]) grouped[lang] = [];
+            grouped[lang].push({ voice: v, index: i });
+        });
+
+        voiceSelect.innerHTML = '';
+
+        // Sort language groups, put English first
+        const langs = Object.keys(grouped).sort((a, b) => {
+            if (a === 'EN') return -1;
+            if (b === 'EN') return 1;
+            return a.localeCompare(b);
+        });
+
+        langs.forEach(lang => {
+            const group = document.createElement('optgroup');
+            group.label = lang;
+            grouped[lang].forEach(({ voice, index }) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                const label = voice.name.replace(/Microsoft |Google |Apple /, '');
+                opt.textContent = `${label} (${voice.lang})${voice.default ? ' *' : ''}`;
+                if (voice.default) opt.selected = true;
+                group.appendChild(opt);
+            });
+            voiceSelect.appendChild(group);
+        });
+
+        buildPresets();
+    }
+
+    let voicesLoaded = false;
+    synth.addEventListener('voiceschanged', () => {
+        if (!voicesLoaded) { loadVoices(); voicesLoaded = true; }
+    });
+    loadVoices();
+
+    // --- Presets ---
+    function buildPresets() {
+        const presets = [
+            { name: 'Normal', rate: 1, pitch: 1 },
+            { name: 'Slow', rate: 0.7, pitch: 1 },
+            { name: 'Fast', rate: 1.5, pitch: 1 },
+            { name: 'Deep', rate: 0.9, pitch: 0.5 },
+            { name: 'High', rate: 1, pitch: 1.7 },
+            { name: 'Robot', rate: 0.85, pitch: 0.2 },
+            { name: 'Chipmunk', rate: 1.6, pitch: 2 },
+        ];
+
+        // Remove old chips
+        presetsRow.querySelectorAll('.preset-chip').forEach(c => c.remove());
+
+        presets.forEach((p, i) => {
+            const chip = document.createElement('button');
+            chip.className = 'preset-chip' + (i === 0 ? ' active' : '');
+            chip.textContent = p.name;
+            chip.onclick = () => {
+                rateSlider.value = p.rate;
+                pitchSlider.value = p.pitch;
+                rateValue.textContent = p.rate.toFixed(1) + 'x';
+                pitchValue.textContent = p.pitch.toFixed(1);
+                presetsRow.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            };
+            presetsRow.appendChild(chip);
+        });
+    }
+
+    // --- Speak ---
+    speakBtn.addEventListener('click', () => {
+        if (speaking && !paused) {
+            stopSpeaking();
+            return;
+        }
+        if (paused) {
+            synth.resume();
+            paused = false;
+            updateUI(true);
+            return;
+        }
+
+        const text = textInput.value.trim();
+        if (!text) {
+            showToast('Enter some text first');
+            return;
+        }
+
+        synth.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        const selectedIdx = parseInt(voiceSelect.value, 10);
+        const selectedVoice = voices[selectedIdx];
+        if (selectedVoice) {
+            utter.voice = selectedVoice;
+            utter.lang = selectedVoice.lang;
+        }
+        utter.rate = parseFloat(rateSlider.value);
+        utter.pitch = parseFloat(pitchSlider.value);
+        utter.volume = parseFloat(volumeSlider.value);
+
+        utter.onstart = () => {
+            speaking = true;
+            paused = false;
+            updateUI(true);
+            startVisualizer();
+        };
+
+        utter.onend = () => {
+            speaking = false;
+            paused = false;
+            updateUI(false);
+            stopVisualizer();
+        };
+
+        utter.onerror = () => {
+            speaking = false;
+            paused = false;
+            updateUI(false);
+            stopVisualizer();
+        };
+
+        synth.speak(utter);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+        if (paused) {
+            synth.resume();
+            paused = false;
+            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            startVisualizer();
+        } else {
+            synth.pause();
+            paused = true;
+            pauseBtn.innerHTML = '<i class="fas fa-play"></i> Resume';
+            stopVisualizer();
+        }
+    });
+
+    function stopSpeaking() {
+        synth.cancel();
+        speaking = false;
+        paused = false;
+        updateUI(false);
+        stopVisualizer();
+    }
+
+    function updateUI(isSpeaking) {
+        if (isSpeaking) {
+            speakBtn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+            speakBtn.classList.add('speaking');
+            pauseBtn.style.display = '';
+        } else {
+            speakBtn.innerHTML = '<i class="fas fa-play"></i> Speak';
+            speakBtn.classList.remove('speaking');
+            pauseBtn.style.display = 'none';
+            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        }
+    }
+
+    // --- Visualizer ---
+    function startVisualizer() {
+        visualizer.classList.add('active');
+        const bars = vizBars.querySelectorAll('.viz-bar');
+        vizInterval = setInterval(() => {
+            bars.forEach(bar => {
+                const h = Math.random() * 50 + 6;
+                bar.style.height = h + 'px';
+            });
+        }, 100);
+    }
+
+    function stopVisualizer() {
+        clearInterval(vizInterval);
+        vizInterval = null;
+        const bars = vizBars.querySelectorAll('.viz-bar');
+        bars.forEach(bar => bar.style.height = '4px');
+        setTimeout(() => {
+            if (!speaking) visualizer.classList.remove('active');
+        }, 500);
+    }
+
+    // --- Actions ---
+    function copyText() {
+        const text = textInput.value.trim();
+        if (!text) { showToast('Nothing to copy'); return; }
+        navigator.clipboard.writeText(text)
+            .then(() => showToast('Copied to clipboard!'))
+            .catch(() => showToast('Failed to copy'));
+    }
+
+    function shareText() {
+        const text = textInput.value.trim();
+        if (!text) { showToast('Nothing to share'); return; }
+        if (navigator.share) {
+            navigator.share({ title: 'Text to Speech', text }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(text)
+                .then(() => showToast('Text copied for sharing!'))
+                .catch(() => {});
+        }
+    }
+
+    function printText() {
+        if (!textInput.value.trim()) { showToast('Nothing to print'); return; }
+        window.print();
+    }
+
+    function clearText() {
+        stopSpeaking();
+        textInput.value = '';
+        charCount.textContent = '0 characters';
+    }
+
+    // --- Download Audio (Sound of Text API) ---
+    const DL_VOICE_MAP = {
+        'en-us': 'en-US', 'en-gb': 'en-GB', 'en-au': 'en-AU', 'en-in': 'en-IN', 'en': 'en-US',
+        'es-es': 'es-ES', 'es-mx': 'es-ES', 'es-us': 'es-ES', 'es': 'es-ES',
+        'fr-fr': 'fr-FR', 'fr-ca': 'fr-FR', 'fr': 'fr-FR',
+        'de-de': 'de-DE', 'de': 'de-DE',
+        'it-it': 'it-IT', 'it': 'it-IT',
+        'pt-br': 'pt-BR', 'pt-pt': 'pt-BR', 'pt': 'pt-BR',
+        'ja-jp': 'ja-JP', 'ja': 'ja-JP',
+        'ko-kr': 'ko-KR', 'ko': 'ko-KR',
+        'zh-cn': 'cmn-Hant-TW', 'zh-tw': 'cmn-Hant-TW', 'zh-hk': 'cmn-Hant-TW', 'zh': 'cmn-Hant-TW', 'cmn': 'cmn-Hant-TW',
+        'ru-ru': 'ru-RU', 'ru': 'ru-RU',
+        'tr-tr': 'tr-TR', 'tr': 'tr-TR',
+        'hi-in': 'hi-IN', 'hi': 'hi-IN',
+        'pl-pl': 'pl-PL', 'pl': 'pl-PL',
+        'nl-nl': 'nl-NL', 'nl-be': 'nl-NL', 'nl': 'nl-NL',
+        'sv-se': 'sv-SE', 'sv': 'sv-SE',
+        'nb-no': 'nb-NO', 'nb': 'nb-NO', 'no': 'nb-NO',
+        'da-dk': 'da-DK', 'da': 'da-DK',
+        'fi-fi': 'fi-FI', 'fi': 'fi-FI',
+        'el-gr': 'el-GR', 'el': 'el-GR',
+        'th-th': 'th-TH', 'th': 'th-TH',
+        'vi-vn': 'vi-VN', 'vi': 'vi-VN',
+        'id-id': 'id-ID', 'id': 'id-ID',
+        'uk-ua': 'uk-UA', 'uk': 'uk-UA',
+        'ro-ro': 'ro-RO', 'ro': 'ro-RO',
+        'hu-hu': 'hu-HU', 'hu': 'hu-HU',
+    };
+
+    function getDownloadVoice() {
+        const selected = voices[voiceSelect.value];
+        if (!selected) return 'en-US';
+        const lang = selected.lang.toLowerCase();
+        return DL_VOICE_MAP[lang] || DL_VOICE_MAP[lang.split('-')[0]] || 'en-US';
+    }
+
+    async function downloadAudio() {
+        const text = textInput.value.trim();
+        if (!text) { showToast('Enter some text first'); return; }
+
+        const dlBtn = document.getElementById('downloadBtn');
+        dlBtn.classList.add('downloading');
+        dlBtn.innerHTML = '<i class="fas fa-spinner"></i> Generating...';
+
+        const voice = getDownloadVoice();
+
+        try {
+            // Step 1: Request audio generation
+            const createResp = await fetch('https://api.soundoftext.com/sounds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ engine: 'Google', data: { text, voice } })
+            });
+            const createData = await createResp.json();
+            if (!createData.success) throw new Error('Generation failed');
+
+            // Step 2: Poll for completion
+            const id = createData.id;
+            let audioUrl = null;
+            for (let i = 0; i < 20; i++) {
+                const statusResp = await fetch(`https://api.soundoftext.com/sounds/${id}`);
+                const statusData = await statusResp.json();
+                if (statusData.status === 'Done') {
+                    audioUrl = statusData.location;
+                    break;
+                }
+                if (statusData.status === 'Error') throw new Error('Generation error');
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            if (!audioUrl) throw new Error('Timeout');
+
+            // Step 3: Download the MP3 via direct link
+            const a = document.createElement('a');
+            a.href = audioUrl;
+            a.download = '';
+            a.target = '_blank';
+            a.click();
+            showToast('Downloading MP3 (Google voice)');
+        } catch (err) {
+            showToast('Download failed. Try again.');
+        }
+
+        dlBtn.classList.remove('downloading');
+        dlBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+    }
+
+    // --- Toast ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(100px)'; }, 2000);
+    }
+</script>
+
+</body>
+</html>
