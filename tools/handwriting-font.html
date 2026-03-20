@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwriting to Font | Tools Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#0f172a;--surface:#1e293b;--s2:#334155;--s3:#3b4963;--border:#334155;--bh:#475569;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--or:#db2777;--ord:rgba(219,39,119,.12);--org:rgba(219,39,119,.25);--gr:#10b981;--grd:rgba(16,185,129,.12);--rd:#ef4444;--r:10px;--rl:16px}
+        html{font-size:15px}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(219,39,119,.04),transparent);pointer-events:none}
+        header{display:flex;align-items:center;gap:1rem;padding:1.5rem 2rem;background:linear-gradient(135deg,#be185d,#db2777,#f472b6);box-shadow:0 4px 20px rgba(219,39,119,.3);position:sticky;top:0;z-index:50}
+        .back-btn{display:flex;align-items:center;gap:.5rem;color:white;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);transition:background .2s;font-size:.9rem}
+        .back-btn:hover{background:rgba(255,255,255,.25)}
+        .logo{display:flex;align-items:center;gap:.75rem;flex:1}
+        .logo h1{font-size:1.5rem;font-weight:700;color:white}
+        .logo i{font-size:1.5rem;color:white}
+        .logo span{display:none}
+        .steps{display:flex;align-items:center;gap:5px}
+        .step-pip{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:500;border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.5);transition:all .3s}
+        .step-pip.active{border-color:white;color:white;background:rgba(255,255,255,.2)}
+        .step-pip.done{border-color:rgba(255,255,255,.6);color:rgba(255,255,255,.8);background:rgba(255,255,255,.15)}
+        .step-bar{width:16px;height:1.5px;background:rgba(255,255,255,.2);transition:background .3s}
+        .step-bar.done{background:rgba(255,255,255,.6)}
+        .view{display:none;animation:su .3s ease}.view.active{display:block}
+        @keyframes su{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .btn{font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:500;padding:7px 16px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--s2);color:var(--text);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+        .btn:hover{border-color:var(--bh);background:var(--s3)}
+        .btn-go{background:var(--or);border-color:var(--or);color:#000;font-weight:700}
+        .btn-go:hover{filter:brightness(1.1);box-shadow:0 0 24px var(--org)}
+        .btn-go:disabled{opacity:.35;pointer-events:none}
+        .btn-sm{font-size:.68rem;padding:4px 10px}
+        .btn-danger{border-color:var(--rd);color:var(--rd)}.btn-danger:hover{background:rgba(240,80,80,.1)}
+
+        /* Step 1 */
+        #v1{max-width:680px;margin:0 auto;padding:32px 24px 60px}
+        .v1t{font-size:1.4rem;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+        .v1s{color:var(--t2);font-size:.8rem;line-height:1.6;margin-bottom:20px}
+        .fl{font-family:'JetBrains Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.14em;color:var(--t3);margin-bottom:6px}
+        .ci{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.85rem;padding:10px;outline:none;line-height:1.7;min-height:44px;resize:vertical;margin-bottom:16px}
+        .ci:focus{border-color:var(--or)}
+        .da{border:2px dashed var(--border);border-radius:var(--rl);padding:36px 16px;text-align:center;cursor:pointer;transition:all .3s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:160px}
+        .da:hover,.da.over{border-color:var(--or);background:var(--ord)}
+        .da.hi{padding:8px;border-style:solid}
+        .da.hi img{max-width:100%;max-height:280px;border-radius:var(--r);display:block}
+        .di{font-size:1.6rem;color:var(--or)}
+        .dt{font-size:.8rem;color:var(--t2)}.dt b{color:var(--or)}
+        .ub{margin-top:14px;display:flex;justify-content:flex-end;gap:10px}
+
+        /* Step 2 */
+        #v2.active{padding:0;height:100vh;display:flex;flex-direction:column}
+        .toolbar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+        .toolbar .cc{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text);display:flex;align-items:center;gap:6px}
+        .toolbar .badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;background:var(--or);color:#000;font-weight:700;font-size:1rem;border-radius:6px}
+        .toolbar .prog{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--t3)}
+        .toggle-wrap{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+        .toggle{width:34px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+        .toggle.on{background:var(--or)}
+        .toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:left .2s}
+        .toggle.on::after{left:18px}
+        .split{display:flex;flex:1;min-height:0}
+        .canvas-col{flex:1;position:relative;overflow:auto;background:#0a0a0e;display:flex;align-items:center;justify-content:center}
+        .canvas-col canvas{display:block;max-width:100%;max-height:100%}
+        .side-col{width:260px;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--surface);flex-shrink:0}
+        @media(max-width:800px){.side-col{width:200px}}
+        .side-section{padding:10px 12px;border-bottom:1px solid var(--border)}
+        .side-section.grow{flex:1;overflow-y:auto;padding:6px 8px}
+        .cli{display:flex;align-items:center;justify-content:space-between;padding:4px 7px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;transition:background .15s}
+        .cli:hover{background:var(--s2)}
+        .cli.act{background:var(--ord);color:var(--or)}
+        .cli .st{font-size:.55rem}.st.ok{color:var(--gr)}.st.no{color:var(--t3)}
+        .prev-mini{background:#faf8f5;border-radius:var(--r);padding:10px;min-height:50px;color:#181818;font-size:1rem;line-height:1.5;word-wrap:break-word;margin-top:6px}
+        .prev-mini.empty{color:#bbb;font-style:italic;font-family:'Outfit',sans-serif!important;font-size:.72rem}
+        .mini-type{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.72rem;padding:6px 8px;outline:none;resize:none;height:36px}
+        .mini-type:focus{border-color:var(--or)}
+
+        /* Step 3 */
+        #v3{max-width:900px;margin:0 auto;padding:32px 24px 60px}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px}
+        .card-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.14em;color:var(--t3);margin-bottom:10px}
+        .fn{font-size:1.15rem;font-weight:600;background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--or);padding:5px 0;width:100%;outline:none;font-family:'Outfit',sans-serif}
+        .fn:focus{border-color:var(--or)}.fn::placeholder{color:var(--t3)}
+        .ta{width:100%;min-height:80px;resize:vertical;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:10px;outline:none}
+        .ta:focus{border-color:var(--or)}
+        .pp{background:#faf8f5;border-radius:var(--rl);padding:28px;min-height:120px;color:#181818;font-size:2rem;line-height:1.7;word-wrap:break-word}
+        .pp.empty{color:#c0bdb8;font-style:italic;font-family:'Outfit',sans-serif!important;font-size:.85rem}
+        .dlb{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl)}
+        .dlb .lbl{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.14em}
+        .dlbtns{display:flex;gap:8px}
+        .sc{display:flex;align-items:center;gap:8px}
+        .sc label{font-family:'JetBrains Mono',monospace;font-size:.52rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+
+        .ov{display:none;position:fixed;inset:0;background:rgba(8,8,12,.88);z-index:200}
+        .ov.on{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+        .sp{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--or);border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .ot{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--t2);text-align:center}
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+        /* Help button & modal */
+        .help-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:white;font-size:1rem;cursor:pointer;transition:background .2s;flex-shrink:0}
+        .help-btn:hover{background:rgba(255,255,255,.25)}
+        .help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(5px)}
+        .help-overlay.open{display:flex}
+        .help-modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;padding:2rem;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:helpIn .25s ease}
+        @keyframes helpIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        .help-modal::-webkit-scrollbar{width:4px}
+        .help-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        .help-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+        .help-top h2{font-size:1.2rem;font-weight:700;color:white;display:flex;align-items:center;gap:.5rem}
+        .help-top h2 i{color:var(--or)}
+        .help-close{background:var(--s2);border:none;color:var(--t2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+        .help-close:hover{background:var(--s3);color:white}
+        .help-step{margin-bottom:1.25rem;display:flex;gap:.75rem}
+        .help-num{width:28px;height:28px;border-radius:50%;background:var(--or);color:white;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+        .help-step-content h3{font-size:.95rem;font-weight:600;color:white;margin-bottom:.3rem}
+        .help-step-content p{font-size:.82rem;color:var(--t2);line-height:1.6}
+        .help-tip{background:var(--ord);border:1px solid rgba(219,39,119,.25);border-radius:10px;padding:.75rem 1rem;margin-top:1rem}
+        .help-tip-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--or);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem}
+        .help-tip p{font-size:.8rem;color:var(--t2);line-height:1.5;margin:0}
+    </style>
+</head>
+<body>
+<header>
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <div class="logo"><i class="fas fa-pen-fancy"></i><h1>Handwriting to Font</h1></div>
+    <div class="steps">
+        <div class="step-pip active" data-step="1">1</div><div class="step-bar" data-bar="1"></div>
+        <div class="step-pip" data-step="2">2</div><div class="step-bar" data-bar="2"></div>
+        <div class="step-pip" data-step="3">3</div>
+    </div>
+    <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Instructions"><i class="fas fa-circle-question"></i></button>
+</header>
+
+<!-- Help Modal -->
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="help-modal">
+        <div class="help-top">
+            <h2><i class="fas fa-circle-question"></i> How to use</h2>
+            <button class="help-close" onclick="document.getElementById('helpOverlay').classList.remove('open')"><i class="fas fa-xmark"></i></button>
+        </div>
+
+        <div class="help-step">
+            <div class="help-num">1</div>
+            <div class="help-step-content">
+                <h3>Write your characters</h3>
+                <p>Write each letter clearly on paper — uppercase (A-Z), lowercase (a-z), and numbers (0-9). Keep good spacing between characters. Use a dark pen on white paper for best results.</p>
+            </div>
+        </div>
+
+        <div class="help-step">
+            <div class="help-num">2</div>
+            <div class="help-step-content">
+                <h3>Upload your photo</h3>
+                <p>Take a clear, well-lit photo of your handwriting and upload it. You can drag and drop the image or click to browse. Make sure the image is not blurry and has good contrast.</p>
+            </div>
+        </div>
+
+        <div class="help-step">
+            <div class="help-num">3</div>
+            <div class="help-step-content">
+                <h3>Map each character</h3>
+                <p>Draw a box around each character on the image. The current character is shown in the top-left badge. Click and drag to draw a rectangle around the letter. <strong>Smart Fit</strong> is enabled by default — it automatically snaps the box tightly around the character.</p>
+            </div>
+        </div>
+
+        <div class="help-step">
+            <div class="help-num">4</div>
+            <div class="help-step-content">
+                <h3>Adjust boxes</h3>
+                <p>You can <strong>move</strong> any box by clicking and dragging inside it. <strong>Resize</strong> by dragging the corner or edge handles. Click a character in the sidebar to jump to it. Use <strong>Skip</strong> to skip a character and <strong>Undo</strong> to remove the last box.</p>
+            </div>
+        </div>
+
+        <div class="help-step">
+            <div class="help-num">5</div>
+            <div class="help-step-content">
+                <h3>Generate & Download</h3>
+                <p>Click <strong>Generate</strong> to create your font. You can preview it by typing text, then download as <strong>.otf</strong> or <strong>.woff</strong>. Install the .otf file on your computer to use it in any app.</p>
+            </div>
+        </div>
+
+        <div class="help-tip">
+            <div class="help-tip-title"><i class="fas fa-lightbulb"></i> Tips for best results</div>
+            <p>
+                &bull; Write on unlined white paper with a thick, dark pen<br>
+                &bull; Keep letters roughly the same size<br>
+                &bull; Leave space between characters so they don't touch<br>
+                &bull; Take the photo straight-on (not at an angle)<br>
+                &bull; Good lighting = better character detection<br>
+                &bull; You can edit the character list to add symbols like ! @ # etc.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- STEP 1 -->
+<div class="view active" id="v1">
+    <h2 class="v1t">Upload your handwriting</h2>
+    <p class="v1s">Upload a photo of your characters. You'll draw a box around each letter on the image.</p>
+    <div class="fl">Characters to map (space-separated)</div>
+    <textarea class="ci" id="charInput">A a B b C c D d E e F f G g H h I i J j K k L l M m N n O o P p Q q R r S s T t U u V v W w X x Y y Z z 0 1 2 3 4 5 6 7 8 9</textarea>
+    <div class="da" id="dropArea"><div class="di">&#8593;</div><div class="dt"><b>Click to upload</b> or drag &amp; drop</div></div>
+    <input type="file" id="filePick" accept="image/*" hidden>
+    <div class="ub"><button class="btn btn-go" id="goMap" disabled onclick="goToMapping()">Start Mapping &rarr;</button></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="view" id="v2">
+    <div class="toolbar">
+        <div class="cc">Draw box: <span class="badge" id="curBadge">a</span></div>
+        <span class="prog" id="progText">0/26</span>
+        <div style="flex:1"></div>
+        <div class="toggle-wrap">Smart Fit <div class="toggle on" id="smartToggle" onclick="this.classList.toggle('on')"></div></div>
+        <button class="btn btn-sm btn-danger" onclick="clearAll()">Clear</button>
+    </div>
+    <div class="split">
+        <div class="canvas-col"><canvas id="cv"></canvas></div>
+        <div class="side-col">
+            <div class="side-section grow" id="charList"></div>
+            <div class="side-section" style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm" style="flex:1" onclick="skipChar()">Skip</button>
+                    <button class="btn btn-sm" style="flex:1" onclick="undoLast()">Undo</button>
+                </div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm" onclick="setStep(1)">&larr;</button>
+                    <button class="btn btn-sm btn-go" style="flex:1" onclick="startGen()">Generate &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="view" id="v3">
+    <h2 style="font-size:1.4rem;font-weight:700;letter-spacing:-.03em;margin-bottom:4px">Your handwriting font</h2>
+    <p style="color:var(--t2);font-size:.8rem;line-height:1.6;margin-bottom:20px">Type below to preview. Download the font to use anywhere.</p>
+    <div style="display:flex;flex-direction:column;gap:16px">
+        <input class="fn" id="fontNameIn" placeholder="My Handwriting" value="My Handwriting">
+        <div class="card" style="padding:10px"><div class="card-label">Type something</div><textarea class="ta" id="typeArea" placeholder="Type something..."></textarea></div>
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div class="card-label" style="margin:0">Preview</div>
+                <div class="sc"><label>Size</label><input type="range" id="sizeSlider" min="16" max="80" value="36" style="width:90px;-webkit-appearance:none;appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none"><span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--or)" id="sizeVal">36px</span></div>
+            </div>
+            <div class="pp empty" id="previewPane">Start typing...</div>
+        </div>
+        <div class="dlb"><span class="lbl">Download</span><div class="dlbtns"><button class="btn" onclick="setStep(2)">&larr; Back</button><button class="btn" onclick="dlFont('otf')">.otf</button><button class="btn btn-go" onclick="dlFont('woff')">.woff</button></div></div>
+    </div>
+</div>
+
+<div class="ov" id="ov"><div class="sp"></div><div class="ot" id="ovMsg">Processing...</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+<script>
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let uploadedImg=null, chars=[], mappings={}, curIdx=0;
+let genFont=null, fontBlobURL=null, ufId=0;
+
+// Canvas/drawing
+let cv, ctx, imgScale=1;
+let mode='idle'; // idle | drawing | moving | resizing
+let dragStart=null, dragCurrent=null;
+let resizeEdge=null; // 'tl','tr','bl','br','t','b','l','r'
+let activeChar=null;  // char being moved/resized
+const HANDLE=8;
+
+// ═══════════════════════
+// UPLOAD
+// ═══════════════════════
+const da=document.getElementById('dropArea'), fp=document.getElementById('filePick');
+da.addEventListener('click',()=>fp.click());
+da.addEventListener('dragover',e=>{e.preventDefault();da.classList.add('over')});
+da.addEventListener('dragleave',()=>da.classList.remove('over'));
+da.addEventListener('drop',e=>{e.preventDefault();da.classList.remove('over');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
+fp.addEventListener('change',()=>{if(fp.files[0])loadFile(fp.files[0])});
+function loadFile(f){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{uploadedImg=img;da.innerHTML=`<img src="${e.target.result}">`;da.classList.add('hi');document.getElementById('goMap').disabled=false};img.src=e.target.result};r.readAsDataURL(f)}
+
+// ═══════════════════════
+// NAV
+// ═══════════════════════
+function setStep(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('v'+n).classList.add('active');document.querySelectorAll('.step-pip').forEach(p=>{const s=+p.dataset.step;p.classList.toggle('active',s===n);p.classList.toggle('done',s<n)});document.querySelectorAll('.step-bar').forEach(b=>b.classList.toggle('done',+b.dataset.bar<n));document.querySelector('header').style.display='';if(n===2)requestAnimationFrame(initCanvas)}
+
+function goToMapping(){if(!uploadedImg)return;chars=document.getElementById('charInput').value.trim().split(/\s+/).filter(Boolean);if(!chars.length)return;mappings={};curIdx=0;window._sfBin=null;window._sfComps=null;setStep(2);buildList();updateUI();initCanvas()}
+
+// ═══════════════════════
+// CANVAS
+// ═══════════════════════
+function initCanvas(){
+    cv=document.getElementById('cv');ctx=cv.getContext('2d');
+    const wrap=cv.parentElement, maxW=wrap.clientWidth-4, maxH=wrap.clientHeight-4;
+    const iw=uploadedImg.naturalWidth, ih=uploadedImg.naturalHeight;
+    imgScale=Math.min(maxW/iw,maxH/ih,1);
+    cv.width=Math.round(iw*imgScale); cv.height=Math.round(ih*imgScale);
+    cv.onmousedown=onDown; cv.onmousemove=onMove; cv.onmouseup=onUp; cv.onmouseleave=onUp;
+    cv.ontouchstart=e=>{e.preventDefault();onDown(e.touches[0])};
+    cv.ontouchmove=e=>{e.preventDefault();onMove(e.touches[0])};
+    cv.ontouchend=e=>{e.preventDefault();onUp()};
+    redraw();
+}
+window.addEventListener('resize',()=>{if(document.getElementById('v2').classList.contains('active'))initCanvas()});
+
+function c2i(cx,cy){return{x:cx/imgScale,y:cy/imgScale}}
+function i2c(ix,iy){return{x:ix*imgScale,y:iy*imgScale}}
+function pos(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+
+// ═══════════════════════
+// HIT TEST
+// ═══════════════════════
+function hitTest(cx,cy){
+    // Check existing boxes for corner/edge/body hits
+    for(const ch of Object.keys(mappings)){
+        const b=mappings[ch];
+        const tl=i2c(b.x,b.y), br=i2c(b.x+b.w,b.y+b.h);
+        const H=HANDLE;
+        // Corners
+        if(Math.abs(cx-tl.x)<H && Math.abs(cy-tl.y)<H) return{type:'resize',char:ch,edge:'tl'};
+        if(Math.abs(cx-br.x)<H && Math.abs(cy-tl.y)<H) return{type:'resize',char:ch,edge:'tr'};
+        if(Math.abs(cx-tl.x)<H && Math.abs(cy-br.y)<H) return{type:'resize',char:ch,edge:'bl'};
+        if(Math.abs(cx-br.x)<H && Math.abs(cy-br.y)<H) return{type:'resize',char:ch,edge:'br'};
+        // Edges
+        if(cx>tl.x+H && cx<br.x-H && Math.abs(cy-tl.y)<H) return{type:'resize',char:ch,edge:'t'};
+        if(cx>tl.x+H && cx<br.x-H && Math.abs(cy-br.y)<H) return{type:'resize',char:ch,edge:'b'};
+        if(cy>tl.y+H && cy<br.y-H && Math.abs(cx-tl.x)<H) return{type:'resize',char:ch,edge:'l'};
+        if(cy>tl.y+H && cy<br.y-H && Math.abs(cx-br.x)<H) return{type:'resize',char:ch,edge:'r'};
+        // Body
+        if(cx>tl.x && cx<br.x && cy>tl.y && cy<br.y) return{type:'move',char:ch};
+    }
+    return{type:'draw'};
+}
+
+// ═══════════════════════
+// MOUSE/TOUCH HANDLERS
+// ═══════════════════════
+function onDown(e){
+    const p=pos(e);
+    const hit=hitTest(p.x,p.y);
+    dragStart=p; dragCurrent=p;
+
+    if(hit.type==='resize'){
+        mode='resizing'; activeChar=hit.char; resizeEdge=hit.edge;
+        curIdx=chars.indexOf(hit.char); updateUI();
+    } else if(hit.type==='move'){
+        mode='moving'; activeChar=hit.char;
+        curIdx=chars.indexOf(hit.char); updateUI();
+    } else {
+        if(curIdx>=chars.length) return;
+        mode='drawing'; activeChar=null;
+    }
+}
+
+function onMove(e){
+    const p=pos(e); dragCurrent=p;
+    if(mode==='idle'){
+        // Update cursor
+        const hit=hitTest(p.x,p.y);
+        if(hit.type==='resize'){
+            const cursors={tl:'nwse-resize',tr:'nesw-resize',bl:'nesw-resize',br:'nwse-resize',t:'ns-resize',b:'ns-resize',l:'ew-resize',r:'ew-resize'};
+            cv.style.cursor=cursors[hit.edge]||'crosshair';
+        } else if(hit.type==='move') cv.style.cursor='move';
+        else cv.style.cursor='crosshair';
+        return;
+    }
+    if(mode==='moving' && activeChar && mappings[activeChar]){
+        const dx=(dragCurrent.x-dragStart.x)/imgScale;
+        const dy=(dragCurrent.y-dragStart.y)/imgScale;
+        mappings[activeChar].x+=dx; mappings[activeChar].y+=dy;
+        dragStart=dragCurrent;
+    }
+    if(mode==='resizing' && activeChar && mappings[activeChar]){
+        const b=mappings[activeChar];
+        const dx=(dragCurrent.x-dragStart.x)/imgScale;
+        const dy=(dragCurrent.y-dragStart.y)/imgScale;
+        const e=resizeEdge;
+        if(e.includes('l')){b.x+=dx;b.w-=dx}
+        if(e.includes('r')){b.w+=dx}
+        if(e.includes('t')){b.y+=dy;b.h-=dy}
+        if(e.includes('b')){b.h+=dy}
+        b.w=Math.max(b.w,10); b.h=Math.max(b.h,10);
+        dragStart=dragCurrent;
+    }
+    redraw();
+}
+
+function onUp(){
+    if(mode==='drawing' && dragStart && dragCurrent){
+        const s=c2i(dragStart.x,dragStart.y), e=c2i(dragCurrent.x,dragCurrent.y);
+        let x=Math.min(s.x,e.x), y=Math.min(s.y,e.y);
+        let w=Math.abs(e.x-s.x), h=Math.abs(e.y-s.y);
+        if(w>5&&h>5 && curIdx<chars.length){
+            const ch=chars[curIdx];
+            mappings[ch]={x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h)};
+            if(document.getElementById('smartToggle').classList.contains('on')) smartFit(ch);
+            advanceNext();
+        }
+    }
+    if((mode==='moving'||mode==='resizing') && activeChar){
+    }
+    mode='idle'; dragStart=null; dragCurrent=null; activeChar=null;
+    updateUI(); redraw(); updateMiniPreview();
+}
+
+function advanceNext(){
+    for(let i=1;i<=chars.length;i++){const n=(curIdx+i)%chars.length;if(!mappings[chars[n]]){curIdx=n;return}}
+    curIdx=chars.length; // all done
+}
+
+// ═══════════════════════
+// SMART FIT ALGORITHM
+// ═══════════════════════
+function smartFit(ch){
+    const box=mappings[ch]; if(!box) return;
+    const iw=uploadedImg.naturalWidth, ih=uploadedImg.naturalHeight;
+
+    // Cache the binarized image
+    if(!window._sfBin || window._sfCacheImg!==uploadedImg){
+        const sc=document.createElement('canvas'); sc.width=iw; sc.height=ih;
+        const sCtx=sc.getContext('2d'); sCtx.drawImage(uploadedImg,0,0);
+        const data=sCtx.getImageData(0,0,iw,ih);
+        const gray=new Uint8Array(iw*ih);
+        for(let i=0;i<iw*ih;i++) gray[i]=Math.round(.299*data.data[i*4]+.587*data.data[i*4+1]+.114*data.data[i*4+2]);
+        const thr=otsu(gray);
+        window._sfBin=new Uint8Array(iw*ih);
+        for(let i=0;i<iw*ih;i++){
+            const r=data.data[i*4],g=data.data[i*4+1],b=data.data[i*4+2];
+            const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+            window._sfBin[i]=(gray[i]<thr && (mx>0?(mx-mn)/mx:0)<.5)?1:0;
+        }
+        window._sfCacheImg=uploadedImg;
+    }
+
+    const bin=window._sfBin;
+    const boxCX=Math.round(box.x+box.w/2), boxCY=Math.round(box.y+box.h/2);
+
+    // Step 1: Find the nearest ink pixel to box center (spiral search)
+    let seedX=-1, seedY=-1;
+    const maxSearch=Math.max(iw,ih);
+    outer: for(let r=0;r<maxSearch;r++){
+        for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
+            if(Math.abs(dx)<r && Math.abs(dy)<r) continue; // only perimeter
+            const sx=boxCX+dx, sy=boxCY+dy;
+            if(sx<0||sx>=iw||sy<0||sy>=ih) continue;
+            if(bin[sy*iw+sx]){seedX=sx;seedY=sy;break outer}
+        }
+    }
+    if(seedX<0) return;
+
+    // Step 2: Flood fill from seed with generous limit to get the whole blob
+    const maxFill=iw*ih*0.1; // safety cap
+    const visited=new Uint8Array(iw*ih);
+    const queue=[[seedX,seedY]];
+    visited[seedY*iw+seedX]=1;
+    let blobMinX=seedX,blobMinY=seedY,blobMaxX=seedX,blobMaxY=seedY;
+    let count=0;
+
+    while(queue.length && count<maxFill){
+        const [px,py]=queue.shift(); count++;
+        if(px<blobMinX)blobMinX=px; if(px>blobMaxX)blobMaxX=px;
+        if(py<blobMinY)blobMinY=py; if(py>blobMaxY)blobMaxY=py;
+        for(const [nx,ny] of [[px-1,py],[px+1,py],[px,py-1],[px,py+1],
+                               [px-1,py-1],[px+1,py-1],[px-1,py+1],[px+1,py+1]]){
+            if(nx<0||nx>=iw||ny<0||ny>=ih) continue;
+            const ni=ny*iw+nx;
+            if(!visited[ni]&&bin[ni]){visited[ni]=1;queue.push([nx,ny])}
+        }
+    }
+    if(count<5) return;
+
+    const blobW=blobMaxX-blobMinX+1, blobH=blobMaxY-blobMinY+1;
+
+    // Step 3: Vertical projection — count ink pixels per column in blob
+    const proj=new Uint32Array(blobW);
+    for(let y=blobMinY;y<=blobMaxY;y++)
+        for(let x=blobMinX;x<=blobMaxX;x++)
+            if(visited[y*iw+x]) proj[x-blobMinX]++;
+
+    // Find the median/typical column density (the "thick" part of strokes)
+    const sortedProj=[...proj].filter(v=>v>0).sort((a,b)=>a-b);
+    const medianDensity=sortedProj.length?sortedProj[Math.floor(sortedProj.length*0.5)]:1;
+
+    // Valleys = columns significantly thinner than normal strokes (connecting strokes)
+    // A valley is where ink density drops below 30% of median
+    const valleyThresh=Math.max(medianDensity*0.3, 2);
+
+    // Split blob into segments at valleys
+    // A valley must be at least 1px wide
+    const segs=[]; let segStart=-1;
+    for(let x=0;x<blobW;x++){
+        if(proj[x]>=valleyThresh){
+            if(segStart<0) segStart=x;
+        } else {
+            if(segStart>=0){segs.push({l:segStart,r:x-1});segStart=-1}
+        }
+    }
+    if(segStart>=0) segs.push({l:segStart,r:blobW-1});
+
+    // If only 1 segment (no valleys found), try splitting by finding local minima
+    if(segs.length<=1 && blobW>blobH*1.3){
+        // Smooth projection and find local minima
+        const smooth=new Float64Array(blobW);
+        const kern=Math.max(3,Math.round(blobW*0.02));
+        for(let x=0;x<blobW;x++){
+            let s=0,c=0;
+            for(let k=-kern;k<=kern;k++){const xi=x+k;if(xi>=0&&xi<blobW){s+=proj[xi];c++}}
+            smooth[x]=s/c;
+        }
+        // Find minima that are significantly lower than neighbors
+        const minima=[];
+        const peakVal=Math.max(...smooth);
+        for(let x=2;x<blobW-2;x++){
+            if(smooth[x]<smooth[x-1]&&smooth[x]<smooth[x+1]&&smooth[x]<peakVal*0.4){
+                minima.push({x,val:smooth[x]});
+            }
+        }
+        // Use minima as split points
+        if(minima.length>0){
+            segs.length=0;
+            let prev=0;
+            for(const m of minima){
+                if(m.x-prev>3) segs.push({l:prev,r:m.x-1});
+                prev=m.x+1;
+            }
+            if(prev<blobW) segs.push({l:prev,r:blobW-1});
+        }
+    }
+
+    // Pick the segment whose center is closest to the box center
+    let fMinX,fMinY,fMaxX,fMaxY;
+    if(segs.length>1){
+        let bestSeg=segs[0], bsd=Infinity;
+        for(const s of segs){
+            const segCenterX=blobMinX+(s.l+s.r)/2;
+            const d=Math.abs(segCenterX-boxCX);
+            if(d<bsd){bsd=d;bestSeg=s}
+        }
+        fMinX=blobMinX+bestSeg.l; fMaxX=blobMinX+bestSeg.r;
+        // Recalculate Y bounds for this segment only
+        fMinY=Infinity; fMaxY=-1;
+        for(let y=blobMinY;y<=blobMaxY;y++)
+            for(let x=fMinX;x<=fMaxX;x++)
+                if(visited[y*iw+x]){if(y<fMinY)fMinY=y;if(y>fMaxY)fMaxY=y;}
+        if(fMaxY<0){fMinY=blobMinY;fMaxY=blobMaxY}
+    } else {
+        fMinX=blobMinX;fMinY=blobMinY;fMaxX=blobMaxX;fMaxY=blobMaxY;
+    }
+
+    // Snap box with padding
+    const pad=Math.max(4, Math.round(Math.max(fMaxX-fMinX, fMaxY-fMinY)*0.07));
+    mappings[ch]={
+        x: Math.max(0, fMinX-pad),
+        y: Math.max(0, fMinY-pad),
+        w: Math.min(iw-(fMinX-pad), fMaxX-fMinX+1+pad*2),
+        h: Math.min(ih-(fMinY-pad), fMaxY-fMinY+1+pad*2)
+    };
+}
+
+// ═══════════════════════
+// REDRAW
+// ═══════════════════════
+function redraw(){
+    if(!cv||!ctx||!uploadedImg) return;
+    const cw=cv.width,ch=cv.height;
+    ctx.clearRect(0,0,cw,ch);
+    ctx.drawImage(uploadedImg,0,0,cw,ch);
+
+    // Draw saved boxes
+    for(const[char,box] of Object.entries(mappings)){
+        const tl=i2c(box.x,box.y), br=i2c(box.x+box.w,box.y+box.h);
+        const bw=br.x-tl.x, bh=br.y-tl.y;
+        const isCur=chars[curIdx]===char;
+        ctx.strokeStyle=isCur?'rgba(240,128,60,.9)':'rgba(60,207,110,.7)';
+        ctx.lineWidth=2; ctx.setLineDash([]); ctx.strokeRect(tl.x,tl.y,bw,bh);
+
+        // Resize handles for current
+        if(isCur){
+            const H=5;
+            ctx.fillStyle='var(--or)';
+            [[tl.x,tl.y],[br.x,tl.y],[tl.x,br.y],[br.x,br.y]].forEach(([hx,hy])=>{
+                ctx.fillStyle='rgba(240,128,60,.9)';
+                ctx.fillRect(hx-H,hy-H,H*2,H*2);
+            });
+        }
+
+        // Label
+        const fs=Math.max(11,Math.min(16,bh*.25));
+        ctx.font=`bold ${fs}px 'JetBrains Mono',monospace`;
+        const tw=ctx.measureText(char).width;
+        ctx.fillStyle=isCur?'rgba(240,128,60,.85)':'rgba(60,207,110,.8)';
+        ctx.fillRect(tl.x,tl.y-fs-5,tw+8,fs+4);
+        ctx.fillStyle='#000'; ctx.fillText(char,tl.x+4,tl.y-3);
+    }
+
+    // Current drag
+    if(mode==='drawing'&&dragStart&&dragCurrent){
+        const x=Math.min(dragStart.x,dragCurrent.x),y=Math.min(dragStart.y,dragCurrent.y);
+        const w=Math.abs(dragCurrent.x-dragStart.x),h=Math.abs(dragCurrent.y-dragStart.y);
+        ctx.strokeStyle='rgba(240,128,60,.9)';ctx.lineWidth=2;ctx.setLineDash([6,3]);
+        ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
+        ctx.fillStyle='rgba(240,128,60,.06)';ctx.fillRect(x,y,w,h);
+        if(curIdx<chars.length){ctx.fillStyle='rgba(240,128,60,.9)';ctx.font='bold 14px "JetBrains Mono",monospace';ctx.fillText(chars[curIdx],x+4,y-6)}
+    }
+}
+
+// ═══════════════════════
+// UI
+// ═══════════════════════
+function updateUI(){
+    const mapped=Object.keys(mappings).length;
+    document.getElementById('progText').textContent=`${mapped}/${chars.length}`;
+    document.getElementById('curBadge').textContent=curIdx<chars.length?chars[curIdx]:'✓';
+    updateList();
+}
+function buildList(){updateList()}
+function updateList(){
+    const list=document.getElementById('charList');list.innerHTML='';
+    chars.forEach((ch,i)=>{
+        const d=document.createElement('div');d.className='cli'+(i===curIdx?' act':'');
+        const ok=!!mappings[ch];
+        d.innerHTML=`<span>${ch}</span><span class="st ${ok?'ok':'no'}">${ok?'✓':'—'}</span>`;
+        d.onclick=()=>{curIdx=i;updateUI();redraw()};
+        list.appendChild(d);
+    });
+}
+function skipChar(){if(curIdx<chars.length){curIdx++;while(curIdx<chars.length&&mappings[chars[curIdx]])curIdx++}updateUI();redraw()}
+function undoLast(){const m=chars.filter(c=>mappings[c]);if(!m.length)return;const l=m[m.length-1];curIdx=chars.indexOf(l);delete mappings[l];updateUI();redraw();updateMiniPreview()}
+function clearAll(){mappings={};curIdx=0;updateUI();redraw();updateMiniPreview()}
+
+// Mini preview (no-op now, preview only on step 3)
+function updateMiniPreview(){}
+
+// ═══════════════════════
+// EXTRACT + FONT GEN
+// ═══════════════════════
+function otsu(g){const h=new Float64Array(256);for(const v of g)h[v]++;const t=g.length;let s=0;for(let i=0;i<256;i++)s+=i*h[i];let sB=0,wB=0,best=0,thr=128;for(let tt=0;tt<256;tt++){wB+=h[tt];if(!wB)continue;const wF=t-wB;if(!wF)break;sB+=tt*h[tt];const d=sB/wB-(s-sB)/wF;const v=wB*wF*d*d;if(v>best){best=v;thr=tt}}return thr}
+
+async function startGen(){
+    if(!Object.keys(mappings).length){alert('Draw boxes first!');return}
+    const unmapped=chars.filter(c=>!mappings[c]);
+    if(unmapped.length){alert('Missing boxes for: '+unmapped.join(', '));return}
+    showOv('Extracting...');await sleep(50);
+    try{
+    const sc=document.createElement('canvas');sc.width=uploadedImg.naturalWidth;sc.height=uploadedImg.naturalHeight;
+    const sCtx=sc.getContext('2d');sCtx.drawImage(uploadedImg,0,0);
+    const full=sCtx.getImageData(0,0,sc.width,sc.height);
+
+    const UPM=1000,ASC=800,DESC=-200;
+    const name=document.getElementById('fontNameIn').value||'My Handwriting';
+    const ndp=new opentype.Path();ndp.moveTo(80,0);ndp.lineTo(80,700);ndp.lineTo(520,700);ndp.lineTo(520,0);ndp.close();ndp.moveTo(130,50);ndp.lineTo(470,50);ndp.lineTo(470,650);ndp.lineTo(130,650);ndp.close();
+    const glyphs=[new opentype.Glyph({name:'.notdef',unicode:0,advanceWidth:600,path:ndp}),new opentype.Glyph({name:'space',unicode:32,advanceWidth:300,path:new opentype.Path()})];
+    const seen=new Set([0,32]);
+
+    const keys=Object.keys(mappings);
+    for(let ki=0;ki<keys.length;ki++){
+        const ch=keys[ki],box=mappings[ch],code=ch.charCodeAt(0);
+        if(seen.has(code))continue;seen.add(code);
+        document.getElementById('ovMsg').textContent=`Tracing: ${ch} (${ki+1}/${keys.length})`;await sleep(4);
+
+        const bx=Math.max(0,Math.round(box.x)),by=Math.max(0,Math.round(box.y));
+        const bw=Math.min(Math.round(box.w),sc.width-bx),bh=Math.min(Math.round(box.h),sc.height-by);
+        if(bw<2||bh<2)continue;
+
+        const gray=new Uint8Array(bw*bh);
+        for(let j=0;j<bw*bh;j++){const si=((by+Math.floor(j/bw))*sc.width+(bx+(j%bw)))*4;gray[j]=Math.round(.299*full.data[si]+.587*full.data[si+1]+.114*full.data[si+2])}
+        const thr=otsu(gray);
+        const bin=new Uint8Array(bw*bh);
+        for(let j=0;j<bw*bh;j++){const si=((by+Math.floor(j/bw))*sc.width+(bx+(j%bw)))*4;const r2=full.data[si],g2=full.data[si+1],b2=full.data[si+2];const mx=Math.max(r2,g2,b2),mn=Math.min(r2,g2,b2);bin[j]=(gray[j]<thr&&(mx>0?(mx-mn)/mx:0)<.5)?1:0}
+
+        const path=new opentype.Path();
+        const contours=marchSq(bin,bw,bh);
+        if(!contours.length){glyphs.push(new opentype.Glyph({name:ch,unicode:code,advanceWidth:300,path}));continue}
+
+        const targetH=ASC*.85,scale=targetH/bh,gW=bw*scale,lsb=40;
+        for(let cont of contours){cont=simp(cont,.9);if(cont.length<3)continue;const fp=cont.map(p=>[p[0]*scale+lsb,ASC-p[1]*scale]);path.moveTo(fp[0][0],fp[0][1]);for(let k=1;k<fp.length;k++)path.lineTo(fp[k][0],fp[k][1]);path.close()}
+        glyphs.push(new opentype.Glyph({name:ch,unicode:code,advanceWidth:Math.max(Math.round(gW+lsb+40),200),path}));
+    }
+
+    document.getElementById('ovMsg').textContent='Packaging...';await sleep(40);
+    genFont=new opentype.Font({familyName:name,styleName:'Regular',unitsPerEm:UPM,ascender:ASC,descender:DESC,glyphs});
+    const buf=genFont.toArrayBuffer();
+    if(fontBlobURL)URL.revokeObjectURL(fontBlobURL);
+    fontBlobURL=URL.createObjectURL(new Blob([buf],{type:'font/opentype'}));
+    ufId++;
+    let st=document.getElementById('ufSt');if(!st){st=document.createElement('style');st.id='ufSt';document.head.appendChild(st)}
+    st.textContent=`@font-face{font-family:'UF${ufId}';src:url('${fontBlobURL}') format('opentype')}`;
+    document.getElementById('ovMsg').textContent='Loading font...';
+    const testStr=Object.keys(mappings).join('');
+    await document.fonts.load(`20px 'UF${ufId}'`,testStr);
+    const warm=document.createElement('span');warm.style.cssText='position:absolute;left:-9999px;font-size:20px';warm.style.fontFamily=`'UF${ufId}'`;warm.textContent=testStr;document.body.appendChild(warm);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    warm.remove();
+    hideOv();setStep(3);refreshPreview();
+    }catch(err){hideOv();alert('Error generating font: '+err.message);console.error(err)}
+}
+
+// Marching squares
+function marchSq(bin,w,h){const pw=w+2,ph=h+2,pad=new Uint8Array(pw*ph);for(let y=0;y<h;y++)for(let x=0;x<w;x++)pad[(y+1)*pw+(x+1)]=bin[y*w+x];function sg(cx,cy,ci){const T=[cx+.5,cy],R=[cx+1,cy+.5],B=[cx+.5,cy+1],L=[cx,cy+.5];switch(ci){case 0:case 15:return[];case 1:return[[L,B]];case 2:return[[B,R]];case 3:return[[L,R]];case 4:return[[R,T]];case 5:return[[L,T],[B,R]];case 6:return[[B,T]];case 7:return[[L,T]];case 8:return[[T,L]];case 9:return[[T,B]];case 10:return[[T,R],[L,B]];case 11:return[[T,R]];case 12:return[[R,L]];case 13:return[[R,B]];case 14:return[[B,L]];default:return[]}}const all=[];for(let cy=0;cy<ph-1;cy++)for(let cx=0;cx<pw-1;cx++){const ci=(pad[cy*pw+cx]<<3)|(pad[cy*pw+cx+1]<<2)|(pad[(cy+1)*pw+cx+1]<<1)|pad[(cy+1)*pw+cx];for(const s of sg(cx,cy,ci))all.push(s)}if(!all.length)return[];const key=p=>`${(p[0]*2)|0},${(p[1]*2)|0}`,sm={},used=new Uint8Array(all.length);for(let i=0;i<all.length;i++){const k=key(all[i][0]);(sm[k]=sm[k]||[]).push(i)}const contours=[];for(let i=0;i<all.length;i++){if(used[i])continue;const pts=[];let cur=i;while(cur!==-1&&!used[cur]){used[cur]=1;pts.push(all[cur][0]);const ek=key(all[cur][1]);cur=-1;for(const c of(sm[ek]||[]))if(!used[c]){cur=c;break}}if(pts.length>=3)contours.push(pts.map(p=>[p[0]-1,p[1]-1]))}return contours}
+function simp(pts,tol){if(pts.length<=2)return pts;let mx=0,mi=0;const a=pts[0],b=pts[pts.length-1];for(let i=1;i<pts.length-1;i++){const d=pLD(pts[i],a,b);if(d>mx){mx=d;mi=i}}if(mx>tol){const l=simp(pts.slice(0,mi+1),tol);const r=simp(pts.slice(mi),tol);return l.slice(0,-1).concat(r)}return[a,b]}
+function pLD(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],sq=dx*dx+dy*dy;if(!sq)return Math.hypot(p[0]-a[0],p[1]-a[1]);const t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/sq));return Math.hypot(p[0]-(a[0]+t*dx),p[1]-(a[1]+t*dy))}
+
+// WOFF
+function toWoff(ob){const dv=new DataView(ob),sf=dv.getUint32(0),nT=dv.getUint16(4),tabs=[];for(let i=0;i<nT;i++){const o=12+i*16;tabs.push({tag:String.fromCharCode(dv.getUint8(o),dv.getUint8(o+1),dv.getUint8(o+2),dv.getUint8(o+3)),cs:dv.getUint32(o+4),off:dv.getUint32(o+8),len:dv.getUint32(o+12)})}const hs=44,ds=nT*20;let dO=hs+ds;const a4=n=>(n+3)&~3;const ent=tabs.map(t=>{const e={...t,wO:dO,cL:t.len};dO+=a4(t.len);return e});const tot=dO,wB=new ArrayBuffer(tot),wv=new DataView(wB),wb=new Uint8Array(wB);wv.setUint32(0,0x774F4646);wv.setUint32(4,sf);wv.setUint32(8,tot);wv.setUint16(12,nT);wv.setUint16(14,0);wv.setUint32(16,ob.byteLength);wv.setUint16(20,1);wv.setUint16(22,0);[24,28,32,36,40].forEach(o=>wv.setUint32(o,0));ent.forEach((e,i)=>{const o=hs+i*20;for(let j=0;j<4;j++)wv.setUint8(o+j,e.tag.charCodeAt(j));wv.setUint32(o+4,e.wO);wv.setUint32(o+8,e.cL);wv.setUint32(o+12,e.len);wv.setUint32(o+16,e.cs);wb.set(new Uint8Array(ob,e.off,e.len),e.wO)});return wB}
+
+// Preview
+function refreshPreview(){const t=document.getElementById('typeArea').value,p=document.getElementById('previewPane'),s=document.getElementById('sizeSlider').value;p.style.fontFamily=ufId?`'UF${ufId}',cursive`:'';if(t.trim()){p.textContent=t;p.style.fontSize=s+'px';p.classList.remove('empty')}else{p.textContent='Start typing...';p.classList.add('empty');p.style.fontSize=''}}
+document.getElementById('typeArea').addEventListener('input',refreshPreview);
+document.getElementById('sizeSlider').addEventListener('input',e=>{document.getElementById('sizeVal').textContent=e.target.value+'px';refreshPreview()});
+function dlFont(fmt){if(!genFont)return;const n=(document.getElementById('fontNameIn').value||'MyHandwriting').replace(/\s+/g,'');if(fmt==='woff'){const w=toWoff(genFont.toArrayBuffer());const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([w],{type:'font/woff'}));a.download=n+'.woff';a.click()}else genFont.download(n+'.otf')}
+function showOv(m){document.getElementById('ovMsg').textContent=m;document.getElementById('ov').classList.add('on')}
+function hideOv(){document.getElementById('ov').classList.remove('on')}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('helpOverlay').classList.remove('open')});
+</script>
+</body>
+</html>
