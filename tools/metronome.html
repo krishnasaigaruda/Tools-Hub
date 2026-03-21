@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metronome | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--s2:#334155;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--accent:#c026d3;--accent2:#e879f9;--accent-d:rgba(192,38,211,.12);--r:10px}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+.header{background:linear-gradient(135deg,#86198f,#c026d3,#e879f9);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(192,38,211,.3);flex-shrink:0}
+.back-btn{display:flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);font-size:.9rem;transition:background .2s}
+.back-btn:hover{background:rgba(255,255,255,.25)}
+.header-title{display:flex;align-items:center;gap:.75rem;flex:1}
+.header-title i{font-size:1.5rem;color:#fff}
+.header-title h1{font-size:1.5rem;font-weight:700;color:#fff}
+
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.metro-card{max-width:480px;width:100%;text-align:center}
+
+/* Pendulum */
+.pendulum-wrap{height:200px;position:relative;margin-bottom:1.5rem;overflow:hidden}
+.pendulum-line{position:absolute;bottom:0;left:50%;width:3px;height:180px;background:linear-gradient(to top,var(--accent),var(--accent2));transform-origin:bottom center;border-radius:2px;transition:transform .1s ease-out}
+.pendulum-dot{position:absolute;top:0;left:50%;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--accent2);box-shadow:0 0 20px rgba(232,121,249,.5)}
+.pendulum-base{position:absolute;bottom:0;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--accent)}
+
+/* BPM Display */
+.bpm-display{margin-bottom:.25rem}
+.bpm-num{font-family:'JetBrains Mono',monospace;font-size:5rem;font-weight:700;color:#fff;line-height:1;letter-spacing:-.03em}
+.bpm-label{font-size:.85rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+
+/* Tempo name */
+.tempo-name{font-size:1rem;color:var(--accent2);font-weight:500;margin-bottom:1.5rem;min-height:1.5rem}
+
+/* BPM slider */
+.bpm-slider-wrap{margin-bottom:1.5rem;padding:0 1rem}
+.bpm-slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;background:var(--s2);border-radius:3px;outline:none}
+.bpm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 12px rgba(192,38,211,.4)}
+.bpm-range{display:flex;justify-content:space-between;font-size:.65rem;color:var(--t3);font-family:'JetBrains Mono',monospace;margin-top:.25rem}
+
+/* Controls */
+.controls{display:flex;align-items:center;justify-content:center;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.ctrl-btn{background:var(--panel);border:1px solid var(--border);color:var(--t2);width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ctrl-btn:hover{background:var(--s2);color:var(--text)}
+.play-btn{width:64px;height:64px;background:var(--accent);border:none;color:#fff;font-size:1.5rem;box-shadow:0 4px 20px rgba(192,38,211,.4)}
+.play-btn:hover{filter:brightness(1.15);transform:scale(1.05)}
+.play-btn.active{background:#ef4444;box-shadow:0 4px 20px rgba(239,68,68,.4)}
+
+/* Time signature */
+.sig-row{display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1.5rem}
+.sig-label{font-size:.75rem;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.sig-btns{display:flex;gap:.25rem}
+.sig-btn{background:var(--panel);border:1px solid var(--border);color:var(--t2);padding:.4rem .7rem;border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;transition:all .12s}
+.sig-btn:hover{background:var(--s2);color:var(--text)}
+.sig-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Beat dots */
+.beat-dots{display:flex;justify-content:center;gap:.75rem;margin-bottom:1.5rem}
+.beat-dot{width:20px;height:20px;border-radius:50%;background:var(--s2);border:2px solid var(--border);transition:all .1s}
+.beat-dot.accent{border-color:var(--accent)}
+.beat-dot.hit{background:var(--accent);border-color:var(--accent2);box-shadow:0 0 16px rgba(192,38,211,.6);transform:scale(1.2)}
+.beat-dot.accent.hit{background:var(--accent2);box-shadow:0 0 20px rgba(232,121,249,.7)}
+
+/* Tap tempo */
+.tap-section{margin-bottom:1.5rem}
+.tap-btn{background:var(--panel);border:2px solid var(--border);color:var(--t2);padding:1rem 2.5rem;border-radius:12px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:.5rem}
+.tap-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tap-btn:active{background:var(--accent-d);transform:scale(.97)}
+.tap-info{font-size:.7rem;color:var(--t3);margin-top:.4rem}
+
+/* Quick presets */
+.presets{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;margin-bottom:1rem}
+.preset{background:var(--panel);border:1px solid var(--border);color:var(--t2);padding:.3rem .6rem;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:'JetBrains Mono',monospace;transition:all .12s}
+.preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Subdivisions */
+.sub-row{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1.5rem}
+.sub-btn{background:var(--panel);border:1px solid var(--border);color:var(--t2);padding:.35rem .65rem;border-radius:6px;cursor:pointer;font-size:.7rem;font-weight:600;transition:all .12s}
+.sub-btn:hover{background:var(--s2)}
+.sub-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Sound select */
+.sound-row{display:flex;align-items:center;justify-content:center;gap:.75rem}
+.sound-label{font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.05em}
+.sound-sel{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:.4rem .6rem;border-radius:6px;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;outline:none}
+
+/* Volume */
+.vol-row{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1rem}
+.vol-icon{color:var(--t3);font-size:.85rem}
+.vol-sl{width:100px;-webkit-appearance:none;appearance:none;height:3px;background:var(--s2);border-radius:2px;outline:none}
+.vol-sl::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--accent);color:var(--text);padding:.75rem 1.5rem;border-radius:12px;font-size:.9rem;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:500px){
+.main{padding:1rem}
+.bpm-num{font-size:3.5rem}
+.pendulum-wrap{height:140px}
+.pendulum-line{height:120px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <div class="header-title"><i class="fas fa-drum"></i><h1>Metronome</h1></div>
+</div>
+
+<div class="main">
+  <div class="metro-card">
+    <!-- Pendulum -->
+    <div class="pendulum-wrap">
+      <div class="pendulum-line" id="pendulum">
+        <div class="pendulum-dot"></div>
+      </div>
+      <div class="pendulum-base"></div>
+    </div>
+
+    <!-- BPM -->
+    <div class="bpm-display">
+      <div class="bpm-num" id="bpmNum">120</div>
+      <div class="bpm-label">BPM</div>
+    </div>
+    <div class="tempo-name" id="tempoName">Allegro</div>
+
+    <!-- Slider -->
+    <div class="bpm-slider-wrap">
+      <input type="range" class="bpm-slider" id="bpmSlider" min="15" max="2000" value="120" oninput="setBPM(+this.value)">
+      <div class="bpm-range"><span>15</span><span>2000</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn" onclick="adjustBPM(-10)" title="-10"><i class="fas fa-angles-left"></i></button>
+      <button class="ctrl-btn" onclick="adjustBPM(-1)" title="-1"><i class="fas fa-minus"></i></button>
+      <button class="play-btn" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
+      <button class="ctrl-btn" onclick="adjustBPM(1)" title="+1"><i class="fas fa-plus"></i></button>
+      <button class="ctrl-btn" onclick="adjustBPM(10)" title="+10"><i class="fas fa-angles-right"></i></button>
+    </div>
+
+    <!-- Beat dots -->
+    <div class="beat-dots" id="beatDots"></div>
+
+    <!-- Time signature -->
+    <div class="sig-row">
+      <span class="sig-label">Time</span>
+      <div class="sig-btns">
+        <button class="sig-btn" onclick="setTimeSig(2)">2/4</button>
+        <button class="sig-btn" onclick="setTimeSig(3)">3/4</button>
+        <button class="sig-btn active" onclick="setTimeSig(4)">4/4</button>
+        <button class="sig-btn" onclick="setTimeSig(5)">5/4</button>
+        <button class="sig-btn" onclick="setTimeSig(6)">6/8</button>
+        <button class="sig-btn" onclick="setTimeSig(7)">7/8</button>
+      </div>
+    </div>
+
+    <!-- Subdivisions -->
+    <div class="sub-row">
+      <span class="sig-label">Subdivision</span>
+      <button class="sub-btn active" onclick="setSubdiv(1)">Quarter</button>
+      <button class="sub-btn" onclick="setSubdiv(2)">Eighth</button>
+      <button class="sub-btn" onclick="setSubdiv(3)">Triplet</button>
+      <button class="sub-btn" onclick="setSubdiv(4)">Sixteenth</button>
+    </div>
+
+    <!-- Tap tempo -->
+    <div class="tap-section">
+      <button class="tap-btn" id="tapBtn" onclick="tapTempo()"><i class="fas fa-hand-pointer"></i> Tap Tempo</button>
+      <div class="tap-info" id="tapInfo">Tap repeatedly to detect BPM</div>
+    </div>
+
+    <!-- Presets -->
+    <div class="presets">
+      <button class="preset" onclick="setBPM(40)">Grave 40</button>
+      <button class="preset" onclick="setBPM(60)">Largo 60</button>
+      <button class="preset" onclick="setBPM(72)">Adagio 72</button>
+      <button class="preset" onclick="setBPM(92)">Andante 92</button>
+      <button class="preset" onclick="setBPM(108)">Moderato 108</button>
+      <button class="preset" onclick="setBPM(120)">Allegro 120</button>
+      <button class="preset" onclick="setBPM(144)">Vivace 144</button>
+      <button class="preset" onclick="setBPM(168)">Presto 168</button>
+      <button class="preset" onclick="setBPM(200)">Prestissimo 200</button>
+    </div>
+
+    <!-- Sound + Volume -->
+    <div class="sound-row">
+      <span class="sound-label">Sound</span>
+      <select class="sound-sel" id="soundSel" onchange="soundType=this.value">
+        <option value="click">Click</option>
+        <option value="beep">Beep</option>
+        <option value="wood">Woodblock</option>
+        <option value="hi">Hi-hat</option>
+      </select>
+    </div>
+    <div class="vol-row">
+      <i class="fas fa-volume-low vol-icon"></i>
+      <input type="range" class="vol-sl" id="volSlider" min="0" max="100" value="80" oninput="volume=this.value/100">
+      <i class="fas fa-volume-high vol-icon"></i>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var bpm = 120, playing = false, timeSig = 4, subdiv = 1;
+var beatNum = 0, intervalId = null;
+var volume = 0.8, soundType = 'click';
+var audioCtx = null;
+var tapTimes = [];
+
+// Tempo names
+function getTempoName(bpm) {
+  if (bpm < 25) return 'Larghissimo';
+  if (bpm < 45) return 'Grave';
+  if (bpm < 55) return 'Largo';
+  if (bpm < 65) return 'Larghetto';
+  if (bpm < 78) return 'Adagio';
+  if (bpm < 86) return 'Andante';
+  if (bpm < 98) return 'Andantino';
+  if (bpm < 110) return 'Moderato';
+  if (bpm < 120) return 'Allegretto';
+  if (bpm < 140) return 'Allegro';
+  if (bpm < 160) return 'Vivace';
+  if (bpm < 180) return 'Presto';
+  if (bpm < 250) return 'Prestissimo';
+  return 'Hyper';
+}
+
+function setBPM(v) {
+  bpm = Math.max(15, Math.min(2000, Math.round(v)));
+  document.getElementById('bpmNum').textContent = bpm;
+  document.getElementById('bpmSlider').value = bpm;
+  document.getElementById('tempoName').textContent = getTempoName(bpm);
+  if (playing) { stopMetronome(); startMetronome(); }
+}
+
+function adjustBPM(d) { setBPM(bpm + d); }
+
+// Init beat dots
+function renderDots() {
+  var html = '';
+  for (var i = 0; i < timeSig; i++) {
+    html += '<div class="beat-dot' + (i === 0 ? ' accent' : '') + '" id="dot-' + i + '"></div>';
+  }
+  document.getElementById('beatDots').innerHTML = html;
+}
+renderDots();
+
+function setTimeSig(n) {
+  timeSig = n;
+  beatNum = 0;
+  renderDots();
+  document.querySelectorAll('.sig-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.sig-btn').forEach(function(b) {
+    if (b.textContent.startsWith(n + '/')) b.classList.add('active');
+  });
+  if (playing) { stopMetronome(); startMetronome(); }
+}
+
+function setSubdiv(n) {
+  subdiv = n;
+  document.querySelectorAll('.sub-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.sub-btn')[n - 1].classList.add('active');
+  if (playing) { stopMetronome(); startMetronome(); }
+}
+
+// Play/Stop
+function togglePlay() {
+  if (playing) stopMetronome();
+  else startMetronome();
+}
+
+function startMetronome() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  playing = true;
+  beatNum = 0;
+  document.getElementById('playIcon').className = 'fas fa-stop';
+  document.getElementById('playBtn').classList.add('active');
+  tick();
+  var ms = (60000 / bpm) / subdiv;
+  intervalId = setInterval(tick, ms);
+}
+
+function stopMetronome() {
+  playing = false;
+  clearInterval(intervalId);
+  document.getElementById('playIcon').className = 'fas fa-play';
+  document.getElementById('playBtn').classList.remove('active');
+  // Reset dots
+  document.querySelectorAll('.beat-dot').forEach(function(d) { d.classList.remove('hit'); });
+  // Reset pendulum
+  document.getElementById('pendulum').style.transform = 'rotate(0deg)';
+}
+
+function tick() {
+  var mainBeat = beatNum % subdiv === 0;
+  var dotIdx = Math.floor(beatNum / subdiv) % timeSig;
+  var isAccent = dotIdx === 0 && mainBeat;
+
+  // Sound
+  playSound(isAccent, mainBeat);
+
+  // Visual — dots
+  document.querySelectorAll('.beat-dot').forEach(function(d) { d.classList.remove('hit'); });
+  if (mainBeat) {
+    var dot = document.getElementById('dot-' + dotIdx);
+    if (dot) dot.classList.add('hit');
+  }
+
+  // Pendulum swing
+  var swing = mainBeat ? (dotIdx % 2 === 0 ? 30 : -30) : 0;
+  document.getElementById('pendulum').style.transform = 'rotate(' + swing + 'deg)';
+
+  beatNum++;
+}
+
+// Generate click buffers on init (pre-rendered for zero latency)
+var clickBuffers = {};
+
+function generateClickBuffers() {
+  if (!audioCtx) return;
+  var sr = audioCtx.sampleRate;
+
+  // Classic metronome: short woody tick with natural resonance
+  // Accent (high tick) and normal (low tock) — like a real mechanical metronome
+  var types = {
+    'click-accent': { freq: 2500, bodyFreq: 900, len: 0.012, bodyLen: 0.03 },
+    'click-normal': { freq: 1800, bodyFreq: 600, len: 0.008, bodyLen: 0.02 },
+    'beep-accent':  { freq: 1000, bodyFreq: 0, len: 0.06, bodyLen: 0 },
+    'beep-normal':  { freq: 660, bodyFreq: 0, len: 0.04, bodyLen: 0 },
+    'wood-accent':  { freq: 3200, bodyFreq: 800, len: 0.006, bodyLen: 0.045 },
+    'wood-normal':  { freq: 2400, bodyFreq: 540, len: 0.004, bodyLen: 0.035 },
+    'hi-accent':    { freq: 0, bodyFreq: 0, len: 0.06, bodyLen: 0, noise: true },
+    'hi-normal':    { freq: 0, bodyFreq: 0, len: 0.025, bodyLen: 0, noise: true }
+  };
+
+  for (var key in types) {
+    var t = types[key];
+    var totalLen = Math.max(t.len, t.bodyLen, 0.01);
+    var samples = Math.ceil(sr * (totalLen + 0.02));
+    var buf = audioCtx.createBuffer(1, samples, sr);
+    var data = buf.getChannelData(0);
+
+    if (t.noise) {
+      // Hi-hat style — filtered noise
+      for (var i = 0; i < samples; i++) {
+        var env = Math.pow(1 - i / samples, key.includes('accent') ? 5 : 12);
+        data[i] = (Math.random() * 2 - 1) * env * 0.6;
+      }
+    } else {
+      // Sharp attack transient (the "tick")
+      var attackSamples = Math.ceil(sr * t.len);
+      for (var i = 0; i < attackSamples && i < samples; i++) {
+        var env = Math.pow(1 - i / attackSamples, 3);
+        // Mix of the fundamental + noise for organic feel
+        data[i] = (Math.sin(2 * Math.PI * t.freq * i / sr) * 0.7 +
+                   (Math.random() * 2 - 1) * 0.3) * env;
+      }
+
+      // Body resonance (the warm "ock" decay)
+      if (t.bodyFreq) {
+        var bodySamples = Math.ceil(sr * t.bodyLen);
+        for (var i = 0; i < bodySamples && i < samples; i++) {
+          var env = Math.pow(1 - i / bodySamples, 6);
+          var phase = 2 * Math.PI * t.bodyFreq * i / sr;
+          data[i] += Math.sin(phase) * env * 0.25;
+          // Add subtle 2nd harmonic
+          data[i] += Math.sin(phase * 2.02) * env * 0.08;
+        }
+      }
+    }
+
+    clickBuffers[key] = buf;
+  }
+}
+
+function playSound(accent, main) {
+  if (!audioCtx) return;
+
+  // Generate buffers on first use
+  if (!clickBuffers['click-accent']) generateClickBuffers();
+
+  var key = soundType + '-' + (accent ? 'accent' : 'normal');
+  var buf = clickBuffers[key];
+  if (!buf) return;
+
+  var vol = volume * (accent ? 1 : main ? 0.6 : 0.2);
+
+  var src = audioCtx.createBufferSource();
+  src.buffer = buf;
+
+  var gain = audioCtx.createGain();
+  gain.gain.value = vol;
+
+  // Add a subtle high-pass to remove any DC offset / muddiness
+  var hp = audioCtx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 200;
+
+  src.connect(hp);
+  hp.connect(gain);
+  gain.connect(audioCtx.destination);
+  src.start(audioCtx.currentTime);
+}
+
+// Tap tempo
+function tapTempo() {
+  var now = Date.now();
+  tapTimes.push(now);
+  // Keep last 8 taps
+  if (tapTimes.length > 8) tapTimes.shift();
+  if (tapTimes.length >= 2) {
+    var intervals = [];
+    for (var i = 1; i < tapTimes.length; i++) {
+      intervals.push(tapTimes[i] - tapTimes[i - 1]);
+    }
+    var avg = intervals.reduce(function(a, b) { return a + b; }, 0) / intervals.length;
+    var detected = Math.round(60000 / avg);
+    detected = Math.max(15, Math.min(2000, detected));
+    setBPM(detected);
+    document.getElementById('tapInfo').textContent = 'Detected: ' + detected + ' BPM (' + tapTimes.length + ' taps)';
+  } else {
+    document.getElementById('tapInfo').textContent = 'Keep tapping...';
+  }
+  // Reset after 2 seconds of no tapping
+  clearTimeout(tapTempo._timeout);
+  tapTempo._timeout = setTimeout(function() {
+    tapTimes = [];
+    document.getElementById('tapInfo').textContent = 'Tap repeatedly to detect BPM';
+  }, 2000);
+
+  // Flash the button
+  var btn = document.getElementById('tapBtn');
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.color = 'var(--accent)';
+  setTimeout(function() { btn.style.borderColor = ''; btn.style.color = ''; }, 100);
+}
+
+// Keyboard
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); adjustBPM(1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustBPM(-1); }
+  if (e.key === 'ArrowRight') adjustBPM(5);
+  if (e.key === 'ArrowLeft') adjustBPM(-5);
+  if (e.key === 't' || e.key === 'T') tapTempo();
+});
+
+// Init
+document.getElementById('tempoName').textContent = getTempoName(bpm);
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>

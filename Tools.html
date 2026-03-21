@@ -189,7 +189,7 @@
         }
 
         /* Media & Audio - Classic Fuchsia */
-        .voice-recorder, .music-player, .video-player, .audio-visualizer, .metronome, .tuner {
+        .voice-recorder, .music-player, .video-player, .metronome, .tuner {
             background: #c026d3;
         }
 
@@ -348,7 +348,6 @@
             <button class="tool-btn voice-recorder" onclick="openTool('voice-recorder')"><span class="tool-icon"><i class="fas fa-microphone-alt"></i></span><span class="tool-name">Voice Recorder</span></button>
             <button class="tool-btn music-player" onclick="openTool('music-player')"><span class="tool-icon"><i class="fas fa-music"></i></span><span class="tool-name">Music Player</span></button>
             <button class="tool-btn video-player" onclick="openTool('video-player')"><span class="tool-icon"><i class="fas fa-play-circle"></i></span><span class="tool-name">Video Player</span></button>
-            <button class="tool-btn audio-visualizer" onclick="openTool('audio-visualizer')"><span class="tool-icon"><i class="fas fa-headphones"></i></span><span class="tool-name">Audio Visualizer</span></button>
             <button class="tool-btn metronome" onclick="openTool('metronome')"><span class="tool-icon"><i class="fas fa-drum"></i></span><span class="tool-name">Metronome</span></button>
             <button class="tool-btn tuner" onclick="openTool('tuner')"><span class="tool-icon"><i class="fas fa-guitar"></i></span><span class="tool-name">Instrument Tuner</span></button>
         </div>
@@ -435,7 +434,8 @@
                 'pdf-tools': 'tools/pdf-tools.html',
                 'voice-recorder': 'tools/voice-recorder.html',
                 'music-player': 'tools/music-player.html',
-                'video-player': 'tools/video-player.html'
+                'video-player': 'tools/video-player.html',
+                'metronome': 'tools/metronome.html'
             };
 
             if (availableTools[toolName]) {
