@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF Tools | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0e1a;--surface:#111827;--s2:#1e293b;--s3:#283548;--border:#1e293b;--bh:#334155;
+--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--red:#dc2626;--red-d:rgba(220,38,38,.12);
+--red-g:rgba(220,38,38,.25);--green:#10b981;--amber:#f59e0b;--blue:#3b82f6;
+--r:6px;--rl:10px;--header-h:48px;--toolbar-h:40px;--status-h:28px;--thumb-w:200px;
+--panel-w:280px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+
+/* ─── HEADER ─── */
+.app-header{height:var(--header-h);background:linear-gradient(135deg,#991b1b,#dc2626,#ef4444);display:flex;align-items:center;padding:0 16px;gap:12px;z-index:100;position:relative;box-shadow:0 2px 12px rgba(220,38,38,.3)}
+.back-btn{display:flex;align-items:center;gap:6px;color:#fff;text-decoration:none;font-weight:500;padding:5px 12px;border-radius:var(--r);background:rgba(255,255,255,.15);font-size:12px;transition:background .2s}
+.back-btn:hover{background:rgba(255,255,255,.25)}
+.app-title{display:flex;align-items:center;gap:8px;flex:1}
+.app-title i{font-size:18px;color:#fff}
+.app-title h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.app-title .file-name{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);margin-left:8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none}
+.header-actions{display:flex;gap:6px}
+.h-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 10px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;display:flex;align-items:center;gap:5px;transition:background .15s;white-space:nowrap}
+.h-btn:hover{background:rgba(255,255,255,.22)}
+.h-btn i{font-size:12px}
+
+/* ─── TABS ─── */
+.tab-bar{display:none;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-bar.active{display:block}
+.tab-row{display:flex;gap:0;padding:0 8px}
+.tab-item{padding:6px 14px;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
+.tab-item:hover{color:var(--t2)}
+.tab-item.active{color:var(--red);border-bottom-color:var(--red)}
+/* ─── TOOLBAR ─── */
+.toolbar-wrap{height:var(--toolbar-h);background:var(--bg);border-bottom:1px solid var(--border);display:none;align-items:center;padding:0 8px;gap:2px;overflow-x:auto;flex-shrink:0}
+.toolbar-wrap.active{display:flex}
+.toolbar-wrap::-webkit-scrollbar{height:0}
+
+.tb-group{display:flex;align-items:center;gap:1px;padding:0 4px}
+.tb-sep{width:1px;height:22px;background:var(--border);margin:0 4px;flex-shrink:0}
+.tb-btn{background:none;border:none;color:var(--t2);width:32px;height:32px;border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .12s;position:relative;flex-shrink:0}
+.tb-btn:hover{background:var(--s2);color:var(--text)}
+.tb-btn.active{background:var(--red-d);color:var(--red)}
+.tb-btn[disabled]{opacity:.3;pointer-events:none}
+.tb-btn .badge{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+.tb-label{font-size:10px;color:var(--t3);font-weight:500;text-transform:uppercase;letter-spacing:.06em;padding:0 6px;white-space:nowrap;flex-shrink:0}
+.tb-input{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;width:48px;text-align:center;outline:none}
+.tb-input:focus{border-color:var(--red)}
+.tb-select{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:inherit;font-size:11px;outline:none;cursor:pointer}
+.color-pick{width:24px;height:24px;border:2px solid var(--border);border-radius:4px;cursor:pointer;padding:0;background:none;overflow:hidden}
+.color-pick input{width:32px;height:32px;border:none;cursor:pointer;margin:-4px}
+
+/* ─── LAYOUT ─── */
+.app-body{display:none;flex-direction:column;height:calc(100vh - var(--header-h))}
+.app-body.active{display:flex}
+.main-area{flex:1;display:flex;min-height:0}
+
+/* ─── THUMBNAILS SIDEBAR ─── */
+.thumb-sidebar{width:var(--thumb-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.thumb-sidebar.hidden{display:none}
+.thumb-header{padding:8px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.thumb-header span{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em}
+.thumb-list{flex:1;overflow-y:auto;padding:8px}
+.thumb-list::-webkit-scrollbar{width:4px}
+.thumb-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.thumb-item{position:relative;margin-bottom:8px;cursor:pointer;border-radius:var(--r);overflow:hidden;border:2px solid transparent;transition:border-color .15s}
+.thumb-item:hover{border-color:var(--bh)}
+.thumb-item.active{border-color:var(--red)}
+.thumb-item canvas{width:100%;display:block;background:#fff;border-radius:4px}
+.thumb-num{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-family:'IBM Plex Mono',monospace;padding:1px 5px;border-radius:3px}
+.thumb-actions{position:absolute;top:4px;right:4px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.thumb-item:hover .thumb-actions{opacity:1}
+.thumb-action{background:rgba(0,0,0,.7);border:none;color:#fff;width:20px;height:20px;border-radius:3px;cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center}
+.thumb-action:hover{background:var(--red)}
+.thumb-bookmark{position:absolute;top:4px;left:4px;color:var(--amber);font-size:12px;display:none;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.thumb-item.bookmarked .thumb-bookmark{display:block}
+
+/* ─── VIEWER ─── */
+.viewer{flex:1;overflow-y:auto;background:#1a1f2e;padding:30px;position:relative}
+.viewer::-webkit-scrollbar{width:8px}
+.viewer::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+.viewer.light-mode{background:#808080}
+.page{background:#fff;width:8.5in;min-height:11in;padding:1in;margin:0 auto 24px;box-shadow:0 2px 24px rgba(0,0,0,.4);position:relative}
+.page-editor{min-height:calc(11in - 2in);outline:none;font-size:16px;line-height:1.6;color:#222;overflow:hidden;font-family:'IBM Plex Sans',sans-serif}
+.page-editor:empty:before{content:'Start typing...';color:#bbb;pointer-events:none}
+.page-editor ul,.page-editor ol{margin-left:20px;padding-left:20px}
+.page-editor li{margin:4px 0}
+.page-editor img{max-width:100%;border-radius:4px;margin:8px 0}
+.page-num{position:absolute;bottom:.5in;right:1in;font-size:11px;color:#999;font-family:'IBM Plex Mono',monospace}
+/* Hide canvas stuff — not used in edit mode */
+.page-container{display:none}
+.annotation-layer{display:none}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel{width:var(--panel-w);background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.right-panel.hidden{display:none}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.panel-tab{flex:1;padding:8px;text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.panel-tab:hover{color:var(--t2)}
+.panel-tab.active{color:var(--red);border-bottom-color:var(--red)}
+.panel-content{flex:1;overflow-y:auto;padding:12px}
+.panel-content::-webkit-scrollbar{width:4px}
+.panel-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.panel-section{margin-bottom:16px}
+.panel-label{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.panel-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.panel-input{flex:1;background:var(--s2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:var(--r);font-family:inherit;font-size:12px;outline:none}
+.panel-input:focus{border-color:var(--red)}
+.panel-textarea{width:100%;min-height:60px;resize:vertical;background:var(--s2);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:var(--r);font-family:inherit;font-size:12px;outline:none}
+.panel-textarea:focus{border-color:var(--red)}
+.panel-btn{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--r);font-family:inherit;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;justify-content:center;font-weight:500}
+.panel-btn:hover{background:var(--s3);border-color:var(--bh)}
+.panel-btn.primary{background:var(--red);border-color:var(--red);color:#fff}
+.panel-btn.primary:hover{filter:brightness(1.1)}
+.panel-info{font-size:11px;color:var(--t2);line-height:1.5}
+.panel-info strong{color:var(--text)}
+
+/* ─── STATUS BAR ─── */
+.status-bar{height:var(--status-h);background:var(--surface);border-top:1px solid var(--border);display:none;align-items:center;padding:0 12px;gap:16px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--t3);flex-shrink:0}
+.status-bar.active{display:flex}
+.status-item{display:flex;align-items:center;gap:4px}
+.status-item i{font-size:9px}
+.status-sep{flex:1}
+
+/* ─── UPLOAD SCREEN ─── */
+.upload-screen{display:flex;align-items:center;justify-content:center;height:calc(100vh - var(--header-h));padding:40px}
+.upload-screen.hidden{display:none}
+.upload-card{max-width:560px;width:100%;text-align:center}
+.upload-icon{font-size:64px;color:var(--red);margin-bottom:20px;opacity:.8}
+.upload-title{font-size:28px;font-weight:700;letter-spacing:-.03em;margin-bottom:8px}
+.upload-sub{color:var(--t2);font-size:14px;margin-bottom:28px;line-height:1.6}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--rl);padding:48px 24px;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;align-items:center;gap:12px}
+.drop-zone:hover,.drop-zone.over{border-color:var(--red);background:var(--red-d)}
+.drop-zone i{font-size:28px;color:var(--t3)}
+.drop-zone p{color:var(--t2);font-size:13px}
+.drop-zone p b{color:var(--red)}
+.upload-features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+.upload-feat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center}
+.upload-feat i{font-size:18px;color:var(--red);margin-bottom:6px;display:block}
+.upload-feat span{font-size:11px;color:var(--t2)}
+
+
+/* ─── MODALS ─── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);max-width:480px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.modal-head h3 i{color:var(--red)}
+.modal-close{background:var(--s2);border:none;color:var(--t2);width:28px;height:28px;border-radius:var(--r);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--s3);color:#fff}
+.modal-body{padding:16px}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ─── SIGNATURE PAD ─── */
+.sig-canvas{width:100%;height:150px;background:#fff;border-radius:var(--r);cursor:crosshair;display:block}
+
+/* ─── SEARCH BAR ─── */
+.search-bar{display:none;position:absolute;top:8px;right:8px;z-index:50;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:6px 8px;display:none;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.search-bar.open{display:flex}
+.search-bar input{background:var(--s2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-family:inherit;font-size:12px;width:200px;outline:none}
+.search-bar input:focus{border-color:var(--red)}
+.search-bar button{background:none;border:none;color:var(--t2);cursor:pointer;padding:4px;font-size:12px}
+.search-bar button:hover{color:var(--text)}
+.search-bar .count{font-size:10px;color:var(--t3);font-family:'IBM Plex Mono',monospace}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--red);color:var(--text);padding:8px 18px;border-radius:var(--rl);font-size:12px;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+.thumb-sidebar{width:140px}
+.right-panel{width:220px}
+.upload-features{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+.thumb-sidebar,.right-panel{display:none!important}
+.upload-features{grid-template-columns:1fr}
+.app-title h1{font-size:13px}
+.header-actions .h-btn span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <div class="app-title">
+    <i class="fas fa-file-pdf"></i>
+    <h1>PDF Tools</h1>
+    <span class="file-name" id="fileName"></span>
+  </div>
+  <div class="header-actions" id="headerActions" style="display:none">
+    <button class="h-btn" onclick="backToHome()"><i class="fas fa-house"></i><span> Home</span></button>
+    <button class="h-btn" onclick="openModal('mergeModal')"><i class="fas fa-layer-group"></i><span> Merge</span></button>
+    <button class="h-btn" onclick="openModal('metaModal')"><i class="fas fa-info-circle"></i><span> Info</span></button>
+    <button class="h-btn" onclick="printPDF()"><i class="fas fa-print"></i><span> Print</span></button>
+    <button class="h-btn" onclick="savePDF()"><i class="fas fa-download"></i><span> Save</span></button>
+  </div>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div class="upload-screen" id="uploadScreen">
+  <div class="upload-card">
+    <div class="upload-icon"><i class="fas fa-file-pdf"></i></div>
+    <h2 class="upload-title">PDF Tools</h2>
+    <p class="upload-sub">Upload a PDF to edit, annotate, split, merge, and more.<br>Everything runs in your browser — your files never leave your device.</p>
+    <div class="drop-zone" id="dropZone">
+      <i class="fas fa-cloud-arrow-up"></i>
+      <p><b>Click to upload</b> or drag & drop your PDF</p>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" hidden>
+    <div class="upload-features">
+      <div class="upload-feat"><i class="fas fa-pen"></i><span>Annotate & Draw</span></div>
+      <div class="upload-feat"><i class="fas fa-scissors"></i><span>Split & Merge</span></div>
+      <div class="upload-feat"><i class="fas fa-signature"></i><span>Sign PDFs</span></div>
+      <div class="upload-feat"><i class="fas fa-highlighter"></i><span>Highlight Text</span></div>
+      <div class="upload-feat"><i class="fas fa-rotate"></i><span>Rotate Pages</span></div>
+      <div class="upload-feat"><i class="fas fa-download"></i><span>Download & Print</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div class="app-body" id="appBody">
+  <!-- TAB BAR -->
+  <div class="tab-bar active">
+    <div class="tab-row">
+      <div class="tab-item active" onclick="switchToolbarTab('home')">Home</div>
+      <div class="tab-item" onclick="switchToolbarTab('text')">Text</div>
+      <div class="tab-item" onclick="switchToolbarTab('insert')">Insert</div>
+      <div class="tab-item" onclick="switchToolbarTab('page')">Page</div>
+      <div class="tab-item" onclick="switchToolbarTab('view')">View</div>
+    </div>
+  </div>
+
+  <!-- HOME TOOLBAR -->
+  <div class="toolbar-wrap active" id="toolbar-home">
+    <div class="tb-group">
+      <button class="tb-btn" title="Open (Ctrl+O)" onclick="document.getElementById('fileInput').click()"><i class="fas fa-folder-open"></i></button>
+      <button class="tb-btn" title="Save (Ctrl+S)" onclick="savePDF()"><i class="fas fa-floppy-disk"></i></button>
+      <button class="tb-btn" title="Print (Ctrl+P)" onclick="printPDF()"><i class="fas fa-print"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Undo (Ctrl+Z)" id="undoBtn" disabled onclick="undo()"><i class="fas fa-undo"></i></button>
+      <button class="tb-btn" title="Redo (Ctrl+Y)" id="redoBtn" disabled onclick="redo()"><i class="fas fa-redo"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Select (V)" id="toolSelect" onclick="setTool('select')"><i class="fas fa-arrow-pointer"></i></button>
+      <button class="tb-btn" title="Highlight (H)" onclick="setTool('highlight')"><i class="fas fa-highlighter"></i></button>
+      <button class="tb-btn" title="Draw (D)" onclick="setTool('draw')"><i class="fas fa-pen"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Previous Page" onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
+      <input class="tb-input" id="pageInput" value="1" onchange="goToPage(+this.value)" style="width:36px">
+      <span style="font-size:11px;color:var(--t3)">/ <span id="totalPages">0</span></span>
+      <button class="tb-btn" title="Next Page" onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Zoom Out" onclick="zoomOut()"><i class="fas fa-minus"></i></button>
+      <input class="tb-input" id="zoomInput" value="100%" onchange="setZoom(this.value)">
+      <button class="tb-btn" title="Zoom In" onclick="zoomIn()"><i class="fas fa-plus"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Search (Ctrl+F)" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+    </div>
+  </div>
+
+  <!-- TEXT TOOLBAR -->
+  <div class="toolbar-wrap" id="toolbar-text">
+    <div class="tb-group">
+      <select class="tb-select" id="fontFamily" style="width:130px" onchange="execFormat('fontName',this.value)">
+        <option value="IBM Plex Sans">IBM Plex Sans</option>
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Palatino">Palatino</option>
+        <option value="Garamond">Garamond</option>
+      </select>
+      <select class="tb-select" id="fontSize" style="width:55px" onchange="execFormat('fontSize',this.value)">
+        <option value="1">8</option><option value="2">10</option><option value="3" selected>12</option><option value="4">14</option><option value="5">18</option><option value="6">24</option><option value="7">36</option>
+      </select>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Bold (Ctrl+B)" onclick="execFormat('bold')"><i class="fas fa-bold"></i></button>
+      <button class="tb-btn" title="Italic (Ctrl+I)" onclick="execFormat('italic')"><i class="fas fa-italic"></i></button>
+      <button class="tb-btn" title="Underline (Ctrl+U)" onclick="execFormat('underline')"><i class="fas fa-underline"></i></button>
+      <button class="tb-btn" title="Strikethrough" onclick="execFormat('strikeThrough')"><i class="fas fa-strikethrough"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <div class="color-pick"><input type="color" id="textColor" value="#000000" onchange="execFormat('foreColor',this.value)"></div>
+      <div class="color-pick"><input type="color" id="textBgColor" value="#ffff00" onchange="execFormat('hiliteColor',this.value)" title="Highlight Color"></div>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Align Left" onclick="execFormat('justifyLeft')"><i class="fas fa-align-left"></i></button>
+      <button class="tb-btn" title="Align Center" onclick="execFormat('justifyCenter')"><i class="fas fa-align-center"></i></button>
+      <button class="tb-btn" title="Align Right" onclick="execFormat('justifyRight')"><i class="fas fa-align-right"></i></button>
+      <button class="tb-btn" title="Justify" onclick="execFormat('justifyFull')"><i class="fas fa-align-justify"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Bulleted List" onclick="execFormat('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+      <button class="tb-btn" title="Numbered List" onclick="execFormat('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+      <button class="tb-btn" title="Increase Indent" onclick="execFormat('indent')"><i class="fas fa-indent"></i></button>
+      <button class="tb-btn" title="Decrease Indent" onclick="execFormat('outdent')"><i class="fas fa-outdent"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Superscript" onclick="execFormat('superscript')"><i class="fas fa-superscript"></i></button>
+      <button class="tb-btn" title="Subscript" onclick="execFormat('subscript')"><i class="fas fa-subscript"></i></button>
+      <button class="tb-btn" title="Clear Formatting" onclick="execFormat('removeFormat')"><i class="fas fa-eraser"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Back to Home" onclick="document.getElementById('pageTextEditor').blur();switchToolbarTab('home')"><i class="fas fa-arrow-left"></i></button>
+    </div>
+  </div>
+
+  <!-- INSERT TOOLBAR -->
+  <div class="toolbar-wrap" id="toolbar-insert">
+    <div class="tb-group">
+      <span class="tb-label">Shapes</span>
+      <button class="tb-btn" title="Highlight" onclick="setTool('highlight')"><i class="fas fa-highlighter"></i></button>
+      <button class="tb-btn" title="Draw" onclick="setTool('draw')"><i class="fas fa-pen"></i></button>
+      <button class="tb-btn" title="Rectangle" onclick="setTool('rect')"><i class="far fa-square"></i></button>
+      <button class="tb-btn" title="Circle" onclick="setTool('circle')"><i class="far fa-circle"></i></button>
+      <button class="tb-btn" title="Line" onclick="setTool('line')"><i class="fas fa-minus"></i></button>
+      <button class="tb-btn" title="Arrow" onclick="setTool('arrow')"><i class="fas fa-arrow-right"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Signature" onclick="openModal('sigModal')"><i class="fas fa-signature"></i></button>
+      <button class="tb-btn" title="Add Image" onclick="addImage()"><i class="fas fa-image"></i></button>
+      <button class="tb-btn" title="Watermark" onclick="openModal('watermarkModal')"><i class="fas fa-droplet"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <span class="tb-label">Color</span>
+      <div class="color-pick"><input type="color" id="toolColor" value="#dc2626"></div>
+      <select class="tb-select" id="toolSize">
+        <option value="1">1px</option><option value="2" selected>2px</option><option value="3">3px</option><option value="5">5px</option><option value="8">8px</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- PAGE TOOLBAR -->
+  <div class="toolbar-wrap" id="toolbar-page">
+    <div class="tb-group">
+      <button class="tb-btn" title="Rotate Page" onclick="rotatePage()"><i class="fas fa-rotate-right"></i></button>
+      <button class="tb-btn" title="Delete Page" onclick="deletePage()"><i class="fas fa-trash"></i></button>
+      <button class="tb-btn" title="Add Blank Page" onclick="addBlankPage()"><i class="fas fa-file-circle-plus"></i></button>
+      <button class="tb-btn" title="Bookmark" onclick="toggleBookmark()"><i class="fas fa-bookmark"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Extract Pages" onclick="openModal('extractModal')"><i class="fas fa-file-export"></i></button>
+      <button class="tb-btn" title="Split PDF" onclick="openModal('splitModal')"><i class="fas fa-scissors"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Previous" onclick="prevPage()"><i class="fas fa-chevron-left"></i></button>
+      <span style="font-size:11px;color:var(--t2)">Page <span id="pageInput2"></span> / <span id="totalPages2"></span></span>
+      <button class="tb-btn" title="Next" onclick="nextPage()"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <!-- VIEW TOOLBAR -->
+  <div class="toolbar-wrap" id="toolbar-view">
+    <div class="tb-group">
+      <button class="tb-btn" title="Zoom Out" onclick="zoomOut()"><i class="fas fa-minus"></i></button>
+      <input class="tb-input" id="zoomInput2" value="100%" onchange="setZoom(this.value)">
+      <button class="tb-btn" title="Zoom In" onclick="zoomIn()"><i class="fas fa-plus"></i></button>
+      <button class="tb-btn" title="Fit Width" onclick="fitWidth()"><i class="fas fa-arrows-left-right"></i></button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" title="Thumbnails" onclick="toggleThumbs()"><i class="fas fa-grip-vertical"></i></button>
+      <button class="tb-btn" title="Properties" onclick="togglePanel()"><i class="fas fa-sliders"></i></button>
+      <button class="tb-btn" title="Light/Dark" onclick="toggleViewerMode()"><i class="fas fa-circle-half-stroke"></i></button>
+      <button class="tb-btn" title="Fullscreen" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
+      <button class="tb-btn" title="Present" onclick="presentationMode()"><i class="fas fa-display"></i></button>
+    </div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+    <!-- THUMBNAILS -->
+    <div class="thumb-sidebar" id="thumbSidebar">
+      <div class="thumb-header"><span>Pages</span><button class="tb-btn" style="width:24px;height:24px;font-size:10px" onclick="toggleThumbs()"><i class="fas fa-xmark"></i></button></div>
+      <div class="thumb-list" id="thumbList"></div>
+    </div>
+
+    <!-- VIEWER (document-style pages) -->
+    <div class="viewer" id="viewer">
+      <div class="search-bar" id="searchBar">
+        <i class="fas fa-search" style="color:var(--t3);font-size:12px"></i>
+        <input type="text" id="searchInput" placeholder="Search text..." onkeydown="if(event.key==='Enter')searchInPages()">
+        <span class="count" id="searchCount"></span>
+        <button onclick="searchInPages()" title="Search"><i class="fas fa-arrow-right"></i></button>
+        <button onclick="toggleSearch()" title="Close"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div id="pagesContainer">
+        <!-- Pages rendered here like document creator -->
+      </div>
+    </div>
+    <!-- Hidden canvas for PDF rendering/export -->
+    <canvas id="pdfCanvas" style="display:none"></canvas>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="rightPanel">
+      <div class="panel-tabs">
+        <div class="panel-tab active" onclick="switchTab(this,'propPanel')">Properties</div>
+        <div class="panel-tab" onclick="switchTab(this,'annotPanel')">Annotations</div>
+        <div class="panel-tab" onclick="switchTab(this,'bookPanel')">Bookmarks</div>
+      </div>
+      <div class="panel-content" id="propPanel">
+        <div class="panel-section">
+          <div class="panel-label">Page Info</div>
+          <div class="panel-info" id="pageInfo">No PDF loaded</div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-label">Document Info</div>
+          <div class="panel-info" id="docInfo">No PDF loaded</div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-label">Quick Actions</div>
+          <div class="panel-row"><button class="panel-btn" style="flex:1" onclick="rotatePage()"><i class="fas fa-rotate-right"></i> Rotate</button><button class="panel-btn" style="flex:1" onclick="deletePage()"><i class="fas fa-trash"></i> Delete</button></div>
+          <div class="panel-row"><button class="panel-btn" style="flex:1" onclick="addBlankPage()"><i class="fas fa-plus"></i> Add Page</button><button class="panel-btn" style="flex:1" onclick="toggleBookmark()"><i class="fas fa-bookmark"></i> Bookmark</button></div>
+          <div class="panel-row"><button class="panel-btn primary" style="flex:1" onclick="savePDF()"><i class="fas fa-download"></i> Download PDF</button></div>
+        </div>
+      </div>
+      <div class="panel-content" id="annotPanel" style="display:none">
+        <div class="panel-section">
+          <div class="panel-label">Annotations on this page</div>
+          <div id="annotList"><div class="panel-info" style="text-align:center;padding:20px 0;color:var(--t3)">No annotations yet.<br>Use the tools above to add annotations.</div></div>
+        </div>
+        <div class="panel-row"><button class="panel-btn" style="flex:1" onclick="clearAnnotations()"><i class="fas fa-trash"></i> Clear All</button></div>
+      </div>
+      <div class="panel-content" id="bookPanel" style="display:none">
+        <div class="panel-section">
+          <div class="panel-label">Bookmarked Pages</div>
+          <div id="bookmarkList"><div class="panel-info" style="text-align:center;padding:20px 0;color:var(--t3)">No bookmarks yet.<br>Click the bookmark icon to add.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar active">
+    <div class="status-item"><i class="fas fa-file"></i> <span id="statusPage">Page 1 / 1</span></div>
+    <div class="status-item"><i class="fas fa-ruler-combined"></i> <span id="statusSize">-</span></div>
+    <div class="status-item"><i class="fas fa-search"></i> <span id="statusZoom">100%</span></div>
+    <div class="status-sep"></div>
+    <div class="status-item" id="statusTool"><i class="fas fa-arrow-pointer"></i> Select</div>
+    <div class="status-item"><i class="fas fa-keyboard"></i> Ctrl+? for shortcuts</div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Metadata -->
+<div class="modal-overlay" id="metaModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-info-circle"></i> PDF Metadata</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-section"><div class="panel-label">Title</div><input class="panel-input" id="metaTitle" style="width:100%"></div>
+      <div class="panel-section"><div class="panel-label">Author</div><input class="panel-input" id="metaAuthor" style="width:100%"></div>
+      <div class="panel-section"><div class="panel-label">Subject</div><input class="panel-input" id="metaSubject" style="width:100%"></div>
+      <div class="panel-section"><div class="panel-label">Keywords</div><input class="panel-input" id="metaKeywords" style="width:100%"></div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="saveMetadata()">Save</button></div>
+  </div>
+</div>
+
+<!-- Extract -->
+<div class="modal-overlay" id="extractModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-file-export"></i> Extract Pages</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-section"><div class="panel-label">Page Range (e.g. 1-3, 5, 7-9)</div><input class="panel-input" id="extractRange" style="width:100%" placeholder="1-3, 5"></div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="extractPages()">Extract & Download</button></div>
+  </div>
+</div>
+
+<!-- Split -->
+<div class="modal-overlay" id="splitModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-scissors"></i> Split PDF</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-section"><div class="panel-label">Split at page number</div><input class="panel-input" id="splitAt" type="number" min="1" style="width:100%" placeholder="Split after page..."></div>
+      <div class="panel-info" style="margin-top:8px">Creates two PDFs: pages 1 to N, and pages N+1 to end.</div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="splitPDF()">Split & Download</button></div>
+  </div>
+</div>
+
+<!-- Merge -->
+<div class="modal-overlay" id="mergeModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-layer-group"></i> Merge PDFs</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-section"><div class="panel-label">Upload PDFs to merge with current document</div>
+      <input type="file" id="mergeInput" accept=".pdf" multiple style="margin-top:6px">
+      </div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="mergePDFs()">Merge & Download</button></div>
+  </div>
+</div>
+
+<!-- Watermark -->
+<div class="modal-overlay" id="watermarkModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-droplet"></i> Add Watermark</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="panel-section"><div class="panel-label">Watermark Text</div><input class="panel-input" id="watermarkText" style="width:100%" placeholder="CONFIDENTIAL" value="CONFIDENTIAL"></div>
+      <div class="panel-section"><div class="panel-label">Opacity (%)</div><input class="panel-input" id="watermarkOpacity" type="number" min="5" max="100" value="15" style="width:100%"></div>
+      <div class="panel-section"><div class="panel-label">Apply to</div>
+        <select class="tb-select" id="watermarkPages" style="width:100%;padding:6px"><option value="all">All Pages</option><option value="current">Current Page</option></select>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="addWatermark()">Apply Watermark</button></div>
+  </div>
+</div>
+
+<!-- Signature -->
+<div class="modal-overlay" id="sigModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-signature"></i> Draw Signature</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <canvas class="sig-canvas" id="sigCanvas"></canvas>
+      <div class="panel-row" style="margin-top:8px"><button class="panel-btn" style="flex:1" onclick="clearSignature()"><i class="fas fa-eraser"></i> Clear</button></div>
+    </div>
+    <div class="modal-footer"><button class="panel-btn" onclick="closeModals()">Cancel</button><button class="panel-btn primary" onclick="placeSignature()">Place on Page</button></div>
+  </div>
+</div>
+
+<!-- Shortcuts -->
+<div class="modal-overlay" id="shortcutsModal" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <div class="modal-head"><h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3><button class="modal-close" onclick="closeModals()"><i class="fas fa-xmark"></i></button></div>
+    <div class="modal-body" style="column-count:2;column-gap:20px;font-size:11px">
+      <p><b>Ctrl+O</b> — Open PDF</p><p><b>Ctrl+S</b> — Save PDF</p><p><b>Ctrl+P</b> — Print</p><p><b>Ctrl+Z</b> — Undo</p><p><b>Ctrl+Y</b> — Redo</p>
+      <p><b>Ctrl+F</b> — Search</p><p><b>+/-</b> — Zoom In/Out</p><p><b>← →</b> — Prev/Next Page</p><p><b>F11</b> — Fullscreen</p>
+      <p><b>V</b> — Select tool</p><p><b>T</b> — Text tool</p><p><b>H</b> — Highlight</p><p><b>D</b> — Draw</p><p><b>B</b> — Bookmark</p>
+      <p><b>R</b> — Rotate page</p><p><b>Del</b> — Delete page</p><p><b>Ctrl+?</b> — This dialog</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// FILE UPLOAD
+// ════════════════════════════════════════
+(function(){
+  var dz = document.getElementById('dropZone');
+  var fi = document.getElementById('fileInput');
+  dz.onclick = function(){ fi.click(); };
+  dz.ondragover = function(e){ e.preventDefault(); dz.classList.add('over'); };
+  dz.ondragleave = function(){ dz.classList.remove('over'); };
+  dz.ondrop = function(e){ e.preventDefault(); dz.classList.remove('over'); if(e.dataTransfer.files[0]) loadPDF(e.dataTransfer.files[0]); };
+  fi.onchange = function(){ if(fi.files[0]) loadPDF(fi.files[0]); };
+})();
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+try { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch(e) {}
+
+let pdfDoc = null, pdfBytes = null, currentPage = 1, totalPagesCount = 0;
+let pages = [{ id: 1, content: '' }]; // document-creator style pages
+let currentPageId = 1;
+let bookmarks = new Set();
+let metadata = { title: '', author: '', subject: '', keywords: '' };
+let activeTab = 'home';
+let sigDrawing = false, sigCtx = null;
+
+// ════════════════════════════════════════
+// RENDER PAGES (like document creator)
+// ════════════════════════════════════════
+function renderAllPages() {
+  var container = document.getElementById('pagesContainer');
+  container.innerHTML = pages.map(function(page, i) {
+    var fontStyle = page.fontFamily ? 'font-family:' + page.fontFamily + ';' : '';
+    return '<div class="page" id="page-' + page.id + '">' +
+      '<div class="page-editor" contenteditable="true" spellcheck="true" id="editor-' + page.id + '" ' +
+      'style="' + fontStyle + '" ' +
+      'oninput="onPageInput(' + page.id + ')" onfocus="onPageFocus(' + page.id + ')">' + page.content + '</div>' +
+      '<div class="page-num">Page ' + (i + 1) + '</div></div>';
+  }).join('');
+  totalPagesCount = pages.length;
+  updateUI();
+  renderThumbnails();
+}
+
+function onPageInput(pageId) {
+  var page = pages.find(function(p) { return p.id === pageId; });
+  if (page) {
+    var el = document.getElementById('editor-' + pageId);
+    page.content = el.innerHTML;
+    checkOverflow(pageId);
+    updateFormatButtons();
+  }
+}
+
+function onPageFocus(pageId) {
+  currentPageId = pageId;
+  currentPage = pages.findIndex(function(p) { return p.id === pageId; }) + 1;
+  // Auto-switch to Text tab
+  switchToolbarTab('text');
+  updateUI();
+}
+
+function checkOverflow(pageId) {
+  var el = document.getElementById('editor-' + pageId);
+  if (!el) return;
+  // Check if content overflows the page
+  var maxH = el.parentElement.clientHeight - 144; // 1in padding top+bottom in px approx
+  if (el.scrollHeight <= maxH + 2) return;
+
+  // Move overflow to next page
+  var children = Array.from(el.childNodes);
+  if (children.length <= 1) {
+    // Single node - add new page and let user keep typing there
+    var idx = pages.findIndex(function(p) { return p.id === pageId; });
+    if (idx === pages.length - 1) {
+      addPageAfter(idx);
+    }
+    return;
+  }
+
+  var overflow = '';
+  while (el.scrollHeight > maxH + 2 && el.childNodes.length > 1) {
+    var last = el.childNodes[el.childNodes.length - 1];
+    overflow = (last.outerHTML || last.textContent) + overflow;
+    last.remove();
+  }
+
+  if (overflow) {
+    var page = pages.find(function(p) { return p.id === pageId; });
+    if (page) page.content = el.innerHTML;
+
+    var idx = pages.findIndex(function(p) { return p.id === pageId; });
+    if (idx === pages.length - 1) {
+      // Add new page with overflow
+      var newId = Date.now();
+      pages.push({ id: newId, content: overflow });
+      renderAllPages();
+      // Focus new page
+      var newEditor = document.getElementById('editor-' + newId);
+      if (newEditor) { setCursorEnd(newEditor); }
+    } else {
+      // Prepend to next page
+      var nextPage = pages[idx + 1];
+      nextPage.content = overflow + nextPage.content;
+      renderAllPages();
+    }
+    toast('Text flowed to next page');
+  }
+}
+
+function addPageAfter(idx) {
+  var newId = Date.now();
+  pages.splice(idx + 1, 0, { id: newId, content: '' });
+  renderAllPages();
+  var newEditor = document.getElementById('editor-' + newId);
+  if (newEditor) newEditor.focus();
+  toast('New page added');
+}
+
+function setCursorEnd(el) {
+  el.focus();
+  var range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+// ════════════════════════════════════════
+// FORMAT (exactly like document creator)
+// ════════════════════════════════════════
+function execFormat(cmd, val) {
+  document.execCommand(cmd, false, val || null);
+  var ed = document.getElementById('editor-' + currentPageId);
+  if (ed) ed.focus();
+  updateFormatButtons();
+}
+
+function updateFormatButtons() {
+  ['bold','italic','underline','strikeThrough'].forEach(function(cmd) {
+    var active = false;
+    try { active = document.queryCommandState(cmd); } catch(e) {}
+    document.querySelectorAll('.tb-btn').forEach(function(b) {
+      var icon = b.querySelector('i');
+      if (!icon) return;
+      var map = { bold:'fa-bold', italic:'fa-italic', underline:'fa-underline', strikeThrough:'fa-strikethrough' };
+      if (icon.classList.contains(map[cmd])) {
+        b.classList.toggle('active', active);
+      }
+    });
+  });
+}
+
+// ════════════════════════════════════════
+// TOOLBAR TABS
+// ════════════════════════════════════════
+function switchToolbarTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-item').forEach(function(t) {
+    if (t.textContent.toLowerCase().trim() === tab) t.classList.add('active');
+  });
+  document.querySelectorAll('.toolbar-wrap').forEach(function(t) { t.classList.remove('active'); });
+  var tb = document.getElementById('toolbar-' + tab);
+  if (tb) tb.classList.add('active');
+}
+
+// Auto-switch back to home when clicking outside editors
+document.getElementById('viewer').addEventListener('click', function(e) {
+  if (!e.target.closest('.page-editor') && activeTab === 'text') {
+    switchToolbarTab('home');
+  }
+});
+
+// ════════════════════════════════════════
+// LOAD PDF
+// ════════════════════════════════════════
+async function loadPDF(file) {
+  var buf = await file.arrayBuffer();
+  pdfBytes = new Uint8Array(buf);
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileName').style.display = '';
+
+  pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
+  totalPagesCount = pdfDoc.numPages;
+  bookmarks = new Set();
+
+  // Load metadata
+  var info = await pdfDoc.getMetadata().catch(function() { return null; });
+  if (info && info.info) {
+    metadata.title = info.info.Title || '';
+    metadata.author = info.info.Author || '';
+    metadata.subject = info.info.Subject || '';
+    metadata.keywords = info.info.Keywords || '';
+  }
+
+  // Extract styled text from each page
+  pages = [];
+  for (var i = 1; i <= totalPagesCount; i++) {
+    var page = await pdfDoc.getPage(i);
+    var viewport = page.getViewport({ scale: 1 });
+    var pageWidth = viewport.width;
+    var content = await page.getTextContent({ includeMarkedContent: false });
+    var fontStyles = content.styles || {};
+
+    // Map PDF font names to CSS font families
+    function pdfFontToCSS(pdfFontName) {
+      var info = fontStyles[pdfFontName] || {};
+      var family = info.fontFamily || '';
+      // Try multiple sources: styles.fontFamily, then the raw fontName itself
+      var candidates = [family, pdfFontName || ''];
+      var result = '';
+
+      for (var ci = 0; ci < candidates.length; ci++) {
+        var name = candidates[ci].replace(/,.*/,'').replace(/[-_+]/g, ' ').replace(/\s+/g, ' ').trim();
+        var lower = name.toLowerCase();
+        // Strip weight/style suffixes for matching
+        lower = lower.replace(/\b(ps|mt|bold|italic|oblique|regular|light|medium|semibold|black|heavy|roman|book)\b/g, '').trim();
+
+        if (lower.includes('times') || lower.includes('timesnewroman')) { result = "'Times New Roman',Times,serif"; break; }
+        if (lower.includes('arial')) { result = "Arial,Helvetica,sans-serif"; break; }
+        if (lower.includes('helvetica')) { result = "Helvetica,Arial,sans-serif"; break; }
+        if (lower.includes('courier')) { result = "'Courier New',Courier,monospace"; break; }
+        if (lower.includes('georgia')) { result = "Georgia,serif"; break; }
+        if (lower.includes('verdana')) { result = "Verdana,sans-serif"; break; }
+        if (lower.includes('palatino') || lower.includes('palat')) { result = "Palatino,'Palatino Linotype',serif"; break; }
+        if (lower.includes('garamond')) { result = "Garamond,serif"; break; }
+        if (lower.includes('trebuchet')) { result = "'Trebuchet MS',sans-serif"; break; }
+        if (lower.includes('comic')) { result = "'Comic Sans MS',cursive"; break; }
+        if (lower.includes('impact')) { result = "Impact,sans-serif"; break; }
+        if (lower.includes('cambria')) { result = "Cambria,serif"; break; }
+        if (lower.includes('calibri')) { result = "Calibri,sans-serif"; break; }
+        if (lower.includes('tahoma')) { result = "Tahoma,sans-serif"; break; }
+        if (lower.includes('lucida')) { result = "'Lucida Sans',sans-serif"; break; }
+        if (lower.includes('bookman') || lower.includes('book antiqua')) { result = "'Book Antiqua',Palatino,serif"; break; }
+        if (lower.includes('century')) { result = "'Century Schoolbook',serif"; break; }
+        if (lower.includes('minion')) { result = "'Minion Pro',Times,serif"; break; }
+        if (lower.includes('myriad')) { result = "'Myriad Pro',Arial,sans-serif"; break; }
+      }
+
+      // If no match but fontFamily exists, use it directly
+      if (!result && family) {
+        result = "'" + family.split(',')[0].replace(/'/g,'').trim() + "',serif";
+      }
+
+      // Detect serif vs sans-serif from the style data
+      if (!result && info.ascent && info.descent) {
+        // If we have style info but no family match, check if it looks like serif
+        // Serif fonts typically have serifs indicated in the name
+        var rawLower = (pdfFontName || '').toLowerCase();
+        if (rawLower.match(/serif|roman|times|garamond|palatino|georgia|book|minion/)) {
+          result = "serif";
+        } else {
+          result = "sans-serif";
+        }
+      }
+
+      return result;
+    }
+
+    // Find the most common font (= body font)
+    var fontCounts = {};
+    content.items.forEach(function(item) {
+      if (!item.str.trim()) return;
+      var fn = (item.fontName || '').toLowerCase();
+      fontCounts[fn] = (fontCounts[fn] || 0) + item.str.length;
+    });
+    var bodyFont = '';
+    var bodyFontCSS = '';
+    var maxCount = 0;
+    for (var fn in fontCounts) {
+      if (fontCounts[fn] > maxCount) { maxCount = fontCounts[fn]; bodyFont = fn; }
+    }
+    bodyFontCSS = pdfFontToCSS(bodyFont);
+
+    // Find most common font size (= body size)
+    var sizeCounts = {};
+    content.items.forEach(function(item) {
+      if (!item.str.trim()) return;
+      var sz = Math.round(Math.abs(item.transform[3]) || Math.abs(item.transform[0]) || 12);
+      sizeCounts[sz] = (sizeCounts[sz] || 0) + item.str.length;
+    });
+    var bodySize = 12;
+    var maxSizeCount = 0;
+    for (var sz in sizeCounts) {
+      if (sizeCounts[sz] > maxSizeCount) { maxSizeCount = sizeCounts[sz]; bodySize = parseInt(sz); }
+    }
+
+    // Group items into lines by Y position
+    var lineMap = {};
+    content.items.forEach(function(item) {
+      if (!item.str.trim() && item.str !== ' ') return;
+      var y = Math.round(item.transform[5]);
+      var foundY = null;
+      for (var ly in lineMap) {
+        if (Math.abs(parseInt(ly) - y) < 3) { foundY = ly; break; }
+      }
+      var key = foundY || y;
+      if (!lineMap[key]) lineMap[key] = [];
+      lineMap[key].push(item);
+    });
+
+    // Sort lines top to bottom (PDF Y is bottom-up, so reverse)
+    var sortedYs = Object.keys(lineMap).map(Number).sort(function(a, b) { return b - a; });
+
+    var html = '';
+    var prevFontSize = 0;
+    var prevWasGap = false;
+
+    for (var li = 0; li < sortedYs.length; li++) {
+      var lineItems = lineMap[sortedYs[li]];
+      // Sort items left to right
+      lineItems.sort(function(a, b) { return a.transform[4] - b.transform[4]; });
+
+      // Detect line properties
+      var fontSize = Math.round(Math.abs(lineItems[0].transform[3]) || Math.abs(lineItems[0].transform[0]) || 12);
+      var fontName = (lineItems[0].fontName || '').toLowerCase();
+      // Only mark as bold if it's a DIFFERENT font from body text (not just because body font happens to have "bold" in name)
+      var fontIsBoldVariant = fontName.includes('bold') || fontName.includes('black') || fontName.includes('heavy');
+      var bodyIsBold = bodyFont.includes('bold') || bodyFont.includes('black') || bodyFont.includes('heavy');
+      var isBold = fontIsBoldVariant && !bodyIsBold; // Only bold if body font is NOT bold
+      var isItalic = fontName.includes('italic') || fontName.includes('oblique');
+
+      // Detect centering: check if line is roughly centered on page
+      var lineLeft = lineItems[0].transform[4];
+      var lastItem = lineItems[lineItems.length - 1];
+      var lineRight = lastItem.transform[4] + (lastItem.width || lastItem.str.length * fontSize * 0.5);
+      var lineCenter = (lineLeft + lineRight) / 2;
+      var pageCenter = pageWidth / 2;
+      var isCentered = Math.abs(lineCenter - pageCenter) < 30 && lineLeft > pageWidth * 0.15;
+
+      // Build line text
+      var lineText = '';
+      for (var ti = 0; ti < lineItems.length; ti++) {
+        var item = lineItems[ti];
+        var s = item.str;
+        // Add space between items if there's a gap
+        if (ti > 0) {
+          var prevItem = lineItems[ti - 1];
+          var prevEnd = prevItem.transform[4] + (prevItem.width || 0);
+          var gap = item.transform[4] - prevEnd;
+          if (gap > fontSize * 0.3) s = ' ' + s;
+        }
+        lineText += s;
+      }
+
+      if (!lineText.trim()) continue;
+
+      // Detect paragraph gap (big Y jump = new paragraph)
+      var isNewParagraph = li > 0 && (sortedYs[li - 1] - sortedYs[li]) > fontSize * 1.8;
+
+      // Map PDF font size to HTML — compare to body size to determine headings
+      var tag = 'p';
+      var style = '';
+      var sizeRatio = fontSize / bodySize;
+
+      if (sizeRatio >= 2) {
+        tag = 'h1';
+      } else if (sizeRatio >= 1.5) {
+        tag = 'h2';
+      } else if (sizeRatio >= 1.2) {
+        tag = 'h3';
+      }
+
+      // Detect font family for this line
+      var lineFontCSS = pdfFontToCSS(lineItems[0].fontName || '');
+      var fontDiffers = lineFontCSS && lineFontCSS !== bodyFontCSS;
+
+      // Build style
+      var styles = [];
+      if (isCentered) styles.push('text-align:center');
+      if (fontDiffers) styles.push('font-family:' + lineFontCSS);
+      style = styles.length ? ' style="' + styles.join(';') + '"' : '';
+
+      // Build content with inline formatting
+      var inner = lineText;
+      if (isBold && tag === 'p') inner = '<b>' + inner + '</b>';
+      if (isItalic) inner = '<i>' + inner + '</i>';
+
+      // Merge with previous line if same paragraph (small gap, same style)
+      if (!isNewParagraph && li > 0 && tag === 'p' && html.endsWith('</p>')) {
+        // Append to previous paragraph
+        html = html.slice(0, -4) + ' ' + inner + '</p>';
+      } else {
+        html += '<' + tag + style + '>' + inner + '</' + tag + '>';
+      }
+    }
+
+    // Store body font so the editor uses it
+    pages.push({ id: Date.now() + i, content: html, fontFamily: bodyFontCSS });
+  }
+
+  currentPage = 1;
+  currentPageId = pages[0].id;
+
+  document.getElementById('uploadScreen').classList.add('hidden');
+  document.getElementById('appBody').classList.add('active');
+  document.getElementById('headerActions').style.display = '';
+
+  renderAllPages();
+
+  toast('PDF loaded — ' + totalPagesCount + ' pages. You can now edit the text directly.');
+}
+
+// ════════════════════════════════════════
+// THUMBNAILS
+// ════════════════════════════════════════
+function renderThumbnails() {
+  var list = document.getElementById('thumbList');
+  list.innerHTML = pages.map(function(page, i) {
+    var preview = (page.content || '').replace(/<[^>]*>/g, ' ').slice(0, 100);
+    var isActive = page.id === currentPageId;
+    var isBookmarked = bookmarks.has(i + 1);
+    return '<div class="thumb-item' + (isActive ? ' active' : '') + (isBookmarked ? ' bookmarked' : '') + '" onclick="goToPage(' + (i+1) + ')">' +
+      '<div style="background:#fff;border-radius:3px;padding:8px;min-height:80px;font-size:5px;line-height:1.3;color:#333;overflow:hidden">' + (preview || '<span style="color:#ccc">Empty</span>') + '</div>' +
+      '<span class="thumb-num">' + (i+1) + '</span>' +
+      '<span class="thumb-bookmark"><i class="fas fa-bookmark"></i></span>' +
+      '<div class="thumb-actions">' +
+      '<button class="thumb-action" title="Delete" onclick="event.stopPropagation();deletePageN(' + (i+1) + ')"><i class="fas fa-trash"></i></button>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+function nextPage() { if (currentPage < pages.length) goToPage(currentPage + 1); }
+function goToPage(n) {
+  n = Math.max(1, Math.min(pages.length, n));
+  currentPage = n;
+  currentPageId = pages[n - 1].id;
+  var el = document.getElementById('page-' + currentPageId);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  renderThumbnails();
+  updateUI();
+}
+
+// ════════════════════════════════════════
+// PAGE OPERATIONS
+// ════════════════════════════════════════
+function addBlankPage() {
+  var newId = Date.now();
+  pages.push({ id: newId, content: '' });
+  renderAllPages();
+  goToPage(pages.length);
+  toast('Blank page added');
+}
+
+function deletePage() { deletePageN(currentPage); }
+function deletePageN(n) {
+  if (pages.length <= 1) { toast('Cannot delete the only page'); return; }
+  if (!confirm('Delete page ' + n + '?')) return;
+  pages.splice(n - 1, 1);
+  if (currentPage > pages.length) currentPage = pages.length;
+  currentPageId = pages[currentPage - 1].id;
+  renderAllPages();
+  toast('Page deleted');
+}
+
+function toggleBookmark() {
+  if (bookmarks.has(currentPage)) bookmarks.delete(currentPage);
+  else bookmarks.add(currentPage);
+  renderThumbnails();
+  updateBookmarkList();
+  toast(bookmarks.has(currentPage) ? 'Bookmarked' : 'Bookmark removed');
+}
+
+function updateBookmarkList() {
+  var list = document.getElementById('bookmarkList');
+  if (!bookmarks.size) {
+    list.innerHTML = '<div class="panel-info" style="text-align:center;padding:20px 0;color:var(--t3)">No bookmarks.</div>';
+    return;
+  }
+  list.innerHTML = Array.from(bookmarks).sort(function(a,b){return a-b;}).map(function(p) {
+    return '<div class="panel-row" style="cursor:pointer" onclick="goToPage('+p+')"><i class="fas fa-bookmark" style="color:var(--amber)"></i><span style="flex:1;font-size:11px">Page '+p+'</span></div>';
+  }).join('');
+}
+
+// Dummy for old references
+function rotatePage() { toast('Rotate is available when saving via Page tab'); }
+
+// ════════════════════════════════════════
+// SAVE PDF (rebuild from page content)
+// ════════════════════════════════════════
+async function savePDF() {
+  // Save all current editor contents to pages array
+  pages.forEach(function(page) {
+    var editor = document.getElementById('editor-' + page.id);
+    if (editor) page.content = editor.innerHTML;
+  });
+
+  var filename = prompt('Enter file name:', (document.getElementById('fileName').textContent || 'document').replace('.pdf', ''));
+  if (!filename) return;
+
+  toast('Generating PDF...');
+
+  // Build PDF content — same approach as document creator
+  var origBg = document.body.style.background;
+  document.body.style.background = '#ffffff';
+
+  var pdfContainer = document.createElement('div');
+  pdfContainer.style.cssText = "font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;color:#222;background:#ffffff;";
+
+  var hasContent = false;
+  var pageCount = 0;
+  pages.forEach(function(page) {
+    var content = page.content || '';
+    var textContent = content.replace(/<[^>]*>/g, '').trim();
+    var hasImages = content.includes('<img');
+    if (textContent.length === 0 && !hasImages) return;
+    hasContent = true;
+
+    var pageDiv = document.createElement('div');
+    if (pageCount > 0) pageDiv.style.pageBreakBefore = 'always';
+    pageDiv.innerHTML = content;
+    pdfContainer.appendChild(pageDiv);
+    pageCount++;
+  });
+
+  if (!hasContent) {
+    document.body.style.background = origBg;
+    toast('No content to save');
+    return;
+  }
+
+  document.body.appendChild(pdfContainer);
+  await new Promise(function(r) { setTimeout(r, 200); });
+
+  var opt = {
+    margin: 10,
+    filename: filename + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    pagebreak: { mode: ['css'] },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(pdfContainer).save();
+    toast('Downloaded ' + filename + '.pdf');
+  } catch(e) {
+    toast('Export failed: ' + e.message);
+  }
+
+  pdfContainer.remove();
+  document.body.style.background = origBg;
+}
+
+function downloadBlob(data, name) {
+  var blob = new Blob([data], { type: 'application/pdf' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function printPDF() { window.print(); }
+
+// ════════════════════════════════════════
+// EXTRACT / SPLIT / MERGE (use original pdfBytes)
+// ════════════════════════════════════════
+function parseRange(str, max) {
+  var result = new Set();
+  str.split(',').forEach(function(part) {
+    part = part.trim();
+    if (part.includes('-')) {
+      var ab = part.split('-').map(Number);
+      for (var i = Math.max(1,ab[0]); i <= Math.min(max,ab[1]); i++) result.add(i);
+    } else {
+      var n = parseInt(part);
+      if (n >= 1 && n <= max) result.add(n);
+    }
+  });
+  return Array.from(result).sort(function(a,b){return a-b;});
+}
+
+async function extractPages() {
+  if (!pdfBytes) { toast('Load a PDF first'); return; }
+  var range = document.getElementById('extractRange').value;
+  var pg = parseRange(range, totalPagesCount);
+  if (!pg.length) { toast('Invalid range'); return; }
+  var src = await PDFLib.PDFDocument.load(pdfBytes);
+  var dst = await PDFLib.PDFDocument.create();
+  var copied = await dst.copyPages(src, pg.map(function(p){return p-1;}));
+  copied.forEach(function(p){dst.addPage(p);});
+  downloadBlob(await dst.save(), 'extracted.pdf');
+  closeModals(); toast('Extracted ' + pg.length + ' pages');
+}
+
+async function splitPDF() {
+  if (!pdfBytes) { toast('Load a PDF first'); return; }
+  var at = parseInt(document.getElementById('splitAt').value);
+  if (!at || at < 1 || at >= totalPagesCount) { toast('Invalid split point'); return; }
+  var src = await PDFLib.PDFDocument.load(pdfBytes);
+  var d1 = await PDFLib.PDFDocument.create();
+  var d2 = await PDFLib.PDFDocument.create();
+  var p1 = await d1.copyPages(src, Array.from({length:at},function(_,i){return i;}));
+  p1.forEach(function(p){d1.addPage(p);});
+  var p2 = await d2.copyPages(src, Array.from({length:totalPagesCount-at},function(_,i){return i+at;}));
+  p2.forEach(function(p){d2.addPage(p);});
+  var o1 = await d1.save();
+  var o2 = await d2.save();
+  downloadBlob(o1, 'split_1.pdf');
+  setTimeout(function(){downloadBlob(o2, 'split_2.pdf');}, 500);
+  closeModals(); toast('Split into 2 files');
+}
+
+async function mergePDFs() {
+  if (!pdfBytes) { toast('Load a PDF first'); return; }
+  var files = document.getElementById('mergeInput').files;
+  if (!files.length) { toast('Select files'); return; }
+  var merged = await PDFLib.PDFDocument.load(pdfBytes);
+  for (var i = 0; i < files.length; i++) {
+    var buf = await files[i].arrayBuffer();
+    var src = await PDFLib.PDFDocument.load(buf);
+    var pg = await merged.copyPages(src, src.getPageIndices());
+    pg.forEach(function(p){merged.addPage(p);});
+  }
+  downloadBlob(await merged.save(), 'merged.pdf');
+  closeModals(); toast('Merged');
+}
+
+// ════════════════════════════════════════
+// WATERMARK (applies to original pdfBytes)
+// ════════════════════════════════════════
+async function addWatermark() {
+  if (!pdfBytes) { toast('Load a PDF first'); return; }
+  var text = document.getElementById('watermarkText').value || 'WATERMARK';
+  var opacity = (parseInt(document.getElementById('watermarkOpacity').value) || 15) / 100;
+  var lib = await PDFLib.PDFDocument.load(pdfBytes);
+  var font = await lib.embedFont(PDFLib.StandardFonts.Helvetica);
+  lib.getPages().forEach(function(page) {
+    var s = page.getSize();
+    page.drawText(text, { x: s.width/2 - text.length*12, y: s.height/2, size: 60, font: font, color: PDFLib.rgb(.5,.5,.5), opacity: opacity, rotate: PDFLib.degrees(-45) });
+  });
+  pdfBytes = await lib.save();
+  closeModals(); toast('Watermark applied to original PDF');
+}
+
+// ════════════════════════════════════════
+// METADATA
+// ════════════════════════════════════════
+async function saveMetadata() {
+  metadata.title = document.getElementById('metaTitle').value;
+  metadata.author = document.getElementById('metaAuthor').value;
+  metadata.subject = document.getElementById('metaSubject').value;
+  metadata.keywords = document.getElementById('metaKeywords').value;
+  closeModals(); toast('Metadata saved');
+}
+
+// ════════════════════════════════════════
+// SIGNATURE
+// ════════════════════════════════════════
+function initSigPad() {
+  var c = document.getElementById('sigCanvas');
+  sigCtx = c.getContext('2d');
+  c.width = c.offsetWidth; c.height = c.offsetHeight;
+  sigCtx.fillStyle = '#fff';
+  sigCtx.fillRect(0,0,c.width,c.height);
+  sigCtx.strokeStyle = '#000'; sigCtx.lineWidth = 2; sigCtx.lineCap = 'round';
+  c.onmousedown = function(e){ sigDrawing=true; sigCtx.beginPath(); var r=c.getBoundingClientRect(); sigCtx.moveTo(e.clientX-r.left,e.clientY-r.top); };
+  c.onmousemove = function(e){ if(!sigDrawing)return; var r=c.getBoundingClientRect(); sigCtx.lineTo(e.clientX-r.left,e.clientY-r.top); sigCtx.stroke(); };
+  c.onmouseup = function(){ sigDrawing=false; };
+  c.onmouseleave = function(){ sigDrawing=false; };
+}
+function clearSignature() { var c=document.getElementById('sigCanvas'); sigCtx.fillStyle='#fff'; sigCtx.fillRect(0,0,c.width,c.height); }
+function placeSignature() {
+  var c = document.getElementById('sigCanvas');
+  var src = c.toDataURL('image/png');
+  // Insert signature image into current page editor
+  var ed = document.getElementById('editor-' + currentPageId);
+  if (ed) {
+    ed.focus();
+    document.execCommand('insertHTML', false, '<img src="' + src + '" style="width:200px;height:80px;display:block;margin:8px 0">');
+  }
+  closeModals(); toast('Signature inserted');
+}
+
+// ════════════════════════════════════════
+// ADD IMAGE
+// ════════════════════════════════════════
+function addImage() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = function() {
+    var r = new FileReader();
+    r.onload = function(e) {
+      var ed = document.getElementById('editor-' + currentPageId);
+      if (ed) {
+        ed.focus();
+        document.execCommand('insertHTML', false, '<img src="' + e.target.result + '" style="max-width:100%;border-radius:4px;margin:8px 0">');
+      }
+      toast('Image inserted');
+    };
+    r.readAsDataURL(inp.files[0]);
+  };
+  inp.click();
+}
+
+// ════════════════════════════════════════
+// SEARCH
+// ════════════════════════════════════════
+function toggleSearch() { document.getElementById('searchBar').classList.toggle('open'); if(document.getElementById('searchBar').classList.contains('open')) document.getElementById('searchInput').focus(); }
+function searchInPages() {
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) return;
+  var found = 0;
+  for (var i = 0; i < pages.length; i++) {
+    var text = (pages[i].content || '').replace(/<[^>]*>/g, '').toLowerCase();
+    if (text.includes(q)) { found++; if (found === 1) goToPage(i + 1); }
+  }
+  document.getElementById('searchCount').textContent = found ? found + ' found' : 'Not found';
+}
+
+// ════════════════════════════════════════
+// VIEW
+// ════════════════════════════════════════
+function toggleThumbs() { document.getElementById('thumbSidebar').classList.toggle('hidden'); }
+function togglePanel() { document.getElementById('rightPanel').classList.toggle('hidden'); }
+function toggleViewerMode() { document.getElementById('viewer').classList.toggle('light-mode'); }
+function toggleFullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+function presentationMode() { toast('Use Fullscreen mode (F11) for presentation'); }
+function zoomIn() { toast('Zoom: use Ctrl+/- in browser'); }
+function zoomOut() { toast('Zoom: use Ctrl+/- in browser'); }
+function setZoom() {}
+function fitWidth() {}
+
+function switchTab(tab, panelId) {
+  document.querySelectorAll('.panel-tab').forEach(function(t){t.classList.remove('active');});
+  tab.classList.add('active');
+  document.querySelectorAll('.panel-content').forEach(function(p){p.style.display='none';});
+  document.getElementById(panelId).style.display='';
+}
+
+// ════════════════════════════════════════
+// UI UPDATE
+// ════════════════════════════════════════
+function updateUI() {
+  totalPagesCount = pages.length;
+  var pi = document.getElementById('pageInput'); if(pi) pi.value = currentPage;
+  var pi2 = document.getElementById('pageInput2'); if(pi2) pi2.textContent = currentPage;
+  var tp = document.getElementById('totalPages'); if(tp) tp.textContent = totalPagesCount;
+  var tp2 = document.getElementById('totalPages2'); if(tp2) tp2.textContent = totalPagesCount;
+  document.getElementById('statusPage').textContent = 'Page ' + currentPage + ' / ' + totalPagesCount;
+
+  // Page info panel
+  document.getElementById('pageInfo').innerHTML = '<strong>Page:</strong> ' + currentPage + ' of ' + totalPagesCount + '<br><strong>Size:</strong> 8.5" x 11" (Letter)';
+  document.getElementById('docInfo').innerHTML = '<strong>Title:</strong> ' + (metadata.title || '\u2014') + '<br><strong>Author:</strong> ' + (metadata.author || '\u2014') + '<br><strong>Pages:</strong> ' + totalPagesCount;
+}
+
+// ════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'sigModal') setTimeout(initSigPad, 100);
+  if (id === 'metaModal') {
+    document.getElementById('metaTitle').value = metadata.title;
+    document.getElementById('metaAuthor').value = metadata.author;
+    document.getElementById('metaSubject').value = metadata.subject;
+    document.getElementById('metaKeywords').value = metadata.keywords;
+  }
+}
+function closeModals() { document.querySelectorAll('.modal-overlay').forEach(function(m){m.classList.remove('open');}); }
+
+// ════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ════════════════════════════════════════
+document.addEventListener('keydown', function(e) {
+  // Don't intercept when typing in editors
+  if (e.target.classList.contains('page-editor')) {
+    // Only intercept Ctrl combos
+    if (!(e.ctrlKey || e.metaKey)) return;
+  }
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
+    if (e.key === 's') { e.preventDefault(); savePDF(); }
+    if (e.key === 'p') { e.preventDefault(); printPDF(); }
+    if (e.key === 'f') { e.preventDefault(); toggleSearch(); }
+    if (e.key === '/') { e.preventDefault(); openModal('shortcutsModal'); }
+    return;
+  }
+
+  if (e.key === 'Escape') closeModals();
+  if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); }
+});
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');}, 2500);
+}
+
+// ════════════════════════════════════════
+// BACK TO HOME
+// ════════════════════════════════════════
+function backToHome() {
+  if (!confirm('Go back to home screen?\n\nPDF changes will NOT be saved unless you export them first.\nClick "Save" to download your edited PDF before leaving.')) return;
+  document.getElementById('appBody').classList.remove('active');
+  document.getElementById('uploadScreen').classList.remove('hidden');
+  document.getElementById('headerActions').style.display = 'none';
+  document.getElementById('fileName').style.display = 'none';
+  pages = [{ id: 1, content: '' }];
+  currentPage = 1;
+  currentPageId = 1;
+  pdfDoc = null;
+  pdfBytes = null;
+  renderAllPages();
+}
+
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+renderAllPages();
+
+// Remove old unused references
+function clearAnnotations(){}
+function setTool(){}
+function undo(){}
+function redo(){}
+</script>
+</body>
+</html>
