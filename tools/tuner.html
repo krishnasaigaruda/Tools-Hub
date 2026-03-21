@@ -315,67 +315,74 @@ function detect() {
   document.getElementById('needle').style.transform = 'rotate(' + angle + 'deg)';
 }
 
-// YIN pitch detection algorithm (professional-grade)
-// Based on de Cheveigné & Kawahara (2002)
-function autoCorrelate(buf, sr) {
-  var n = buf.length;
-  var halfN = Math.floor(n / 2);
-  var yinThreshold = 0.15; // lower = stricter, 0.10-0.20 is good
+// ═══════════════════════════════════════════════════════════
+// PitchFinder YIN Algorithm — from pitchfinder library v2.3.4
+// Ported from aubio (C) Paul Brossier, GPL v3
+// https://github.com/peterkhayes/pitchfinder
+// ═══════════════════════════════════════════════════════════
+var YINDetector = (function() {
+  var threshold = 0.08;
+  var probabilityThreshold = 0.1;
 
-  // Step 1: Difference function
-  var d = new Float32Array(halfN);
-  for (var tau = 0; tau < halfN; tau++) {
-    var sum = 0;
-    for (var i = 0; i < halfN; i++) {
-      var diff = buf[i] - buf[i + tau];
-      sum += diff * diff;
-    }
-    d[tau] = sum;
-  }
+  return function(float32AudioBuffer, sampleRate) {
+    var bufferSize;
+    for (bufferSize = 1; bufferSize < float32AudioBuffer.length; bufferSize *= 2);
+    bufferSize /= 2;
 
-  // Step 2: Cumulative mean normalized difference
-  var dPrime = new Float32Array(halfN);
-  dPrime[0] = 1;
-  var runningSum = 0;
-  for (var tau = 1; tau < halfN; tau++) {
-    runningSum += d[tau];
-    dPrime[tau] = d[tau] * tau / runningSum;
-  }
+    var yinBufferLength = bufferSize / 2;
+    var yinBuffer = new Float32Array(yinBufferLength);
+    var probability = 0, tau;
 
-  // Step 3: Absolute threshold — find first tau where dPrime dips below threshold
-  // Skip very small lags (high frequencies above human range)
-  var minTau = Math.floor(sr / 2000); // max freq ~2000Hz
-  var maxTau = Math.floor(sr / 30);   // min freq ~30Hz
-  maxTau = Math.min(maxTau, halfN - 1);
-
-  var bestTau = -1;
-  for (var tau = minTau; tau < maxTau; tau++) {
-    if (dPrime[tau] < yinThreshold) {
-      // Find the local minimum in this dip
-      while (tau + 1 < maxTau && dPrime[tau + 1] < dPrime[tau]) {
-        tau++;
+    // Step 2: Difference function
+    for (var t = 0; t < yinBufferLength; t++) yinBuffer[t] = 0;
+    for (var t = 1; t < yinBufferLength; t++) {
+      for (var i = 0; i < yinBufferLength; i++) {
+        var delta = float32AudioBuffer[i] - float32AudioBuffer[i + t];
+        yinBuffer[t] += delta * delta;
       }
-      bestTau = tau;
-      break;
     }
-  }
 
-  if (bestTau < 1) return -1;
+    // Step 3: Cumulative mean normalized difference
+    yinBuffer[0] = 1;
+    yinBuffer[1] = 1;
+    var runningSum = 0;
+    for (var t = 1; t < yinBufferLength; t++) {
+      runningSum += yinBuffer[t];
+      yinBuffer[t] *= t / runningSum;
+    }
 
-  // Step 4: Parabolic interpolation for sub-sample accuracy
-  var t = bestTau;
-  if (t > 0 && t < halfN - 1) {
-    var s0 = dPrime[t - 1];
-    var s1 = dPrime[t];
-    var s2 = dPrime[t + 1];
-    var shift = (s2 - s0) / (2 * (2 * s1 - s0 - s2));
-    if (isFinite(shift)) t = t + shift;
-  }
+    // Step 4: Absolute threshold
+    for (tau = 2; tau < yinBufferLength; tau++) {
+      if (yinBuffer[tau] < threshold) {
+        while (tau + 1 < yinBufferLength && yinBuffer[tau + 1] < yinBuffer[tau]) tau++;
+        probability = 1 - yinBuffer[tau];
+        break;
+      }
+    }
 
-  // Step 5: Confidence check — if the dip isn't deep enough, reject
-  if (dPrime[bestTau] > 0.5) return -1;
+    if (tau === yinBufferLength || yinBuffer[tau] >= threshold) return -1;
+    if (probability < probabilityThreshold) return -1;
 
-  return sr / t;
+    // Step 5: Parabolic interpolation
+    var betterTau, x0, x2;
+    x0 = tau < 1 ? tau : tau - 1;
+    x2 = tau + 1 < yinBufferLength ? tau + 1 : tau;
+
+    if (x0 === tau) {
+      betterTau = yinBuffer[tau] <= yinBuffer[x2] ? tau : x2;
+    } else if (x2 === tau) {
+      betterTau = yinBuffer[tau] <= yinBuffer[x0] ? tau : x0;
+    } else {
+      var s0 = yinBuffer[x0], s1 = yinBuffer[tau], s2 = yinBuffer[x2];
+      betterTau = tau + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+    }
+
+    return sampleRate / betterTau;
+  };
+})();
+
+function autoCorrelate(buf, sr) {
+  return YINDetector(buf, sr);
 }
 
 // Waveform
