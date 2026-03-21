@@ -1379,6 +1379,7 @@ function toast(msg) {
 // ════════════════════════════════════════
 function backToHome() {
   if (!confirm('Go back to home screen?\n\nPDF changes will NOT be saved unless you export them first.\nClick "Save" to download your edited PDF before leaving.')) return;
+  clearSession();
   document.getElementById('appBody').classList.remove('active');
   document.getElementById('uploadScreen').classList.remove('hidden');
   document.getElementById('headerActions').style.display = 'none';
@@ -1393,9 +1394,60 @@ function backToHome() {
 
 
 // ════════════════════════════════════════
-// INIT
+// AUTO-SAVE (same approach as document creator)
 // ════════════════════════════════════════
-renderAllPages();
+function autoSave() {
+  pages.forEach(function(page) {
+    var ed = document.getElementById('editor-' + page.id);
+    if (ed) page.content = ed.innerHTML;
+  });
+  var data = {
+    pages: pages.map(function(p) { return { id: p.id, content: p.content, fontFamily: p.fontFamily || '' }; }),
+    currentPage: currentPage,
+    currentPageId: currentPageId,
+    fileName: document.getElementById('fileName').textContent || '',
+    metadata: metadata
+  };
+  localStorage.setItem('pdftools_session', JSON.stringify(data));
+}
+
+function clearSession() {
+  localStorage.removeItem('pdftools_session');
+}
+
+// Auto-save every 2 seconds when in editor
+setInterval(function() {
+  if (document.getElementById('appBody').classList.contains('active')) {
+    autoSave();
+  }
+}, 2000);
+
+// ════════════════════════════════════════
+// INIT — load saved content like document creator
+// ════════════════════════════════════════
+(function() {
+  var saved = localStorage.getItem('pdftools_session');
+  if (saved) {
+    try {
+      var session = JSON.parse(saved);
+      if (session.pages && session.pages.length) {
+        pages = session.pages;
+        currentPage = session.currentPage || 1;
+        currentPageId = session.currentPageId || pages[0].id;
+        metadata = session.metadata || metadata;
+        document.getElementById('fileName').textContent = session.fileName || '';
+        if (session.fileName) document.getElementById('fileName').style.display = '';
+        document.getElementById('uploadScreen').classList.add('hidden');
+        document.getElementById('appBody').classList.add('active');
+        document.getElementById('headerActions').style.display = '';
+        renderAllPages();
+        return;
+      }
+    } catch(e) {}
+  }
+  renderAllPages();
+})();
+
 
 // Remove old unused references
 function clearAnnotations(){}
