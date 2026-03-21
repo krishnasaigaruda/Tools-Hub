@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instrument Tuner | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--s2:#334155;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--accent:#c026d3;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--r:10px}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+.header{background:linear-gradient(135deg,#86198f,#c026d3,#e879f9);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(192,38,211,.3);flex-shrink:0}
+.back-btn{display:flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);font-size:.9rem;transition:background .2s}
+.back-btn:hover{background:rgba(255,255,255,.25)}
+.header-title{display:flex;align-items:center;gap:.75rem;flex:1}
+.header-title i{font-size:1.5rem;color:#fff}
+.header-title h1{font-size:1.5rem;font-weight:700;color:#fff}
+
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.tuner-card{max-width:420px;width:100%;text-align:center}
+
+/* Gauge */
+.gauge-wrap{position:relative;width:300px;height:160px;margin:0 auto 1rem;overflow:hidden}
+.gauge-bg{position:absolute;bottom:0;left:0;right:0;height:150px;border-radius:150px 150px 0 0;background:conic-gradient(from 0.75turn at 50% 100%,var(--red) 0deg,var(--amber) 40deg,var(--green) 80deg,var(--green) 100deg,var(--amber) 140deg,var(--red) 180deg);opacity:.15}
+.gauge-inner{position:absolute;bottom:0;left:20px;right:20px;height:130px;border-radius:130px 130px 0 0;background:var(--bg)}
+.gauge-ticks{position:absolute;bottom:0;left:0;right:0;height:150px}
+.gauge-needle{position:absolute;bottom:0;left:50%;width:3px;height:120px;margin-left:-1.5px;background:linear-gradient(to top,var(--accent),var(--text));border-radius:2px;transform-origin:bottom center;transform:rotate(0deg);transition:transform .15s ease-out}
+.gauge-dot{position:absolute;bottom:-6px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px rgba(192,38,211,.5)}
+.gauge-labels{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 15px}
+.gauge-labels span{font-size:.6rem;color:var(--t3);font-family:'JetBrains Mono',monospace}
+.gauge-center-label{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:.6rem;color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:600}
+
+/* Note display */
+.note-display{margin-bottom:.5rem}
+.note-letter{font-size:5rem;font-weight:800;line-height:1;color:#fff;letter-spacing:-.03em}
+.note-letter .octave{font-size:2rem;font-weight:400;color:var(--t2);vertical-align:sub}
+.note-freq{font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--t3);margin-bottom:.25rem}
+.note-cents{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;margin-bottom:1rem}
+.note-cents.sharp{color:var(--red)}
+.note-cents.flat{color:var(--amber)}
+.note-cents.tune{color:var(--green)}
+
+/* Status */
+.status{font-size:.9rem;font-weight:600;margin-bottom:1.5rem;min-height:1.5rem}
+.status.tune{color:var(--green)}
+.status.off{color:var(--t3)}
+
+/* Mic button */
+.mic-wrap{margin-bottom:1.5rem}
+.mic-btn{width:72px;height:72px;border-radius:50%;background:var(--panel);border:3px solid var(--border);color:var(--t2);font-size:1.8rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .2s}
+.mic-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mic-btn.active{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);animation:pulse-mic 1.5s ease-in-out infinite}
+@keyframes pulse-mic{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 20px 5px rgba(239,68,68,.15)}}
+.mic-label{font-size:.8rem;color:var(--t3);margin-top:.5rem}
+
+/* Instrument select */
+.inst-row{display:flex;justify-content:center;gap:.4rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.inst-btn{background:var(--panel);border:1px solid var(--border);color:var(--t2);padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .12s;font-family:'Outfit',sans-serif}
+.inst-btn:hover{border-color:var(--accent);color:var(--accent)}
+.inst-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* Reference strings */
+.strings-section{margin-bottom:1.5rem}
+.strings-title{font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:.5rem}
+.strings-row{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap}
+.string-btn{background:var(--panel);border:1px solid var(--border);color:var(--t2);width:44px;height:44px;border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .12s}
+.string-btn:hover{border-color:var(--accent);color:var(--accent)}
+.string-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.string-btn .hz{font-size:.5rem;font-weight:400;opacity:.7}
+
+/* A4 reference */
+.ref-row{display:flex;align-items:center;justify-content:center;gap:.5rem}
+.ref-label{font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.ref-input{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:.3rem .5rem;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.8rem;width:55px;text-align:center;outline:none}
+.ref-input:focus{border-color:var(--accent)}
+.ref-unit{font-size:.7rem;color:var(--t3)}
+
+/* Waveform */
+.wave-wrap{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:.5rem;margin-bottom:1rem;overflow:hidden}
+.wave-canvas{width:100%;height:60px;display:block}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:var(--panel);border:1px solid var(--accent);color:var(--text);padding:.75rem 1.5rem;border-radius:12px;font-size:.9rem;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:450px){
+.main{padding:1rem}
+.gauge-wrap{width:250px;height:140px}
+.note-letter{font-size:3.5rem}
+.tuner-card{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <div class="header-title"><i class="fas fa-guitar"></i><h1>Instrument Tuner</h1></div>
+</div>
+
+<div class="main">
+  <div class="tuner-card">
+    <!-- Gauge -->
+    <div class="gauge-wrap">
+      <div class="gauge-bg"></div>
+      <div class="gauge-inner"></div>
+      <div class="gauge-needle" id="needle"><div class="gauge-dot"></div></div>
+      <div class="gauge-labels"><span>-50</span><span>-25</span><span></span><span>+25</span><span>+50</span></div>
+      <div class="gauge-center-label">0</div>
+    </div>
+
+    <!-- Note -->
+    <div class="note-display">
+      <div class="note-letter" id="noteLetter">—<span class="octave" id="noteOctave"></span></div>
+      <div class="note-freq" id="noteFreq">— Hz</div>
+      <div class="note-cents tune" id="noteCents">—</div>
+    </div>
+    <div class="status off" id="status">Click the mic to start</div>
+
+    <!-- Waveform -->
+    <div class="wave-wrap">
+      <canvas class="wave-canvas" id="waveCanvas"></canvas>
+    </div>
+
+    <!-- Mic -->
+    <div class="mic-wrap">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()"><i class="fas fa-microphone" id="micIcon"></i></button>
+      <div class="mic-label" id="micLabel">Start listening</div>
+    </div>
+
+    <!-- Instrument -->
+    <div class="inst-row" id="instRow">
+      <button class="inst-btn active" onclick="setInstrument('chromatic')">Chromatic</button>
+      <button class="inst-btn" onclick="setInstrument('guitar')">Guitar</button>
+      <button class="inst-btn" onclick="setInstrument('bass')">Bass</button>
+      <button class="inst-btn" onclick="setInstrument('ukulele')">Ukulele</button>
+      <button class="inst-btn" onclick="setInstrument('violin')">Violin</button>
+    </div>
+
+    <!-- Reference strings -->
+    <div class="strings-section" id="stringsSection" style="display:none">
+      <div class="strings-title" id="stringsTitle">Standard Tuning</div>
+      <div class="strings-row" id="stringsRow"></div>
+    </div>
+
+    <!-- A4 reference -->
+    <div class="ref-row">
+      <span class="ref-label">A4 =</span>
+      <input class="ref-input" id="refInput" type="number" value="440" min="400" max="480" onchange="setRef(+this.value)">
+      <span class="ref-unit">Hz</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var audioCtx = null, analyser = null, stream = null;
+var listening = false, animId = null;
+var a4Ref = 440;
+var freqHistory = []; // for smoothing
+var instrument = 'chromatic';
+var activeString = -1;
+
+var noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Instrument tunings: [name, freq]
+var tunings = {
+  guitar: [['E2',82.41],['A2',110],['D3',146.83],['G3',196],['B3',246.94],['E4',329.63]],
+  bass: [['E1',41.2],['A1',55],['D2',73.42],['G2',98]],
+  ukulele: [['G4',392],['C4',261.63],['E4',329.63],['A4',440]],
+  violin: [['G3',196],['D4',293.66],['A4',440],['E5',659.26]]
+};
+
+var waveCanvas = document.getElementById('waveCanvas');
+var waveCtx = waveCanvas.getContext('2d');
+
+function resizeWave() {
+  waveCanvas.width = waveCanvas.offsetWidth * 2;
+  waveCanvas.height = waveCanvas.offsetHeight * 2;
+}
+resizeWave();
+window.addEventListener('resize', resizeWave);
+
+// Frequency to note
+function freqToNote(freq) {
+  if (freq < 16) return null;
+  var semitones = 12 * Math.log2(freq / a4Ref);
+  var midi = Math.round(semitones) + 69;
+  var noteIdx = ((midi % 12) + 12) % 12;
+  var octave = Math.floor(midi / 12) - 1;
+  var targetFreq = a4Ref * Math.pow(2, (midi - 69) / 12);
+  var cents = Math.round(1200 * Math.log2(freq / targetFreq));
+  return { name: noteNames[noteIdx], octave: octave, freq: targetFreq, cents: cents, midi: midi };
+}
+
+// Toggle mic
+async function toggleMic() {
+  if (listening) { stopListening(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch(e) {
+    toast('Microphone access denied');
+    return;
+  }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 8192; // larger = better low freq accuracy
+  analyser.smoothingTimeConstant = 0;
+  source.connect(analyser);
+
+  listening = true;
+  document.getElementById('micBtn').classList.add('active');
+  document.getElementById('micIcon').className = 'fas fa-stop';
+  document.getElementById('micLabel').textContent = 'Listening...';
+  detect();
+}
+
+function stopListening() {
+  listening = false;
+  cancelAnimationFrame(animId);
+  if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  document.getElementById('micBtn').classList.remove('active');
+  document.getElementById('micIcon').className = 'fas fa-microphone';
+  document.getElementById('micLabel').textContent = 'Start listening';
+  document.getElementById('noteLetter').innerHTML = '—';
+  document.getElementById('noteOctave').textContent = '';
+  document.getElementById('noteFreq').textContent = '— Hz';
+  document.getElementById('noteCents').textContent = '—';
+  document.getElementById('noteCents').className = 'note-cents tune';
+  document.getElementById('status').textContent = 'Click the mic to start';
+  document.getElementById('status').className = 'status off';
+  document.getElementById('needle').style.transform = 'rotate(0deg)';
+  clearWave();
+}
+
+// Pitch detection using autocorrelation
+function detect() {
+  if (!listening) return;
+  animId = requestAnimationFrame(detect);
+
+  var bufLen = analyser.fftSize;
+  var buf = new Float32Array(bufLen);
+  analyser.getFloatTimeDomainData(buf);
+
+  // Draw waveform
+  drawWave(buf);
+
+  // Check signal level
+  var rms = 0;
+  for (var i = 0; i < bufLen; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / bufLen);
+  if (rms < 0.01) {
+    document.getElementById('status').textContent = 'Waiting for sound...';
+    document.getElementById('status').className = 'status off';
+    return;
+  }
+
+  // YIN pitch detection
+  var rawFreq = autoCorrelate(buf, audioCtx.sampleRate);
+  if (rawFreq < 0) return;
+
+  // Smooth: median of last 5 readings (removes outliers)
+  freqHistory.push(rawFreq);
+  if (freqHistory.length > 5) freqHistory.shift();
+  var sorted = freqHistory.slice().sort(function(a, b) { return a - b; });
+  var freq = sorted[Math.floor(sorted.length / 2)]; // median
+
+  var note = freqToNote(freq);
+  if (!note) return;
+
+  // If instrument mode, snap to nearest string
+  if (instrument !== 'chromatic' && tunings[instrument]) {
+    var closest = null, closestDist = Infinity;
+    tunings[instrument].forEach(function(s, i) {
+      var dist = Math.abs(1200 * Math.log2(freq / s[1]));
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    });
+    if (closest !== null && closestDist < 300) {
+      var s = tunings[instrument][closest];
+      var cents = Math.round(1200 * Math.log2(freq / s[1]));
+      note = { name: s[0].replace(/[0-9]/g, ''), octave: parseInt(s[0].match(/[0-9]/)[0]), freq: s[1], cents: cents };
+      highlightString(closest);
+    }
+  }
+
+  // Update UI
+  document.getElementById('noteLetter').innerHTML = note.name + '<span class="octave">' + note.octave + '</span>';
+  document.getElementById('noteFreq').textContent = freq.toFixed(1) + ' Hz';
+
+  var centsText = note.cents === 0 ? '0' : (note.cents > 0 ? '+' + note.cents : '' + note.cents);
+  var centsEl = document.getElementById('noteCents');
+  centsEl.textContent = centsText + ' cents';
+
+  var absCents = Math.abs(note.cents);
+  if (absCents <= 3) {
+    centsEl.className = 'note-cents tune';
+    document.getElementById('status').textContent = 'In tune!';
+    document.getElementById('status').className = 'status tune';
+  } else if (note.cents > 0) {
+    centsEl.className = 'note-cents sharp';
+    document.getElementById('status').textContent = 'Too sharp — tune down';
+    document.getElementById('status').className = 'status';
+  } else {
+    centsEl.className = 'note-cents flat';
+    document.getElementById('status').textContent = 'Too flat — tune up';
+    document.getElementById('status').className = 'status';
+  }
+
+  // Needle: cents mapped to -90 to +90 degrees, clamped to ±50 cents
+  var angle = Math.max(-50, Math.min(50, note.cents)) * (90 / 50);
+  document.getElementById('needle').style.transform = 'rotate(' + angle + 'deg)';
+}
+
+// YIN pitch detection algorithm (professional-grade)
+// Based on de Cheveigné & Kawahara (2002)
+function autoCorrelate(buf, sr) {
+  var n = buf.length;
+  var halfN = Math.floor(n / 2);
+  var yinThreshold = 0.15; // lower = stricter, 0.10-0.20 is good
+
+  // Step 1: Difference function
+  var d = new Float32Array(halfN);
+  for (var tau = 0; tau < halfN; tau++) {
+    var sum = 0;
+    for (var i = 0; i < halfN; i++) {
+      var diff = buf[i] - buf[i + tau];
+      sum += diff * diff;
+    }
+    d[tau] = sum;
+  }
+
+  // Step 2: Cumulative mean normalized difference
+  var dPrime = new Float32Array(halfN);
+  dPrime[0] = 1;
+  var runningSum = 0;
+  for (var tau = 1; tau < halfN; tau++) {
+    runningSum += d[tau];
+    dPrime[tau] = d[tau] * tau / runningSum;
+  }
+
+  // Step 3: Absolute threshold — find first tau where dPrime dips below threshold
+  // Skip very small lags (high frequencies above human range)
+  var minTau = Math.floor(sr / 2000); // max freq ~2000Hz
+  var maxTau = Math.floor(sr / 30);   // min freq ~30Hz
+  maxTau = Math.min(maxTau, halfN - 1);
+
+  var bestTau = -1;
+  for (var tau = minTau; tau < maxTau; tau++) {
+    if (dPrime[tau] < yinThreshold) {
+      // Find the local minimum in this dip
+      while (tau + 1 < maxTau && dPrime[tau + 1] < dPrime[tau]) {
+        tau++;
+      }
+      bestTau = tau;
+      break;
+    }
+  }
+
+  if (bestTau < 1) return -1;
+
+  // Step 4: Parabolic interpolation for sub-sample accuracy
+  var t = bestTau;
+  if (t > 0 && t < halfN - 1) {
+    var s0 = dPrime[t - 1];
+    var s1 = dPrime[t];
+    var s2 = dPrime[t + 1];
+    var shift = (s2 - s0) / (2 * (2 * s1 - s0 - s2));
+    if (isFinite(shift)) t = t + shift;
+  }
+
+  // Step 5: Confidence check — if the dip isn't deep enough, reject
+  if (dPrime[bestTau] > 0.5) return -1;
+
+  return sr / t;
+}
+
+// Waveform
+function drawWave(buf) {
+  var w = waveCanvas.width, h = waveCanvas.height;
+  waveCtx.fillStyle = '#1e293b';
+  waveCtx.fillRect(0, 0, w, h);
+  waveCtx.strokeStyle = '#c026d3';
+  waveCtx.lineWidth = 2;
+  waveCtx.beginPath();
+  var step = Math.ceil(buf.length / w);
+  for (var i = 0; i < w; i++) {
+    var val = buf[i * step] || 0;
+    var y = (1 - val) * h / 2;
+    if (i === 0) waveCtx.moveTo(0, y);
+    else waveCtx.lineTo(i, y);
+  }
+  waveCtx.stroke();
+}
+
+function clearWave() {
+  var w = waveCanvas.width, h = waveCanvas.height;
+  waveCtx.fillStyle = '#1e293b';
+  waveCtx.fillRect(0, 0, w, h);
+  waveCtx.strokeStyle = '#334155';
+  waveCtx.lineWidth = 1;
+  waveCtx.beginPath();
+  waveCtx.moveTo(0, h / 2);
+  waveCtx.lineTo(w, h / 2);
+  waveCtx.stroke();
+}
+clearWave();
+
+// Instruments
+function setInstrument(inst) {
+  instrument = inst;
+  activeString = -1;
+  document.querySelectorAll('.inst-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.inst-btn').forEach(function(b) {
+    if (b.textContent.toLowerCase() === inst) b.classList.add('active');
+  });
+
+  var section = document.getElementById('stringsSection');
+  if (inst === 'chromatic') {
+    section.style.display = 'none';
+  } else {
+    section.style.display = '';
+    var strings = tunings[inst];
+    document.getElementById('stringsTitle').textContent = inst.charAt(0).toUpperCase() + inst.slice(1) + ' — Standard Tuning';
+    document.getElementById('stringsRow').innerHTML = strings.map(function(s, i) {
+      return '<button class="string-btn" id="str-' + i + '" onclick="playRef(' + i + ')">' +
+        s[0].replace(/[0-9]/, '') + '<span class="hz">' + Math.round(s[1]) + '</span></button>';
+    }).join('');
+  }
+}
+
+function highlightString(i) {
+  document.querySelectorAll('.string-btn').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.getElementById('str-' + i);
+  if (btn) btn.classList.add('active');
+}
+
+// Play reference tone
+function playRef(i) {
+  if (!tunings[instrument]) return;
+  var freq = tunings[instrument][i][1];
+  var ctx = new (window.AudioContext || window.webkitAudioContext)();
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 1.5);
+  highlightString(i);
+  toast(tunings[instrument][i][0] + ' — ' + freq.toFixed(1) + ' Hz');
+}
+
+function setRef(v) {
+  a4Ref = Math.max(400, Math.min(480, v));
+  document.getElementById('refInput').value = a4Ref;
+  // Recalculate tuning frequencies
+  var ratio = a4Ref / 440;
+  tunings.guitar = [['E2',82.41*ratio],['A2',110*ratio],['D3',146.83*ratio],['G3',196*ratio],['B3',246.94*ratio],['E4',329.63*ratio]];
+  tunings.bass = [['E1',41.2*ratio],['A1',55*ratio],['D2',73.42*ratio],['G2',98*ratio]];
+  tunings.ukulele = [['G4',392*ratio],['C4',261.63*ratio],['E4',329.63*ratio],['A4',a4Ref]];
+  tunings.violin = [['G3',196*ratio],['D4',293.66*ratio],['A4',a4Ref],['E5',659.26*ratio]];
+  if (instrument !== 'chromatic') setInstrument(instrument);
+}
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>
