@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Map | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--s2:#334155;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--sky:#0284c7;--sky2:#38bdf8;--r:8px}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+.hdr{background:linear-gradient(135deg,#0369a1,#0284c7,#38bdf8);padding:8px 16px;display:flex;align-items:center;gap:10px;z-index:1000;flex-shrink:0}
+.back{display:flex;align-items:center;gap:5px;color:#fff;text-decoration:none;font-weight:500;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.15);font-size:12px}
+.back:hover{background:rgba(255,255,255,.25)}
+.hdr h1{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}
+.hdr h1 i{font-size:14px}
+.hdr-spacer{flex:1}
+.hdr-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:4px;transition:background .15s}
+.hdr-btn:hover{background:rgba(255,255,255,.22)}
+
+.app{flex:1;display:flex;position:relative}
+
+/* Sidebar */
+.sb{width:360px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:900;flex-shrink:0;overflow:hidden}
+.sb.hidden{display:none}
+
+/* Search */
+.search-wrap{padding:10px;border-bottom:1px solid var(--border)}
+.search-box{display:flex;gap:6px}
+.search-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:var(--r);font-family:inherit;font-size:13px;outline:none}
+.search-input:focus{border-color:var(--sky)}
+.search-input::placeholder{color:var(--t3)}
+.search-btn{background:var(--sky);color:#fff;border:none;padding:8px 12px;border-radius:var(--r);cursor:pointer;font-size:13px}
+.search-btn:hover{filter:brightness(1.15)}
+
+.search-results{max-height:200px;overflow-y:auto;border-bottom:1px solid var(--border)}
+.search-results:empty{display:none}
+.sr-item{padding:8px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s;display:flex;gap:8px;align-items:flex-start}
+.sr-item:hover{background:var(--s2)}
+.sr-item i{color:var(--sky);margin-top:2px;flex-shrink:0}
+.sr-name{font-weight:500}
+.sr-addr{font-size:11px;color:var(--t3);margin-top:1px}
+
+/* Tabs */
+.sb-tabs{display:flex;border-bottom:1px solid var(--border)}
+.sb-tab{flex:1;padding:8px;text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}
+.sb-tab:hover{color:var(--t2)}
+.sb-tab.active{color:var(--sky2);border-bottom-color:var(--sky)}
+.sb-panel{flex:1;overflow-y:auto;overflow-x:visible;display:none;padding:10px}
+.sb-panel.active{display:block}
+.sb-panel::-webkit-scrollbar{width:4px}
+.sb-panel::-webkit-scrollbar-thumb{background:var(--s2);border-radius:2px}
+
+/* Route panel */
+.route-input-group{margin-bottom:8px}
+.route-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.route-label .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.route-label .dot.start{background:#10b981}
+.route-label .dot.end{background:#ef4444}
+.route-label .dot.stop{background:#f59e0b}
+.route-field{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:var(--r);font-family:inherit;font-size:12px;outline:none}
+.route-field:focus{border-color:var(--sky)}
+.stops-list{margin-bottom:8px}
+.stop-row{display:flex;gap:4px;align-items:center;margin-bottom:4px}
+.stop-row .route-field{flex:1}
+.stop-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:11px;padding:4px}
+.stop-del:hover{color:#ef4444}
+
+.mode-row{display:flex;gap:4px;margin-bottom:10px}
+.mode-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg);color:var(--t2);cursor:pointer;font-size:9px;font-weight:600;transition:all .12s}
+.mode-btn i{font-size:16px}
+.mode-btn:hover{border-color:var(--sky)}
+.mode-btn.active{background:rgba(2,132,199,.15);border-color:var(--sky);color:var(--sky2)}
+
+.small-btn{background:var(--s2);border:1px solid var(--border);color:var(--t2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;display:flex;align-items:center;gap:4px;transition:all .12s}
+.small-btn:hover{background:var(--sky);color:#fff;border-color:var(--sky)}
+.btn-row{display:flex;gap:4px;margin-bottom:8px}
+
+.route-summary{background:var(--bg);border-radius:var(--r);padding:10px;margin-top:8px;font-size:12px;display:none}
+.route-summary.active{display:block}
+.route-stat{display:flex;justify-content:space-between;margin-bottom:4px}
+.route-stat span:first-child{color:var(--t3)}
+.route-stat span:last-child{font-weight:600;font-family:'JetBrains Mono',monospace}
+
+.route-steps{margin-top:8px;max-height:300px;overflow-y:auto}
+.route-step{display:flex;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:11px}
+.route-step i{color:var(--sky);margin-top:2px;min-width:14px;text-align:center}
+
+/* Layers panel */
+.layer-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--r);cursor:pointer;transition:background .1s;margin-bottom:2px}
+.layer-item:hover{background:var(--s2)}
+.layer-item.active{background:rgba(2,132,199,.12)}
+.layer-check{width:18px;height:18px;border:2px solid var(--t3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;flex-shrink:0}
+.layer-item.active .layer-check{background:var(--sky);border-color:var(--sky);color:#fff}
+.layer-name{font-size:12px;font-weight:500}
+
+/* POI panel */
+.poi-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.poi-btn{display:flex;align-items:center;gap:6px;padding:8px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg);color:var(--t2);cursor:pointer;font-size:11px;font-weight:500;transition:all .12s}
+.poi-btn:hover{border-color:var(--sky);color:var(--sky2)}
+.poi-btn i{font-size:14px;width:18px;text-align:center}
+
+/* Map */
+#map{flex:1;z-index:1}
+.leaflet-control-zoom{border:none!important}
+.leaflet-control-zoom a{background:var(--panel)!important;color:var(--text)!important;border:1px solid var(--border)!important;width:32px!important;height:32px!important;line-height:32px!important;font-size:16px!important}
+.leaflet-control-zoom a:hover{background:var(--s2)!important}
+.leaflet-routing-container{display:none!important}
+
+/* Floating buttons */
+.float-btns{position:absolute;bottom:20px;right:20px;z-index:800;display:flex;flex-direction:column;gap:6px}
+.float-btn{width:40px;height:40px;border-radius:50%;background:var(--panel);border:1px solid var(--border);color:var(--t2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.3);transition:all .15s}
+.float-btn:hover{background:var(--sky);color:#fff;border-color:var(--sky)}
+
+/* Autocomplete */
+.ac-wrap{position:relative}
+.ac-list{position:absolute;top:100%;left:0;right:0;background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);max-height:250px;overflow-y:auto;z-index:999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.ac-list.open{display:block}
+.ac-item{padding:7px 10px;cursor:pointer;font-size:11px;display:flex;gap:6px;align-items:flex-start;transition:background .1s}
+.ac-item:hover,.ac-item.selected{background:var(--s2)}
+.ac-item i{color:var(--sky);margin-top:2px;flex-shrink:0;font-size:10px}
+.ac-name{font-weight:500;font-size:12px}
+.ac-addr{font-size:10px;color:var(--t3);margin-top:1px}
+
+/* Place info */
+.place-img{width:100%;height:160px;object-fit:cover;background:var(--s2);display:block;border-radius:0}
+.place-img.none{display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:2rem}
+.place-img img{width:100%;height:100%;object-fit:cover;display:block}
+.place-body{padding:12px 16px}
+.place-name{font-size:1.2rem;font-weight:700;margin-bottom:2px}
+.place-type{font-size:.7rem;color:var(--sky2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+.place-desc{font-size:.85rem;color:var(--t2);line-height:1.6;margin-bottom:10px}
+.place-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.place-info-item{background:var(--bg);border-radius:6px;padding:8px}
+.place-info-label{font-size:.6rem;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.place-info-val{font-size:.85rem;font-weight:500;margin-top:2px}
+.place-actions{display:flex;gap:4px}
+.place-btn{flex:1;padding:6px;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;text-align:center;transition:all .12s;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:4px}
+.place-btn.primary{background:var(--sky);color:#fff}
+.place-btn.primary:hover{filter:brightness(1.15)}
+.place-btn.sec{background:var(--s2);color:var(--t2)}
+.place-btn.sec:hover{background:var(--sky);color:#fff}
+
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel);border:1px solid var(--sky);color:var(--text);padding:8px 16px;border-radius:10px;font-size:12px;z-index:2000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Coord display */
+.coord-display{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:800;background:rgba(30,41,59,.9);padding:4px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);pointer-events:none}
+
+@media(max-width:700px){
+.sb{width:100%;position:absolute;top:42px;left:0;right:0;bottom:0;z-index:900}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="../Tools.html" class="back"><i class="fas fa-arrow-left"></i> Back</a>
+  <h1><i class="fas fa-map-marked-alt"></i> Map</h1>
+  <div class="hdr-spacer"></div>
+  <button class="hdr-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <button class="hdr-btn" onclick="locateMe()"><i class="fas fa-crosshairs"></i> My Location</button>
+  <button class="hdr-btn" onclick="shareLocation()"><i class="fas fa-share-nodes"></i></button>
+</div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sb" id="sidebar">
+    <div class="search-wrap">
+      <div class="search-box ac-wrap">
+        <input class="search-input" id="searchInput" placeholder="Search places..." oninput="onSearchInput(this.value)" onkeydown="onSearchKey(event)" autocomplete="off">
+        <button class="search-btn" onclick="searchPlace()"><i class="fas fa-search"></i></button>
+        <div class="ac-list" id="searchAC"></div>
+      </div>
+    </div>
+
+    <div class="sb-tabs">
+      <div class="sb-tab active" onclick="sbTab(this,'routePanel')"><i class="fas fa-route"></i> Route</div>
+      <div class="sb-tab" onclick="sbTab(this,'layersPanel')"><i class="fas fa-layer-group"></i> Layers</div>
+      <div class="sb-tab" onclick="sbTab(this,'poiPanel')"><i class="fas fa-map-pin"></i> Nearby</div>
+      <div class="sb-tab" id="placeTab" onclick="sbTab(this,'placePanel')" style="display:none"><i class="fas fa-info-circle"></i> Place</div>
+    </div>
+
+    <!-- Route -->
+    <div class="sb-panel active" id="routePanel">
+      <div class="mode-row">
+        <button class="mode-btn active" id="mode-car" onclick="setMode('car',this)"><i class="fas fa-car"></i>Drive</button>
+        <button class="mode-btn" id="mode-bike" onclick="setMode('bike',this)"><i class="fas fa-bicycle"></i>Bike</button>
+        <button class="mode-btn" id="mode-walk" onclick="setMode('walk',this)"><i class="fas fa-walking"></i>Walk</button>
+      </div>
+      <div class="route-input-group ac-wrap">
+        <div class="route-label"><span class="dot start"></span> Start</div>
+        <input class="route-field" id="routeStart" placeholder="Starting point..." oninput="onRouteInput(this)" onkeydown="onRouteKey(event,this)" onfocus="this.select()" autocomplete="off">
+        <div class="ac-list" id="ac-routeStart"></div>
+      </div>
+      <div class="stops-list" id="stopsList"></div>
+      <div class="route-input-group ac-wrap">
+        <div class="route-label"><span class="dot end"></span> Destination</div>
+        <input class="route-field" id="routeEnd" placeholder="Destination..." oninput="onRouteInput(this)" onkeydown="onRouteKey(event,this)" onfocus="this.select()" autocomplete="off">
+        <div class="ac-list" id="ac-routeEnd"></div>
+      </div>
+      <div class="btn-row">
+        <button class="small-btn" style="flex:1" onclick="addStop()"><i class="fas fa-plus"></i> Add Stop</button>
+        <button class="small-btn" style="flex:1" onclick="swapRoute()"><i class="fas fa-arrows-up-down"></i> Swap</button>
+        <button class="small-btn" style="flex:1" onclick="calcRoute()"><i class="fas fa-route"></i> Go</button>
+      </div>
+      <button class="small-btn" style="width:100%" onclick="clearRoute()"><i class="fas fa-xmark"></i> Clear Route</button>
+      <div class="route-summary" id="routeSummary">
+        <div class="route-stat"><span>Distance</span><span id="routeDist">—</span></div>
+        <div class="route-stat"><span>Duration</span><span id="routeTime">—</span></div>
+        <div class="route-steps" id="routeSteps"></div>
+      </div>
+    </div>
+
+    <!-- Layers -->
+    <div class="sb-panel" id="layersPanel">
+      <div class="layer-item active" onclick="setLayer('streets',this)"><div class="layer-check"><i class="fas fa-check"></i></div><span class="layer-name">Streets</span></div>
+      <div class="layer-item" onclick="setLayer('satellite',this)"><div class="layer-check"><i class="fas fa-check"></i></div><span class="layer-name">Satellite</span></div>
+      <div class="layer-item" onclick="setLayer('topo',this)"><div class="layer-check"><i class="fas fa-check"></i></div><span class="layer-name">Topographic</span></div>
+      <div class="layer-item" onclick="setLayer('dark',this)"><div class="layer-check"><i class="fas fa-check"></i></div><span class="layer-name">Dark Mode</span></div>
+      <div class="layer-item" onclick="setLayer('transit',this)"><div class="layer-check"><i class="fas fa-check"></i></div><span class="layer-name">Light</span></div>
+    </div>
+
+    <!-- POI / Nearby -->
+    <div class="sb-panel" id="poiPanel">
+      <div class="poi-grid">
+        <button class="poi-btn" onclick="searchPOI('restaurant')"><i class="fas fa-utensils"></i> Restaurants</button>
+        <button class="poi-btn" onclick="searchPOI('cafe')"><i class="fas fa-coffee"></i> Cafes</button>
+        <button class="poi-btn" onclick="searchPOI('fuel')"><i class="fas fa-gas-pump"></i> Gas Stations</button>
+        <button class="poi-btn" onclick="searchPOI('hospital')"><i class="fas fa-hospital"></i> Hospitals</button>
+        <button class="poi-btn" onclick="searchPOI('pharmacy')"><i class="fas fa-pills"></i> Pharmacies</button>
+        <button class="poi-btn" onclick="searchPOI('hotel')"><i class="fas fa-hotel"></i> Hotels</button>
+        <button class="poi-btn" onclick="searchPOI('parking')"><i class="fas fa-parking"></i> Parking</button>
+        <button class="poi-btn" onclick="searchPOI('supermarket')"><i class="fas fa-shopping-cart"></i> Grocery</button>
+        <button class="poi-btn" onclick="searchPOI('bank')"><i class="fas fa-university"></i> Banks</button>
+        <button class="poi-btn" onclick="searchPOI('school')"><i class="fas fa-school"></i> Schools</button>
+        <button class="poi-btn" onclick="searchPOI('place_of_worship')"><i class="fas fa-church"></i> Worship</button>
+        <button class="poi-btn" onclick="searchPOI('atm')"><i class="fas fa-money-bill"></i> ATMs</button>
+        <button class="poi-btn" onclick="searchPOI('police')"><i class="fas fa-shield-halved"></i> Police</button>
+        <button class="poi-btn" onclick="searchPOI('gym')"><i class="fas fa-dumbbell"></i> Gyms</button>
+        <button class="poi-btn" onclick="searchPOI('cinema')"><i class="fas fa-film"></i> Cinemas</button>
+        <button class="poi-btn" onclick="clearPOI()"><i class="fas fa-xmark"></i> Clear All</button>
+      </div>
+    </div>
+
+    <!-- Place info (in sidebar) -->
+    <div class="sb-panel" id="placePanel" style="padding:0">
+      <div id="placeImg" class="place-img none" style="height:160px"><i class="fas fa-image"></i></div>
+      <div class="place-body">
+        <div class="place-name" id="placeName">—</div>
+        <div class="place-type" id="placeType">—</div>
+        <div class="place-desc" id="placeDesc"></div>
+        <div class="place-info-grid" id="placeInfoGrid"></div>
+        <div class="place-actions">
+          <button class="place-btn primary" onclick="directionsToPlace()"><i class="fas fa-route"></i> Directions</button>
+          <button class="place-btn sec" onclick="copyPlaceLink()"><i class="fas fa-copy"></i> Copy</button>
+          <button class="place-btn sec" onclick="openInOSM()"><i class="fas fa-external-link-alt"></i> OSM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Float buttons -->
+  <div class="float-btns">
+    <button class="float-btn" onclick="locateMe()" title="My Location"><i class="fas fa-crosshairs"></i></button>
+    <button class="float-btn" onclick="map.setView([20,0],2)" title="World View"><i class="fas fa-globe"></i></button>
+  </div>
+
+  <div class="coord-display" id="coordDisplay">0.000, 0.000</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════
+// MAP INIT
+// ═══════════════════════
+var map = L.map('map', { zoomControl: false, scrollWheelZoom: true, zoomAnimation: true, markerZoomAnimation: true, inertia: true, inertiaDeceleration: 2000, worldCopyJump: true }).setView([20, 0], 3);
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+var tileLayers = {
+  streets: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png', { attribution: '© CartoDB © OpenStreetMap', maxZoom: 20 }),
+  satellite: L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri', maxZoom: 19 }),
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 19, pane: 'overlayPane' })
+  ]),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '© OpenTopoMap', maxZoom: 17 }),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 19 }),
+  transit: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 19 })
+};
+tileLayers.streets.addTo(map);
+var currentLayer = 'streets';
+
+var routeControl = null;
+var poiMarkers = L.layerGroup().addTo(map);
+var searchMarkers = L.layerGroup().addTo(map);
+var routeMode = 'car';
+var stops = [];
+
+// Coord display
+map.on('mousemove', function(e) {
+  document.getElementById('coordDisplay').textContent = e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
+});
+
+// Click on map — reverse geocode and show place info
+map.on('click', function(e) {
+  console.log('Map clicked at', e.latlng.lat, e.latlng.lng);
+  var t = e.originalEvent.target;
+  // Skip if clicking on UI elements
+  if (t.closest && t.closest('.leaflet-marker-icon,.leaflet-popup,.leaflet-control')) return;
+  console.log('Reverse geocoding...');
+  toast('Loading place info...');
+  reverseGeocode(e.latlng.lat, e.latlng.lng);
+});
+
+var significantTypes = ['city','town','village','hamlet','suburb','county','state','country','national_park','park','island','continent','municipality','borough','quarter','neighbourhood','museum','castle','monument','memorial','ruins','archaeological_site','artwork','attraction','viewpoint','zoo','theme_park','stadium','university','college','school','hospital','library','theatre','cinema','marketplace','airport','station','halt','bus_station','ferry_terminal','peak','volcano','glacier','cave_entrance','beach','bay','cape','cliff','spring','waterfall','lake','reservoir','river','forest','nature_reserve','protected_area','garden','building','tower','bridge','dam','lighthouse','windmill','church','cathedral','mosque','synagogue','temple','monastery','chapel','shrine'];
+var significantClasses = ['place','boundary','leisure','natural','tourism','amenity','historic','aeroway','railway','building','man_made','waterway'];
+
+async function reverseGeocode(lat, lng) {
+  try {
+    var zoom = map.getZoom();
+    var queryZoom = zoom < 6 ? 3 : zoom < 10 ? 8 : zoom < 14 ? 12 : 16;
+
+    // Try Photon reverse first
+    var resp = await fetch('https://photon.komoot.io/reverse?lat=' + lat + '&lon=' + lng + '&limit=1&lang=en');
+    if (resp.ok) {
+      var data = await resp.json();
+      if (data.features && data.features.length) {
+        var f = data.features[0];
+        var p = f.properties || {};
+        var parts = [p.name, p.street, p.city, p.state, p.country].filter(Boolean);
+        var r = {
+          lat: lat, lon: lng,
+          display_name: parts.join(', ') || 'Unknown',
+          type: p.osm_value || '',
+          class: p.osm_key || '',
+          address: { country: p.country || '', state: p.state || '', city: p.city || '' }
+        };
+        console.log('Photon reverse result:', r.display_name);
+        searchMarkers.clearLayers();
+        L.marker([lat, lng]).addTo(searchMarkers);
+        showPlaceInfo(r);
+        return;
+      }
+    }
+
+    // Fallback to Nominatim reverse
+    var resp2 = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&addressdetails=1&zoom=' + queryZoom);
+    if (!resp2.ok) { console.log('Nominatim reverse failed:', resp2.status); return; }
+    var r2 = await resp2.json();
+    if (!r2 || !r2.display_name) { console.log('No reverse result'); return; }
+    console.log('Nominatim reverse result:', r2.display_name);
+    searchMarkers.clearLayers();
+    L.marker([lat, lng]).addTo(searchMarkers);
+    showPlaceInfo(r2);
+  } catch(e) { console.log('Reverse geocode error:', e); }
+}
+
+// Right-click context
+map.on('contextmenu', function(e) {
+  var lat = e.latlng.lat.toFixed(6);
+  var lng = e.latlng.lng.toFixed(6);
+  L.popup().setLatLng(e.latlng).setContent(
+    '<div style="font-family:Outfit,sans-serif;font-size:12px">' +
+    '<b style="font-family:JetBrains Mono,monospace;font-size:11px">' + lat + ', ' + lng + '</b><br>' +
+    '<a href="#" onclick="setRoutePoint(\'start\',' + lat + ',' + lng + ');return false" style="color:#0284c7">Set as start</a> · ' +
+    '<a href="#" onclick="setRoutePoint(\'end\',' + lat + ',' + lng + ');return false" style="color:#0284c7">Set as destination</a><br>' +
+    '<a href="#" onclick="navigator.clipboard.writeText(\'' + lat + ',' + lng + '\');toast(\'Copied\');return false" style="color:#0284c7">Copy coordinates</a></div>'
+  ).openOn(map);
+});
+
+// ═══════════════════════
+// AUTOCOMPLETE SEARCH
+// ═══════════════════════
+var acTimer = null;
+var acResults = [];
+var acIdx = -1;
+var currentPlaceData = null;
+
+var lastFetchTime = 0;
+
+async function fetchSuggestions(q) {
+  if (!q || q.length < 2) return [];
+
+  // Rate limit: minimum 1.1 seconds between requests
+  var now = Date.now();
+  var wait = Math.max(0, 1100 - (now - lastFetchTime));
+  if (wait > 0) await new Promise(function(r) { setTimeout(r, wait); });
+  lastFetchTime = Date.now();
+
+  // Try Photon API first (by Komoot, based on OSM, no rate limit issues)
+  try {
+    var resp = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=6&lang=en');
+    if (resp.ok) {
+      var data = await resp.json();
+      if (data.features && data.features.length) {
+        return data.features.map(function(f) {
+          var p = f.properties || {};
+          var parts = [p.name, p.city, p.state, p.country].filter(Boolean);
+          return {
+            lat: f.geometry.coordinates[1],
+            lon: f.geometry.coordinates[0],
+            display_name: parts.join(', '),
+            type: p.osm_value || p.type || '',
+            class: p.osm_key || '',
+            address: { country: p.country || '', state: p.state || '', city: p.city || '' }
+          };
+        });
+      }
+    }
+  } catch(e) {}
+
+  // Fallback to Nominatim
+  try {
+    var resp2 = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&q=' + encodeURIComponent(q));
+    if (resp2.ok) return await resp2.json();
+  } catch(e) {}
+
+  return [];
+}
+
+function onSearchInput(val) {
+  clearTimeout(acTimer);
+  if (!val || val.length < 2) { document.getElementById('searchAC').classList.remove('open'); return; }
+  acTimer = setTimeout(async function() {
+    var results = await fetchSuggestions(val);
+    acResults = results;
+    acIdx = -1;
+    showSearchAC(results);
+  }, 600);
+}
+
+function showSearchAC(results) {
+  var list = document.getElementById('searchAC');
+  if (!results.length) { list.classList.remove('open'); return; }
+  window._searchAcData = results;
+  list.innerHTML = results.map(function(r, i) {
+    var icon = getPlaceIcon(r.type, r.class);
+    var short = shortAddress(r.display_name);
+    return '<div class="ac-item" onmousedown="event.preventDefault()" onclick="pickSearchAC(' + i + ')"><i class="fas fa-' + icon + '"></i><div><div class="ac-name">' + esc(r.display_name.split(',')[0]) + '</div><div class="ac-addr">' + esc(short) + '</div></div></div>';
+  }).join('');
+  list.classList.add('open');
+}
+
+function pickSearchAC(idx) {
+  var r = window._searchAcData[idx];
+  if (r) selectSearchResult(r);
+}
+
+function onSearchKey(e) {
+  var list = document.getElementById('searchAC');
+  if (e.key === 'ArrowDown') { e.preventDefault(); acIdx = Math.min(acIdx + 1, acResults.length - 1); highlightAC('searchAC'); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); acIdx = Math.max(acIdx - 1, -1); highlightAC('searchAC'); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (acIdx >= 0 && acResults[acIdx]) selectSearchResult(acResults[acIdx]); else searchPlace(); }
+  else if (e.key === 'Escape') { list.classList.remove('open'); }
+}
+
+
+function highlightAC(listId) {
+  var items = document.getElementById(listId).querySelectorAll('.ac-item');
+  items.forEach(function(el, i) { el.classList.toggle('selected', i === acIdx); });
+}
+
+function getPlaceIcon(type, cls) {
+  if (cls === 'boundary' || type === 'administrative') return 'flag';
+  if (cls === 'place') return 'city';
+  if (type === 'national_park' || type === 'park') return 'tree';
+  if (type === 'museum') return 'landmark';
+  if (type === 'restaurant') return 'utensils';
+  if (type === 'hotel') return 'hotel';
+  if (type === 'airport' || type === 'aerodrome') return 'plane';
+  if (type === 'station' || type === 'railway') return 'train';
+  if (cls === 'highway') return 'road';
+  if (cls === 'natural') return 'mountain';
+  if (cls === 'waterway') return 'water';
+  return 'map-pin';
+}
+
+function shortAddress(name) {
+  var parts = name.split(',').map(function(s) { return s.trim(); });
+  if (parts.length <= 2) return name;
+  // Show: name, state/region, country (skip middle parts)
+  return parts[0] + ', ' + parts[parts.length - 2] + ', ' + parts[parts.length - 1];
+}
+
+function selectSearchResult(r) {
+  document.getElementById('searchAC').classList.remove('open');
+  document.getElementById('searchInput').value = shortAddress(r.display_name);
+  map.setView([r.lat, r.lon], 14);
+  searchMarkers.clearLayers();
+  L.marker([r.lat, r.lon]).addTo(searchMarkers).on('click', function() { showPlaceInfo(r); });
+  showPlaceInfo(r);
+}
+
+function searchPlace() {
+  var q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  document.getElementById('searchAC').classList.remove('open');
+  toast('Searching...');
+  fetchSuggestions(q).then(function(results) {
+    if (results.length) {
+      selectSearchResult(results[0]);
+    } else {
+      // Try broader search
+      fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(results2) {
+          if (results2.length) selectSearchResult(results2[0]);
+          else toast('No results found for "' + q + '"');
+        }).catch(function() { toast('Search failed'); });
+    }
+  });
+}
+
+// Route field autocomplete
+var routeAcTimer = null;
+var routeAcTarget = null;
+
+function onRouteInput(el) {
+  routeAcTarget = el;
+  clearTimeout(routeAcTimer);
+  if (!el.value || el.value.length < 2) { var l = document.getElementById('ac-' + el.id); if (l) l.classList.remove('open'); return; }
+  routeAcTimer = setTimeout(async function() {
+    if (!el.value || el.value.length < 2) return;
+    var results = await fetchSuggestions(el.value);
+    window._routeAcData = results;
+    var listId = 'ac-' + el.id;
+    var list = document.getElementById(listId);
+    if (!list || !results.length) { if (list) list.classList.remove('open'); return; }
+    list.innerHTML = results.map(function(r, i) {
+      var icon = getPlaceIcon(r.type, r.class);
+      return '<div class="ac-item" onmousedown="event.preventDefault()" onclick="pickRouteAC(' + i + ',\'' + el.id + '\')"><i class="fas fa-' + icon + '"></i><div><div class="ac-name">' + esc(r.display_name.split(',')[0]) + '</div><div class="ac-addr">' + esc(shortAddress(r.display_name)) + '</div></div></div>';
+    }).join('');
+    list.classList.add('open');
+  }, 300);
+}
+
+function pickRouteAC(idx, fieldId) {
+  var r = window._routeAcData[idx];
+  if (!r) return;
+  document.getElementById(fieldId).value = shortAddress(r.display_name);
+  var list = document.getElementById('ac-' + fieldId);
+  if (list) list.classList.remove('open');
+}
+
+function onRouteKey(e, el) {
+  if (e.key === 'Escape') {
+    var list = document.getElementById('ac-' + el.id);
+    if (list) list.classList.remove('open');
+  }
+}
+
+// Close autocomplete when clicking elsewhere
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.ac-wrap')) {
+    document.querySelectorAll('.ac-list').forEach(function(l) { l.classList.remove('open'); });
+  }
+});
+
+// ═══════════════════════
+// PLACE INFO PANEL
+// ═══════════════════════
+async function showPlaceInfo(r) {
+  currentPlaceData = r;
+  var name = r.display_name.split(',')[0];
+  var type = (r.type || '').replace(/_/g, ' ');
+  var cls = (r.class || '').replace(/_/g, ' ');
+
+  document.getElementById('placeName').textContent = name;
+  document.getElementById('placeType').textContent = (type + ' · ' + cls).toUpperCase();
+
+  // Fetch Wikipedia extract if available
+  var desc = '';
+  var imgEl = document.getElementById('placeImg');
+  imgEl.className = 'place-img none';
+  imgEl.innerHTML = '<i class="fas fa-image"></i>';
+
+  // Build Wikipedia query with full context for accurate matching
+  var parts = r.display_name.split(',').map(function(s) { return s.trim(); });
+  var state = (r.address && r.address.state) || '';
+  var country = (r.address && r.address.country) || '';
+
+  // Try multiple queries from most specific to least
+  var queries = [];
+  if (state) queries.push(name + ', ' + state);
+  if (country && country !== state) queries.push(name + ', ' + country);
+  queries.push(name + ' ' + type);
+  queries.push(name);
+
+  try {
+    var found = false;
+    for (var qi = 0; qi < queries.length && !found; qi++) {
+      var searchResp = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=' + encodeURIComponent(queries[qi]) + '&srlimit=3&format=json&origin=*');
+      if (!searchResp.ok) continue;
+      var searchData = await searchResp.json();
+      if (!searchData.query || !searchData.query.search) continue;
+
+      // Find best match — skip disambiguation pages
+      for (var si = 0; si < searchData.query.search.length; si++) {
+        var pageTitle = searchData.query.search[si].title;
+        var snippet = searchData.query.search[si].snippet || '';
+        // Skip disambiguation pages
+        if (snippet.includes('may refer to') || snippet.includes('disambiguation') || pageTitle.includes('disambiguation')) continue;
+
+        var summResp = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(pageTitle));
+        if (!summResp.ok) continue;
+        var wikiData = await summResp.json();
+
+        // Verify it's about a place (not a person, company, etc)
+        var wikiDesc = (wikiData.description || '').toLowerCase();
+        var wikiTitle = (wikiData.title || '').toLowerCase();
+        var placeName = name.toLowerCase();
+
+        // Check if Wikipedia article title actually matches our place name
+        var titleMatch = wikiTitle.includes(placeName) || placeName.includes(wikiTitle) ||
+          wikiTitle.split(',')[0].trim() === placeName.split(',')[0].trim();
+
+        // Check if description mentions place-related words
+        var placeWords = ['city','town','village','county','state','country','park','island','mountain','river','lake','region','district','municipality','capital','building','museum','castle','monument','bridge','tower','airport','station','university','church','cathedral','mosque','temple','stadium','theatre','library','hospital','zoo','beach','forest','garden','dam','lighthouse','landmark','historic','heritage','neighborhood','community','apartment','complex','area'];
+        var descIsPlace = placeWords.some(function(w) { return wikiDesc.includes(w); });
+
+        // Also check the extract itself for the place name
+        var extractMentionsPlace = (wikiData.extract || '').toLowerCase().includes(placeName.split(' ')[0].toLowerCase());
+
+        // Only use if title matches OR description is place-related AND extract mentions the name
+        if (titleMatch || (descIsPlace && extractMentionsPlace)) {
+          if (wikiData.extract) desc = wikiData.extract;
+          if (wikiData.thumbnail && wikiData.thumbnail.source) {
+            setPlaceImg(imgEl, wikiData);
+          }
+          found = true;
+          break;
+        }
+
+        // If first query with state and title matches, use it
+        var fallbackTitle = (wikiData.title || '').toLowerCase();
+        var fallbackMatch = fallbackTitle.includes(name.toLowerCase()) || name.toLowerCase().includes(fallbackTitle.split(',')[0].trim());
+        if (qi === 0 && si === 0 && wikiData.extract && fallbackMatch) {
+          desc = wikiData.extract;
+          if (wikiData.thumbnail && wikiData.thumbnail.source) {
+            setPlaceImg(imgEl, wikiData);
+          }
+          found = true;
+          break;
+        }
+      }
+    }
+  } catch(e) {}
+
+  // If no image found, try a direct Wikipedia page image lookup as last resort
+  if (imgEl.classList.contains('none') && name) {
+    try {
+      var imgResp = await fetch('https://en.wikipedia.org/w/api.php?action=query&titles=' + encodeURIComponent(name + (state ? ', ' + state : '')) + '&prop=pageimages&pithumbsize=600&format=json&origin=*');
+      if (imgResp.ok) {
+        var imgData = await imgResp.json();
+        var pages = imgData.query && imgData.query.pages;
+        if (pages) {
+          for (var pid in pages) {
+            if (pages[pid].thumbnail && pages[pid].thumbnail.source) {
+              imgEl.className = 'place-img';
+              imgEl.innerHTML = '<img src="' + pages[pid].thumbnail.source + '">';
+              break;
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  document.getElementById('placeDesc').textContent = desc || 'No description available.';
+
+  // Info grid
+  var grid = '';
+  grid += '<div class="place-info-item"><div class="place-info-label">Latitude</div><div class="place-info-val">' + parseFloat(r.lat).toFixed(5) + '</div></div>';
+  grid += '<div class="place-info-item"><div class="place-info-label">Longitude</div><div class="place-info-val">' + parseFloat(r.lon).toFixed(5) + '</div></div>';
+  if (r.address) {
+    if (r.address.country) grid += '<div class="place-info-item"><div class="place-info-label">Country</div><div class="place-info-val">' + esc(r.address.country) + '</div></div>';
+    if (r.address.state) grid += '<div class="place-info-item"><div class="place-info-label">State</div><div class="place-info-val">' + esc(r.address.state) + '</div></div>';
+  }
+  document.getElementById('placeInfoGrid').innerHTML = grid;
+
+  // Show place tab and switch to it
+  var placeTab = document.getElementById('placeTab');
+  placeTab.style.display = '';
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('active'); });
+  placeTab.classList.add('active');
+  document.querySelectorAll('.sb-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('placePanel').classList.add('active');
+  // Make sure sidebar is visible
+  document.getElementById('sidebar').classList.remove('hidden');
+}
+
+function setPlaceImg(imgEl, wikiData) {
+  var src = '';
+  if (wikiData.thumbnail && wikiData.thumbnail.source) {
+    // Get a good size — replace thumbnail size with 800px
+    src = wikiData.thumbnail.source.replace(/\/\d+px-/, '/800px-');
+  }
+  if (wikiData.originalimage && wikiData.originalimage.source) {
+    // Use original if thumbnail didn't work, but cap at reasonable size
+    var orig = wikiData.originalimage.source;
+    // For SVG originals, use thumbnail instead
+    if (!orig.endsWith('.svg')) src = orig;
+  }
+  if (src) {
+    imgEl.className = 'place-img';
+    imgEl.innerHTML = '<img src="' + src + '" onerror="this.parentElement.className=\'place-img none\';this.parentElement.innerHTML=\'<i class=\\\'fas fa-image\\\'></i>\'">';
+  }
+}
+
+function closePlacePanel() {
+  document.getElementById('placeTab').style.display = 'none';
+  // Switch back to route tab
+  var routeTab = document.querySelector('.sb-tab');
+  sbTab(routeTab, 'routePanel');
+  currentPlaceData = null;
+}
+
+function directionsToPlace() {
+  if (!currentPlaceData) return;
+  document.getElementById('routeEnd').value = currentPlaceData.display_name.split(',')[0];
+  closePlacePanel();
+  // Switch to route tab
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('.sb-tab').classList.add('active');
+  document.querySelectorAll('.sb-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('routePanel').classList.add('active');
+  toast('Destination set — enter start point and click Go');
+}
+
+function copyPlaceLink() {
+  if (!currentPlaceData) return;
+  var url = 'https://www.openstreetmap.org/?mlat=' + currentPlaceData.lat + '&mlon=' + currentPlaceData.lon + '#map=15/' + currentPlaceData.lat + '/' + currentPlaceData.lon;
+  navigator.clipboard.writeText(url).then(function() { toast('Link copied!'); });
+}
+
+function openInOSM() {
+  if (!currentPlaceData) return;
+  window.open('https://www.openstreetmap.org/?mlat=' + currentPlaceData.lat + '&mlon=' + currentPlaceData.lon + '#map=15/' + currentPlaceData.lat + '/' + currentPlaceData.lon, '_blank');
+}
+
+// ═══════════════════════
+// ROUTING
+// ═══════════════════════
+function setMode(mode, btn) {
+  routeMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function addStop() {
+  stops.push('');
+  renderStops();
+}
+
+function renderStops() {
+  var list = document.getElementById('stopsList');
+  list.innerHTML = stops.map(function(s, i) {
+    return '<div class="stop-row"><div class="route-label" style="margin:0"><span class="dot stop"></span></div><input class="route-field" value="' + escAttr(s) + '" placeholder="Stop ' + (i + 1) + '..." onchange="stops[' + i + ']=this.value"><button class="stop-del" onclick="stops.splice(' + i + ',1);renderStops()"><i class="fas fa-xmark"></i></button></div>';
+  }).join('');
+}
+
+function swapRoute() {
+  var s = document.getElementById('routeStart');
+  var e = document.getElementById('routeEnd');
+  var tmp = s.value; s.value = e.value; e.value = tmp;
+}
+
+async function geocode(query) {
+  if (!query) return null;
+  // Check if it's coordinates
+  var coords = query.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (coords) return L.latLng(parseFloat(coords[1]), parseFloat(coords[2]));
+  try {
+    var resp = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query));
+    var results = await resp.json();
+    if (results.length) return L.latLng(parseFloat(results[0].lat), parseFloat(results[0].lon));
+  } catch(e) {}
+  return null;
+}
+
+async function calcRoute() {
+  var startQ = document.getElementById('routeStart').value.trim();
+  var endQ = document.getElementById('routeEnd').value.trim();
+
+  if (!startQ && !endQ) {
+    // Use current location as start if available
+    toast('Enter start and destination');
+    return;
+  }
+
+  toast('Calculating route...');
+
+  var waypoints = [];
+  var startLL = startQ === 'My Location' ? await getMyLocation() : await geocode(startQ);
+  if (!startLL) { toast('Could not find start location'); return; }
+  waypoints.push(startLL);
+
+  for (var i = 0; i < stops.length; i++) {
+    if (stops[i]) {
+      var stopLL = await geocode(stops[i]);
+      if (stopLL) waypoints.push(stopLL);
+    }
+  }
+
+  var endLL = await geocode(endQ);
+  if (!endLL) { toast('Could not find destination'); return; }
+  waypoints.push(endLL);
+
+  // Remove old route
+  if (routeControl) { map.removeControl(routeControl); routeControl = null; }
+
+  var profile = routeMode === 'car' ? 'driving' : routeMode === 'bike' ? 'cycling' : 'walking';
+
+  routeControl = L.Routing.control({
+    waypoints: waypoints,
+    routeWhileDragging: true,
+    showAlternatives: true,
+    lineOptions: { styles: [{ color: '#0284c7', weight: 5, opacity: 0.8 }] },
+    altLineOptions: { styles: [{ color: '#94a3b8', weight: 4, opacity: 0.5, dashArray: '5,10' }] },
+    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1', profile: profile }),
+    createMarker: function(i, wp) {
+      var color = i === 0 ? '#10b981' : i === waypoints.length - 1 ? '#ef4444' : '#f59e0b';
+      return L.circleMarker(wp.latLng, { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 });
+    },
+    show: false
+  }).addTo(map);
+
+  routeControl.on('routesfound', function(e) {
+    var route = e.routes[0];
+    var dist = route.summary.totalDistance;
+    var time = route.summary.totalTime;
+    document.getElementById('routeDist').textContent = dist > 1000 ? (dist / 1000).toFixed(1) + ' km' : Math.round(dist) + ' m';
+    document.getElementById('routeTime').textContent = formatDuration(time);
+    document.getElementById('routeSummary').classList.add('active');
+
+    // Steps
+    var stepsHtml = '';
+    if (route.instructions) {
+      route.instructions.forEach(function(inst) {
+        var icon = 'arrow-right';
+        if (inst.type === 'Left') icon = 'arrow-left';
+        else if (inst.type === 'Right') icon = 'arrow-right';
+        else if (inst.type === 'Straight') icon = 'arrow-up';
+        else if (inst.type === 'DestinationReached') icon = 'flag-checkered';
+        stepsHtml += '<div class="route-step"><i class="fas fa-' + icon + '"></i><span>' + esc(inst.text) + '</span></div>';
+      });
+    }
+    document.getElementById('routeSteps').innerHTML = stepsHtml;
+    toast('Route found!');
+  });
+
+  routeControl.on('routingerror', function() { toast('Could not calculate route'); });
+}
+
+function clearRoute() {
+  if (routeControl) { map.removeControl(routeControl); routeControl = null; }
+  document.getElementById('routeStart').value = '';
+  document.getElementById('routeEnd').value = '';
+  stops = [];
+  renderStops();
+  document.getElementById('routeSummary').classList.remove('active');
+}
+
+function setRoutePoint(type, lat, lng) {
+  map.closePopup();
+  if (type === 'start') document.getElementById('routeStart').value = lat + ', ' + lng;
+  else document.getElementById('routeEnd').value = lat + ', ' + lng;
+}
+
+// ═══════════════════════
+// MY LOCATION
+// ═══════════════════════
+var myLocMarker = null;
+
+function locateMe() {
+  if (!navigator.geolocation) { toast('Geolocation not supported'); return; }
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var ll = [pos.coords.latitude, pos.coords.longitude];
+    map.setView(ll, 15);
+    if (myLocMarker) map.removeLayer(myLocMarker);
+    myLocMarker = L.circleMarker(ll, { radius: 10, fillColor: '#0284c7', color: '#fff', weight: 3, fillOpacity: 1 }).addTo(map).bindPopup('You are here').openPopup();
+    toast('Location found');
+  }, function() { toast('Location access denied'); }, { enableHighAccuracy: true });
+}
+
+async function getMyLocation() {
+  return new Promise(function(resolve) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      resolve(L.latLng(pos.coords.latitude, pos.coords.longitude));
+    }, function() { resolve(null); });
+  });
+}
+
+function shareLocation() {
+  var center = map.getCenter();
+  var zoom = map.getZoom();
+  var url = 'https://www.openstreetmap.org/#map=' + zoom + '/' + center.lat.toFixed(5) + '/' + center.lng.toFixed(5);
+  navigator.clipboard.writeText(url).then(function() { toast('Map link copied!'); });
+}
+
+// ═══════════════════════
+// LAYERS
+// ═══════════════════════
+function setLayer(name, el) {
+  var old = tileLayers[currentLayer];
+  if (old.eachLayer) old.eachLayer(function(l) { map.removeLayer(l); });
+  else map.removeLayer(old);
+  var nw = tileLayers[name];
+  if (nw.eachLayer) nw.eachLayer(function(l) { l.addTo(map); });
+  else nw.addTo(map);
+  currentLayer = name;
+  document.querySelectorAll('.layer-item').forEach(function(l) { l.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+// ═══════════════════════
+// POI (Overpass API)
+// ═══════════════════════
+async function searchPOI(type) {
+  var center = map.getCenter();
+  var radius = 15000; // 15km
+  var overpassType = type;
+
+  // Map types to Overpass tags
+  var tagMap = {
+    restaurant: '"amenity"="restaurant"',
+    cafe: '"amenity"="cafe"',
+    fuel: '"amenity"="fuel"',
+    hospital: '"amenity"="hospital"',
+    pharmacy: '"amenity"="pharmacy"',
+    hotel: '"tourism"="hotel"',
+    parking: '"amenity"="parking"',
+    supermarket: '"shop"="supermarket"',
+    bank: '"amenity"="bank"',
+    school: '"amenity"="school"',
+    place_of_worship: '"amenity"="place_of_worship"',
+    atm: '"amenity"="atm"',
+    police: '"amenity"="police"',
+    gym: '"leisure"="fitness_centre"',
+    cinema: '"amenity"="cinema"'
+  };
+
+  var tag = tagMap[type] || '"amenity"="' + type + '"';
+  var query = '[out:json][timeout:15];(node[' + tag + '](around:' + radius + ',' + center.lat + ',' + center.lng + ');way[' + tag + '](around:' + radius + ',' + center.lat + ',' + center.lng + '););out center 100;';
+
+  toast('Searching nearby ' + type + '...');
+  try {
+    var resp = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: 'data=' + encodeURIComponent(query) });
+    var data = await resp.json();
+    poiMarkers.clearLayers();
+
+    var iconMap = { restaurant: 'utensils', cafe: 'coffee', fuel: 'gas-pump', hospital: 'hospital', pharmacy: 'pills', hotel: 'hotel', parking: 'parking', supermarket: 'shopping-cart', bank: 'university', school: 'school', place_of_worship: 'church', atm: 'money-bill', police: 'shield-halved', gym: 'dumbbell', cinema: 'film' };
+
+    data.elements.forEach(function(el) {
+      var lat = el.lat || (el.center && el.center.lat);
+      var lon = el.lon || (el.center && el.center.lon);
+      if (!lat || !lon) return;
+      var name = (el.tags && el.tags.name) || type;
+      var addr = '';
+      if (el.tags) {
+        var parts = [];
+        if (el.tags['addr:street']) parts.push(el.tags['addr:street']);
+        if (el.tags['addr:city']) parts.push(el.tags['addr:city']);
+        if (el.tags.phone) parts.push(el.tags.phone);
+        if (el.tags.website) parts.push('<a href="' + el.tags.website + '" target="_blank" rel="noopener noreferrer" style="color:#38bdf8" onclick="return confirm(\'Open external website?\\nThis link may contain ads.\')">Website ↗</a>');
+        if (el.tags.opening_hours) parts.push('Hours: ' + el.tags.opening_hours);
+        addr = parts.join('<br>');
+      }
+      var marker = L.marker([lat, lon], {
+        icon: L.divIcon({
+          html: '<div style="background:#0284c7;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)"><i class="fas fa-' + (iconMap[type] || 'map-pin') + '"></i></div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+          className: ''
+        })
+      }).bindPopup('<div style="font-family:Outfit,sans-serif;min-width:180px"><b style="font-size:13px">' + esc(name) + '</b><br><span style="font-size:10px;color:#0284c7;text-transform:uppercase">' + type + '</span>' + (addr ? '<hr style="border:none;border-top:1px solid #eee;margin:6px 0"><span style="font-size:11px">' + addr + '</span>' : '') + '<hr style="border:none;border-top:1px solid #eee;margin:6px 0"><a href="#" onclick="showPOIInfo(\'' + esc(name.replace(/'/g, '')) + '\',' + lat + ',' + lon + ');return false" style="color:#0284c7;font-size:11px;text-decoration:none"><i class="fas fa-info-circle"></i> More Info</a></div>');
+      poiMarkers.addLayer(marker);
+    });
+
+    toast('Found ' + data.elements.length + ' ' + type + (data.elements.length !== 1 ? 's' : ''));
+  } catch(e) { toast('POI search failed'); }
+}
+
+function clearPOI() { poiMarkers.clearLayers(); toast('POI markers cleared'); }
+
+async function showPOIInfo(name, lat, lon) {
+  map.closePopup();
+  var fakeResult = {
+    lat: lat,
+    lon: lon,
+    display_name: name,
+    type: 'amenity',
+    class: 'amenity',
+    address: {}
+  };
+  // Try reverse geocode for better data
+  try {
+    var resp = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon + '&addressdetails=1&zoom=18');
+    if (resp.ok) {
+      var r = await resp.json();
+      if (r && r.display_name) {
+        r.display_name = name + ', ' + r.display_name;
+        showPlaceInfo(r);
+        return;
+      }
+    }
+  } catch(e) {}
+  showPlaceInfo(fakeResult);
+}
+
+// ═══════════════════════
+// UI
+// ═══════════════════════
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); }
+
+function sbTab(el, id) {
+  document.querySelectorAll('.sb-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('.sb-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function formatDuration(sec) {
+  if (sec < 60) return Math.round(sec) + ' sec';
+  if (sec < 3600) return Math.round(sec / 60) + ' min';
+  var h = Math.floor(sec / 3600);
+  var m = Math.round((sec % 3600) / 60);
+  return h + ' hr ' + m + ' min';
+}
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function escAttr(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2500); }
+
+// Keyboard
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === '/') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+  if (e.key === 'l' || e.key === 'L') locateMe();
+});
+
+// Try to locate on load
+locateMe();
+</script>
+</body>
+</html>
