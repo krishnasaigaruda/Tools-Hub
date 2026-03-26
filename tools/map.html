@@ -189,11 +189,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 
     <!-- Route -->
     <div class="sb-panel active" id="routePanel">
-      <div class="mode-row">
-        <button class="mode-btn active" id="mode-car" onclick="setMode('car',this)"><i class="fas fa-car"></i>Drive</button>
-        <button class="mode-btn" id="mode-bike" onclick="setMode('bike',this)"><i class="fas fa-bicycle"></i>Bike</button>
-        <button class="mode-btn" id="mode-walk" onclick="setMode('walk',this)"><i class="fas fa-walking"></i>Walk</button>
-      </div>
+      <div class="mode-row" style="display:none"></div>
       <div class="route-input-group ac-wrap">
         <div class="route-label"><span class="dot start"></span> Start</div>
         <input class="route-field" id="routeStart" placeholder="Starting point..." oninput="onRouteInput(this)" onkeydown="onRouteKey(event,this)" onfocus="this.select()" autocomplete="off">
@@ -208,9 +204,9 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
       <div class="btn-row">
         <button class="small-btn" style="flex:1" onclick="addStop()"><i class="fas fa-plus"></i> Add Stop</button>
         <button class="small-btn" style="flex:1" onclick="swapRoute()"><i class="fas fa-arrows-up-down"></i> Swap</button>
-        <button class="small-btn" style="flex:1" onclick="calcRoute()"><i class="fas fa-route"></i> Go</button>
+        <button class="small-btn" style="flex:1" onclick="clearRoute()"><i class="fas fa-xmark"></i> Clear</button>
       </div>
-      <button class="small-btn" style="width:100%" onclick="clearRoute()"><i class="fas fa-xmark"></i> Clear Route</button>
+      <button class="small-btn" style="width:100%;background:#0284c7;color:#fff;border-color:#0284c7" onclick="calcRoute()"><i class="fas fa-route"></i> Go</button>
       <div class="route-summary" id="routeSummary">
         <div class="route-stat"><span>Distance</span><span id="routeDist">—</span></div>
         <div class="route-stat"><span>Duration</span><span id="routeTime">—</span></div>
@@ -755,6 +751,11 @@ function setMode(mode, btn) {
   routeMode = mode;
   document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
+  // If a route is already displayed, rebuild with same waypoints — no re-geocoding
+  if (routeControl) {
+    var wps = routeControl.getWaypoints().filter(function(wp) { return wp.latLng; });
+    if (wps.length >= 2) buildRoute(wps.map(function(wp) { return wp.latLng; }));
+  }
 }
 
 function addStop() {
@@ -816,10 +817,13 @@ async function calcRoute() {
   if (!endLL) { toast('Could not find destination'); return; }
   waypoints.push(endLL);
 
-  // Remove old route
+  buildRoute(waypoints);
+}
+
+function buildRoute(waypoints) {
   if (routeControl) { map.removeControl(routeControl); routeControl = null; }
 
-  var profile = routeMode === 'car' ? 'driving' : routeMode === 'bike' ? 'cycling' : 'walking';
+  var profile = 'driving';
 
   routeControl = L.Routing.control({
     waypoints: waypoints,
@@ -843,7 +847,6 @@ async function calcRoute() {
     document.getElementById('routeTime').textContent = formatDuration(time);
     document.getElementById('routeSummary').classList.add('active');
 
-    // Steps
     var stepsHtml = '';
     if (route.instructions) {
       route.instructions.forEach(function(inst) {

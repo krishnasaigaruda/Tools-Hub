@@ -1112,13 +1112,103 @@
                     }
                 }
 
-                // Handle AVG function
+                // Handle AVG/AVERAGE function
                 if (expression.startsWith('AVG(') || expression.startsWith('AVERAGE(')) {
                     const range = expression.match(/(?:AVG|AVERAGE)\(([A-Z]+\d+):([A-Z]+\d+)\)/);
-                    if (range) {
-                        return avgRange(range[1], range[2]);
+                    if (range) return avgRange(range[1], range[2]);
+                }
+
+                // Handle MIN function
+                if (expression.startsWith('MIN(')) {
+                    const range = expression.match(/MIN\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) { const cells = getCellsInRange(range[1], range[2]); return Math.min(...cells.map(c => getCellValue(c))); }
+                }
+
+                // Handle MAX function
+                if (expression.startsWith('MAX(')) {
+                    const range = expression.match(/MAX\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) { const cells = getCellsInRange(range[1], range[2]); return Math.max(...cells.map(c => getCellValue(c))); }
+                }
+
+                // Handle COUNT function
+                if (expression.startsWith('COUNT(')) {
+                    const range = expression.match(/COUNT\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) { const cells = getCellsInRange(range[1], range[2]); return cells.filter(c => { const v = getCellValue(c); return v !== 0 || (document.getElementById(c) && document.getElementById(c).value.trim() !== ''); }).length; }
+                }
+
+                // Handle COUNTA function (count non-empty cells)
+                if (expression.startsWith('COUNTA(')) {
+                    const range = expression.match(/COUNTA\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) { const cells = getCellsInRange(range[1], range[2]); return cells.filter(c => { const el = document.getElementById(c); return el && el.value.trim() !== ''; }).length; }
+                }
+
+                // Handle IF function: =IF(A1>5,"Yes","No")
+                if (expression.startsWith('IF(')) {
+                    const m = expression.match(/IF\((.+),(.+),(.+)\)$/);
+                    if (m) {
+                        let cond = m[1].replace(/([A-Z]+\d+)/g, (match) => match === currentCellId ? 0 : getCellValue(match));
+                        return eval(cond) ? eval(m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)).replace(/"/g, "'")) : eval(m[3].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)).replace(/"/g, "'"));
                     }
                 }
+
+                // Handle CONCAT function
+                if (expression.startsWith('CONCAT(') || expression.startsWith('CONCATENATE(')) {
+                    const inner = expression.match(/(?:CONCAT|CONCATENATE)\((.+)\)$/);
+                    if (inner) {
+                        const parts = inner[1].split(',').map(p => {
+                            p = p.trim();
+                            if (p.startsWith('"') && p.endsWith('"')) return p.slice(1, -1);
+                            if (/^[A-Z]+\d+$/.test(p)) { const el = document.getElementById(p); return el ? el.value : ''; }
+                            return p;
+                        });
+                        return parts.join('');
+                    }
+                }
+
+                // Handle ROUND function
+                if (expression.startsWith('ROUND(')) {
+                    const m = expression.match(/ROUND\((.+),(\d+)\)$/);
+                    if (m) { let val = m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)); return parseFloat(eval(val)).toFixed(parseInt(m[2])) * 1; }
+                }
+
+                // Handle ABS function
+                if (expression.startsWith('ABS(')) {
+                    const m = expression.match(/ABS\((.+)\)$/);
+                    if (m) { let val = m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)); return Math.abs(eval(val)); }
+                }
+
+                // Handle SQRT function
+                if (expression.startsWith('SQRT(')) {
+                    const m = expression.match(/SQRT\((.+)\)$/);
+                    if (m) { let val = m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)); return Math.sqrt(eval(val)); }
+                }
+
+                // Handle POWER function
+                if (expression.startsWith('POWER(') || expression.startsWith('POW(')) {
+                    const m = expression.match(/(?:POWER|POW)\((.+),(.+)\)$/);
+                    if (m) { let base = m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)); let exp = m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)); return Math.pow(eval(base), eval(exp)); }
+                }
+
+                // Handle UPPER/LOWER
+                if (expression.startsWith('UPPER(')) {
+                    const m = expression.match(/UPPER\(([A-Z]+\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.toUpperCase() : ''; }
+                }
+                if (expression.startsWith('LOWER(')) {
+                    const m = expression.match(/LOWER\(([A-Z]+\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.toLowerCase() : ''; }
+                }
+
+                // Handle LEN function
+                if (expression.startsWith('LEN(')) {
+                    const m = expression.match(/LEN\(([A-Z]+\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.length : 0; }
+                }
+
+                // Handle NOW/TODAY
+                if (expression === 'NOW()') return new Date().toLocaleString();
+                if (expression === 'TODAY()') return new Date().toLocaleDateString();
+                if (expression === 'PI()') return Math.PI;
 
                 // Replace cell references with values
                 expression = expression.replace(/([A-Z]+\d+)/g, (match) => {

@@ -1812,24 +1812,84 @@
 
         // Export canvas
         function exportCanvas() {
-            // Temporarily reset offset and zoom to export full canvas
-            const tempOffsetX = offsetX;
-            const tempOffsetY = offsetY;
-            const tempZoom = zoom;
-            offsetX = 0;
-            offsetY = 0;
-            zoom = 1;
-            redraw();
+            if (!elements.length) { alert('Nothing to export'); return; }
 
+            // Find bounding box of ALL content
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+            function expandBounds(x1, y1, x2, y2) {
+                minX = Math.min(minX, x1); minY = Math.min(minY, y1);
+                maxX = Math.max(maxX, x2); maxY = Math.max(maxY, y2);
+            }
+
+            elements.forEach(el => {
+                switch (el.type) {
+                    case 'pen':
+                        if (el.points) el.points.forEach(p => expandBounds(p.x, p.y, p.x, p.y));
+                        break;
+                    case 'line':
+                    case 'arrow':
+                        expandBounds(Math.min(el.x1, el.x2), Math.min(el.y1, el.y2), Math.max(el.x1, el.x2), Math.max(el.y1, el.y2));
+                        if (el.controlPoints) el.controlPoints.forEach(p => expandBounds(p.x, p.y, p.x, p.y));
+                        break;
+                    case 'rectangle':
+                    case 'image':
+                    case 'audio':
+                        expandBounds(el.x, el.y, el.x + (el.width || 100), el.y + (el.height || 50));
+                        break;
+                    case 'circle':
+                        var r = el.radius || 50;
+                        expandBounds(el.x - r, el.y - r, el.x + r, el.y + r);
+                        break;
+                    case 'text':
+                        var fontSize = el.fontSize || 20;
+                        var textW = (el.text || '').length * fontSize * 0.6;
+                        expandBounds(el.x, el.y - fontSize, el.x + textW, el.y + 5);
+                        break;
+                    default:
+                        if (el.x !== undefined && el.y !== undefined) expandBounds(el.x, el.y, el.x + (el.width || 100), el.y + (el.height || 50));
+                        break;
+                }
+            });
+
+            // Account for stroke width in bounds
+            var maxStroke = 0;
+            elements.forEach(el => { if (el.strokeWidth > maxStroke) maxStroke = el.strokeWidth; });
+            const pad = Math.max(20, maxStroke + 10);
+            minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+
+            // Save state
+            const sOffX = offsetX, sOffY = offsetY, sZoom = zoom, sW = canvas.width, sH = canvas.height;
+
+            // Resize main canvas to fit content, set offset, zoom=1
+            canvas.width = Math.round(maxX - minX);
+            canvas.height = Math.round(maxY - minY);
+            offsetX = -minX;
+            offsetY = -minY;
+            zoom = 1;
+
+            // Draw white bg + elements
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(zoom, zoom);
+            elements.forEach(el => drawElement(el, false));
+            ctx.restore();
+
+            // Download
             const link = document.createElement('a');
             link.download = 'whiteboard-' + Date.now() + '.png';
-            link.href = canvas.toDataURL();
+            link.href = canvas.toDataURL('image/png');
             link.click();
 
-            // Restore offset and zoom
-            offsetX = tempOffsetX;
-            offsetY = tempOffsetY;
-            zoom = tempZoom;
+            // Restore and redraw
+            canvas.width = sW;
+            canvas.height = sH;
+            offsetX = sOffX;
+            offsetY = sOffY;
+            zoom = sZoom;
             redraw();
         }
 

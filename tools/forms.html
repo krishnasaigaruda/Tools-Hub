@@ -1280,16 +1280,16 @@
                 case 'rating':
                     const stars = [];
                     for (let i = 1; i <= 5; i++) {
-                        stars.push(`<i class="fas fa-star" style="color: #ddd; font-size: 24px; cursor: pointer;"></i>`);
+                        stars.push(`<i class="fas fa-star" data-star="${i}" style="color: #ddd; font-size: 24px; cursor: pointer; transition: color .15s;" onclick="rateStars(this,${i})" onmouseover="hoverStars(this,${i})" onmouseout="unhoverStars(this)"></i>`);
                     }
-                    return `<div style="display: flex; gap: 5px; padding: 10px 0;">${stars.join('')}</div>`;
+                    return `<div class="star-group" style="display: flex; gap: 5px; padding: 10px 0;">${stars.join('')}</div>`;
 
                 case 'file':
                     return `
-                        <div style="border: 2px dashed #ddd; padding: 30px; text-align: center; border-radius: 8px; background: #f9f9f9;">
+                        <div style="border: 2px dashed #ddd; padding: 30px; text-align: center; border-radius: 8px; background: #f9f9f9; cursor: pointer;" onclick="this.querySelector('input').click()">
                             <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #999; margin-bottom: 10px;"></i>
-                            <div style="font-size: 13px; color: #666;">Click to upload or drag and drop</div>
-                            <input type="file" style="display: none;">
+                            <div class="file-label" style="font-size: 13px; color: #666;">Click to upload or drag and drop</div>
+                            <input type="file" style="display: none;" onchange="this.parentElement.querySelector('.file-label').textContent=this.files[0]?this.files[0].name:'Click to upload'">
                         </div>
                     `;
 
@@ -1307,11 +1307,9 @@
 
                 case 'signature':
                     return `
-                        <div style="border: 1px solid #ddd; height: 120px; background: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #999;">
-                            <div style="text-align: center;">
-                                <i class="fas fa-signature" style="font-size: 24px; margin-bottom: 8px;"></i>
-                                <div style="font-size: 12px;">Sign here</div>
-                            </div>
+                        <div style="position:relative">
+                            <canvas class="sig-canvas" style="border:1px solid #ddd;height:120px;width:100%;background:#fff;border-radius:4px;cursor:crosshair;display:block" onmousedown="startSig(event,this)" onmousemove="drawSig(event,this)" onmouseup="endSig()" onmouseleave="endSig()"></canvas>
+                            <button onclick="clearSig(this.previousElementSibling)" style="position:absolute;top:4px;right:4px;background:#f3f4f6;border:1px solid #ddd;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;color:#666">Clear</button>
                         </div>
                     `;
 
@@ -1659,6 +1657,60 @@
                 menu.classList.remove('open');
             }
         });
+
+        // Rating stars
+        function rateStars(el, n) {
+            var group = el.parentElement;
+            group.querySelectorAll('i').forEach(function(s, i) {
+                s.style.color = i < n ? '#f59e0b' : '#ddd';
+            });
+            group.dataset.rating = n;
+        }
+        function hoverStars(el, n) {
+            var group = el.parentElement;
+            group.querySelectorAll('i').forEach(function(s, i) {
+                s.style.color = i < n ? '#fbbf24' : '#ddd';
+            });
+        }
+        function unhoverStars(el) {
+            var group = el.parentElement;
+            var rated = parseInt(group.dataset.rating) || 0;
+            group.querySelectorAll('i').forEach(function(s, i) {
+                s.style.color = i < rated ? '#f59e0b' : '#ddd';
+            });
+        }
+
+        // Signature canvas
+        var sigDrawing = false;
+        var sigTarget = null;
+        function startSig(e, canvas) {
+            sigDrawing = true;
+            sigTarget = canvas;
+            var ctx = canvas.getContext('2d');
+            if (!canvas._inited) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                canvas._inited = true;
+            }
+            var r = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+        }
+        function drawSig(e, canvas) {
+            if (!sigDrawing || sigTarget !== canvas) return;
+            var ctx = canvas.getContext('2d');
+            var r = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+            ctx.stroke();
+        }
+        function endSig() { sigDrawing = false; }
+        function clearSig(canvas) {
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         // Initialize
         loadAllForms();

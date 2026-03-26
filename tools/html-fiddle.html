@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Fiddle | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--s2:#334155;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--slate:#475569;--r:6px}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+.hdr{background:linear-gradient(135deg,#334155,#475569,#64748b);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:10}
+.back{display:flex;align-items:center;gap:5px;color:#fff;text-decoration:none;font-weight:500;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.12);font-size:12px}
+.back:hover{background:rgba(255,255,255,.2)}
+.hdr h1{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}
+.hdr-spacer{flex:1}
+.hdr-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:4px;transition:background .15s}
+.hdr-btn:hover{background:rgba(255,255,255,.2)}
+.hdr-btn.run{background:#10b981}
+.hdr-btn.run:hover{background:#059669}
+
+.layout-btns{display:flex;gap:2px;margin-right:8px}
+.layout-btn{background:rgba(255,255,255,.08);border:none;color:var(--t2);padding:4px 8px;border-radius:4px;cursor:pointer;font-size:10px}
+.layout-btn:hover{color:#fff}
+.layout-btn.active{background:rgba(255,255,255,.2);color:#fff}
+
+.app{flex:1;display:flex;min-height:0}
+.app.vertical{flex-direction:column}
+.app.horizontal{flex-direction:row}
+
+.editors{display:flex;flex:1;min-height:0;min-width:0}
+.app.vertical .editors{flex-direction:row}
+.app.horizontal .editors{flex-direction:column}
+
+.editor-pane{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--border)}
+.app.horizontal .editor-pane{border-right:none;border-bottom:1px solid var(--border)}
+.editor-pane:last-child{border:none}
+
+.pane-header{display:flex;align-items:center;padding:4px 8px;background:var(--panel);border-bottom:1px solid var(--border);gap:6px;flex-shrink:0}
+.pane-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:4px}
+.pane-label.html{color:#f97316}
+.pane-label.css{color:#3b82f6}
+.pane-label.js{color:#eab308}
+.pane-spacer{flex:1}
+
+textarea.code{flex:1;background:var(--bg);color:var(--text);border:none;padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;resize:none;outline:none;tab-size:2;-moz-tab-size:2}
+textarea.code::placeholder{color:var(--t3)}
+
+.preview-pane{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+.preview-header{display:flex;align-items:center;padding:4px 8px;background:var(--panel);border-bottom:1px solid var(--border);gap:6px;flex-shrink:0}
+.preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#10b981;display:flex;align-items:center;gap:4px}
+.preview-frame{flex:1;border:none;background:#fff}
+
+.console-bar{background:var(--panel);border-top:1px solid var(--border);padding:4px 10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t3);max-height:80px;overflow-y:auto;flex-shrink:0;display:none}
+.console-bar.open{display:block}
+.console-bar .err{color:#ef4444}
+.console-bar .log{color:var(--t2)}
+.console-bar .warn{color:#f59e0b}
+
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel);border:1px solid var(--slate);color:var(--text);padding:8px 16px;border-radius:10px;font-size:12px;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.resize-handle{width:4px;background:var(--border);cursor:col-resize;flex-shrink:0;transition:background .15s}
+.resize-handle:hover{background:var(--slate)}
+.app.horizontal .resize-handle{width:auto;height:4px;cursor:row-resize}
+
+@media(max-width:700px){
+.editors{flex-direction:column!important}
+.editor-pane{border-right:none!important;border-bottom:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <a href="../Tools.html" class="back"><i class="fas fa-arrow-left"></i> Back</a>
+  <h1><i class="fas fa-code"></i> HTML Fiddle</h1>
+  <div class="hdr-spacer"></div>
+  <div class="layout-btns">
+    <button class="layout-btn active" onclick="setLayout('vertical',this)" title="Side by side"><i class="fas fa-columns"></i></button>
+    <button class="layout-btn" onclick="setLayout('horizontal',this)" title="Stacked"><i class="fas fa-rows"></i></button>
+  </div>
+  <button class="hdr-btn" onclick="toggleConsole()"><i class="fas fa-terminal"></i> Console</button>
+  <button class="hdr-btn" onclick="clearAll()"><i class="fas fa-trash"></i> Clear</button>
+  <button class="hdr-btn" onclick="downloadHTML()"><i class="fas fa-download"></i> Download</button>
+  <button class="hdr-btn" onclick="shareCode()"><i class="fas fa-share-nodes"></i> Share</button>
+  <button class="hdr-btn run" onclick="runCode()"><i class="fas fa-play"></i> Run</button>
+</div>
+
+<div class="app vertical" id="app">
+  <div class="editors" id="editors">
+    <div class="editor-pane">
+      <div class="pane-header"><span class="pane-label html"><i class="fab fa-html5"></i> HTML</span></div>
+      <textarea class="code" id="htmlCode" placeholder="Write HTML here..." spellcheck="false" oninput="autoRun()">&lt;h1&gt;Hello World&lt;/h1&gt;
+&lt;p&gt;Start editing to see the result!&lt;/p&gt;
+&lt;button onclick="count++"&gt;Click me&lt;/button&gt;
+&lt;p id="counter"&gt;&lt;/p&gt;</textarea>
+    </div>
+    <div class="resize-handle" onmousedown="startResize(event,0)"></div>
+    <div class="editor-pane">
+      <div class="pane-header"><span class="pane-label css"><i class="fab fa-css3-alt"></i> CSS</span></div>
+      <textarea class="code" id="cssCode" placeholder="Write CSS here..." spellcheck="false" oninput="autoRun()">body {
+  font-family: system-ui, sans-serif;
+  padding: 2rem;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+h1 { color: #3b82f6; }
+
+button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+button:hover { background: #2563eb; }</textarea>
+    </div>
+    <div class="resize-handle" onmousedown="startResize(event,1)"></div>
+    <div class="editor-pane">
+      <div class="pane-header"><span class="pane-label js"><i class="fab fa-js"></i> JavaScript</span></div>
+      <textarea class="code" id="jsCode" placeholder="Write JavaScript here..." spellcheck="false" oninput="autoRun()">let count = 0;
+
+setInterval(() => {
+  document.getElementById('counter').textContent = 'Count: ' + count;
+}, 100);</textarea>
+    </div>
+  </div>
+
+  <div class="preview-pane" id="previewPane">
+    <div class="preview-header"><span class="preview-label"><i class="fas fa-eye"></i> Preview</span></div>
+    <iframe class="preview-frame" id="preview" sandbox="allow-scripts allow-modals allow-forms allow-same-origin"></iframe>
+  </div>
+
+  <div class="console-bar" id="consoleBar"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var autoRunTimer = null;
+var autoRunEnabled = true;
+
+// Tab key in textareas
+document.querySelectorAll('.code').forEach(function(el) {
+  el.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      var start = this.selectionStart;
+      this.value = this.value.substring(0, start) + '  ' + this.value.substring(this.selectionEnd);
+      this.selectionStart = this.selectionEnd = start + 2;
+      autoRun();
+    }
+  });
+});
+
+function autoRun() {
+  clearTimeout(autoRunTimer);
+  autoRunTimer = setTimeout(runCode, 400);
+}
+
+function runCode() {
+  var html = document.getElementById('htmlCode').value;
+  var css = document.getElementById('cssCode').value;
+  var js = document.getElementById('jsCode').value;
+
+  var doc = '<!DOCTYPE html><html><head><style>' + css + '</style></head><body>' + html +
+    '<script>var _console={log:function(){parent.postMessage({type:"log",args:Array.from(arguments)},"*")},error:function(){parent.postMessage({type:"error",args:Array.from(arguments)},"*")},warn:function(){parent.postMessage({type:"warn",args:Array.from(arguments)},"*")}};console.log=_console.log;console.error=_console.error;console.warn=_console.warn;window.onerror=function(m){parent.postMessage({type:"error",args:[m]},"*")};try{' + js + '}catch(e){parent.postMessage({type:"error",args:[e.message]},"*")}<\/script></body></html>';
+
+  var iframe = document.getElementById('preview');
+  iframe.srcdoc = doc;
+
+  // Save to localStorage
+  localStorage.setItem('fiddle_html', html);
+  localStorage.setItem('fiddle_css', css);
+  localStorage.setItem('fiddle_js', js);
+}
+
+// Console messages from iframe
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type) {
+    var bar = document.getElementById('consoleBar');
+    var cls = e.data.type === 'error' ? 'err' : e.data.type === 'warn' ? 'warn' : 'log';
+    var msg = (e.data.args || []).map(function(a) { return typeof a === 'object' ? JSON.stringify(a) : String(a); }).join(' ');
+    bar.innerHTML += '<div class="' + cls + '">' + (e.data.type === 'error' ? '✕ ' : e.data.type === 'warn' ? '⚠ ' : '› ') + escHtml(msg) + '</div>';
+    bar.scrollTop = bar.scrollHeight;
+  }
+});
+
+function toggleConsole() {
+  document.getElementById('consoleBar').classList.toggle('open');
+}
+
+function setLayout(layout, btn) {
+  document.getElementById('app').className = 'app ' + layout;
+  document.querySelectorAll('.layout-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function clearAll() {
+  if (!confirm('Clear all code?')) return;
+  document.getElementById('htmlCode').value = '';
+  document.getElementById('cssCode').value = '';
+  document.getElementById('jsCode').value = '';
+  document.getElementById('consoleBar').innerHTML = '';
+  runCode();
+}
+
+function downloadHTML() {
+  var html = document.getElementById('htmlCode').value;
+  var css = document.getElementById('cssCode').value;
+  var js = document.getElementById('jsCode').value;
+  var full = '<!DOCTYPE html>\n<html>\n<head>\n<style>\n' + css + '\n</style>\n</head>\n<body>\n' + html + '\n<script>\n' + js + '\n<\/script>\n</body>\n</html>';
+  var blob = new Blob([full], { type: 'text/html' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fiddle.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Downloaded fiddle.html');
+}
+
+function shareCode() {
+  var html = document.getElementById('htmlCode').value;
+  var css = document.getElementById('cssCode').value;
+  var js = document.getElementById('jsCode').value;
+  var full = 'HTML:\n' + html + '\n\nCSS:\n' + css + '\n\nJS:\n' + js;
+  navigator.clipboard.writeText(full).then(function() { toast('Code copied to clipboard!'); });
+}
+
+function startResize(e, idx) {
+  e.preventDefault();
+  var panes = document.querySelectorAll('.editor-pane');
+  var isHoriz = document.getElementById('app').classList.contains('horizontal');
+  var startPos = isHoriz ? e.clientY : e.clientX;
+  var pane = panes[idx];
+  var startSize = isHoriz ? pane.offsetHeight : pane.offsetWidth;
+
+  function onMove(ev) {
+    var delta = (isHoriz ? ev.clientY : ev.clientX) - startPos;
+    pane.style.flex = 'none';
+    if (isHoriz) pane.style.height = Math.max(60, startSize + delta) + 'px';
+    else pane.style.width = Math.max(60, startSize + delta) + 'px';
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// Load saved
+var savedHTML = localStorage.getItem('fiddle_html');
+var savedCSS = localStorage.getItem('fiddle_css');
+var savedJS = localStorage.getItem('fiddle_js');
+if (savedHTML !== null) document.getElementById('htmlCode').value = savedHTML;
+if (savedCSS !== null) document.getElementById('cssCode').value = savedCSS;
+if (savedJS !== null) document.getElementById('jsCode').value = savedJS;
+
+// Keyboard
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runCode(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); downloadHTML(); }
+});
+
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2500); }
+
+// Initial run
+runCode();
+</script>
+</body>
+</html>

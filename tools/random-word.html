@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Word | Tools Hub</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:linear-gradient(135deg,#a16207,#ca8a04,#eab308);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(202,138,4,.3)}
+.back-btn{display:flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);font-size:.9rem}.back-btn:hover{background:rgba(255,255,255,.25)}
+.header-title{display:flex;align-items:center;gap:.75rem;flex:1}.header-title i{font-size:1.5rem;color:#fff}.header-title h1{font-size:1.5rem;font-weight:700;color:#fff}
+.main{max-width:600px;margin:0 auto;padding:2rem;text-align:center}
+.word-card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:3rem 2rem;margin-bottom:1.5rem}
+.word{font-size:3.5rem;font-weight:800;color:#fff;margin-bottom:.5rem;letter-spacing:-.02em;word-break:break-word}
+.word-info{font-size:.85rem;color:#64748b;font-family:'JetBrains Mono',monospace}
+.opts{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:1.5rem}
+.opt{padding:.5rem 1rem;border-radius:20px;font-size:.8rem;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-family:'Outfit',sans-serif;font-weight:500;transition:all .12s}
+.opt:hover{border-color:#ca8a04;color:#eab308}
+.opt.active{background:#ca8a04;border-color:#ca8a04;color:#fff}
+.count-row{display:flex;align-items:center;justify-content:center;gap:.75rem;margin-bottom:1.5rem}
+.count-label{font-size:.8rem;color:#64748b}
+.count-input{background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:.4rem .6rem;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.85rem;width:50px;text-align:center;outline:none}
+.gen-btn{background:#ca8a04;color:#fff;border:none;padding:.85rem 2rem;border-radius:12px;font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:filter .15s}.gen-btn:hover{filter:brightness(1.15)}
+.actions{display:flex;gap:.5rem;justify-content:center;margin-top:1rem}
+.act{background:#1e293b;border:1px solid #334155;color:#94a3b8;padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:'Outfit',sans-serif;font-weight:500;display:flex;align-items:center;gap:.4rem;transition:all .12s;border:none}.act:hover{background:#334155;color:#e2e8f0}
+.history{background:#1e293b;border:1px solid #334155;border-radius:12px;margin-top:1.5rem;overflow:hidden}
+.history-hd{padding:.75rem 1rem;border-bottom:1px solid #334155;display:flex;align-items:center;justify-content:space-between}
+.history-hd h3{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b}
+.clr-btn{background:none;border:none;color:#64748b;cursor:pointer;font-size:.7rem}.clr-btn:hover{color:#ef4444}
+.history-list{max-height:200px;overflow-y:auto;padding:.5rem}
+.history-item{padding:.4rem .75rem;border-radius:6px;cursor:pointer;font-size:.9rem;transition:background .1s}.history-item:hover{background:#334155}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);background:#1e293b;border:1px solid #ca8a04;color:#e2e8f0;padding:.75rem 1.5rem;border-radius:12px;font-size:.9rem;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.4)}.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="header"><a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a><div class="header-title"><i class="fas fa-shuffle"></i><h1>Random Word</h1></div></div>
+<div class="main">
+<div class="word-card"><div class="word" id="word">—</div><div class="word-info" id="wordInfo">Click generate</div></div>
+<div class="opts">
+<button class="opt active" onclick="setType('all',this)">All</button>
+<button class="opt" onclick="setType('common',this)">Common</button>
+<button class="opt" onclick="setType('noun',this)">Nouns</button>
+<button class="opt" onclick="setType('verb',this)">Verbs</button>
+<button class="opt" onclick="setType('adjective',this)">Adjectives</button>
+<button class="opt" onclick="setType('animal',this)">Animals</button>
+<button class="opt" onclick="setType('color',this)">Colors</button>
+<button class="opt" onclick="setType('country',this)">Countries</button>
+<button class="opt" onclick="setType('name',this)">Names</button>
+<button class="opt" onclick="setType('nonsense',this)">Nonsense</button>
+</div>
+<div class="count-row"><span class="count-label">Words:</span><input class="count-input" id="countInput" type="number" min="1" max="20" value="1"></div>
+<button class="gen-btn" onclick="generate()"><i class="fas fa-shuffle"></i> Generate</button>
+<div class="actions">
+<button class="act" onclick="copyWord()"><i class="fas fa-copy"></i> Copy</button>
+<button class="act" onclick="speakWord()"><i class="fas fa-volume-high"></i> Speak</button>
+<button class="act" onclick="shareWord()"><i class="fas fa-share-nodes"></i> Share</button>
+</div>
+<div class="history"><div class="history-hd"><h3>History</h3><button class="clr-btn" onclick="hist=[];renderHist()">Clear</button></div><div class="history-list" id="histList"></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var wordType='all',currentWord='',hist=[];
+var words={
+common:['apple','bridge','castle','dragon','eagle','flame','garden','harbor','ivory','jungle','kettle','lantern','marble','nebula','ocean','puzzle','quartz','rainbow','shadow','thunder','umbrella','velvet','whisper','zenith','anchor','beacon','crystal','desert','ember','forest','glacier','haven','island','journey','kingdom','lemon','mirror','needle','orchid','phoenix','quest','riddle','silver','temple','unity','voyage','wander','yellow','zephyr'],
+noun:['mountain','river','castle','forest','ocean','desert','island','valley','canyon','meadow','temple','bridge','tower','garden','harbor','palace','village','market','library','museum','stadium','airport','hospital','factory','school'],
+verb:['discover','explore','imagine','create','inspire','achieve','believe','capture','design','embrace','flourish','generate','harvest','ignite','juggle','kindle','launch','meditate','navigate','observe','persevere','question','reflect','sustain','transform'],
+adjective:['brilliant','curious','dazzling','elegant','fierce','graceful','humble','immense','jovial','keen','luminous','majestic','noble','opulent','pristine','quirky','radiant','serene','tender','unique','vibrant','whimsical','zealous','ancient','bold'],
+animal:['falcon','dolphin','panther','elephant','penguin','octopus','cheetah','koala','eagle','wolf','tiger','bear','whale','hawk','fox','deer','owl','lynx','raven','crane','cobra','bison','otter','panda','jaguar'],
+color:['crimson','azure','emerald','amber','ivory','coral','indigo','scarlet','turquoise','lavender','magenta','burgundy','teal','chartreuse','mauve','cerulean','vermillion','ochre','periwinkle','sienna'],
+country:['Japan','Brazil','Iceland','Norway','Kenya','Portugal','Thailand','Morocco','Australia','Argentina','Switzerland','Ireland','Croatia','Finland','Uruguay','Colombia','Estonia','Bhutan','Namibia','Cambodia'],
+name:['Oliver','Emma','Liam','Sophia','Noah','Ava','Ethan','Mia','Lucas','Luna','Aiden','Chloe','Mason','Zara','Logan','Ivy','James','Aria','Leo','Stella']
+};
+function setType(t,btn){wordType=t;document.querySelectorAll('.opt').forEach(function(b){b.classList.remove('active')});btn.classList.add('active')}
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function nonsenseWord(){var c='bcdfghjklmnpqrstvwxyz',v='aeiou',len=Math.floor(Math.random()*4)+3,w='';for(var i=0;i<len;i++)w+=(i%2===0?rand(c.split('')):rand(v.split('')));return w}
+function getAllWords(){var all=[];for(var k in words)all=all.concat(words[k]);return all}
+function generate(){var count=Math.max(1,Math.min(20,parseInt(document.getElementById('countInput').value)||1));
+var pool=wordType==='all'?getAllWords():wordType==='nonsense'?null:(words[wordType]||words.common);
+var result=[];for(var i=0;i<count;i++){if(wordType==='nonsense')result.push(nonsenseWord());else result.push(rand(pool))}currentWord=result.join(' ');document.getElementById('word').textContent=currentWord;document.getElementById('wordInfo').textContent=wordType+' · '+count+' word'+(count>1?'s':'');hist.unshift(currentWord);if(hist.length>50)hist.pop();renderHist()}
+function renderHist(){var list=document.getElementById('histList');list.innerHTML=hist.map(function(w){return'<div class="history-item" onclick="navigator.clipboard.writeText(\''+w.replace(/'/g,"\\'")+'\');toast(\'Copied!\')">'+w+'</div>'}).join('')}
+function copyWord(){if(!currentWord)return;navigator.clipboard.writeText(currentWord).then(function(){toast('Copied!')})}
+function speakWord(){if(!currentWord)return;speechSynthesis.speak(new SpeechSynthesisUtterance(currentWord))}
+function shareWord(){if(!currentWord)return;if(navigator.share)navigator.share({text:currentWord}).catch(function(){});else copyWord()}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
+generate();
+document.addEventListener('keydown',function(e){if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();generate()}});
+</script>
+</body>
+</html>
