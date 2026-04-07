@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Random Picker | Tools Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+
+    /* ── Header ── */
+    .header{background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+    .back-btn{display:flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.9rem;font-weight:500;background:rgba(255,255,255,.15);padding:.4rem .8rem;border-radius:8px;transition:background .2s;white-space:nowrap}
+    .back-btn:hover{background:rgba(255,255,255,.25)}
+    .header-title{display:flex;align-items:center;gap:.6rem;font-size:1.25rem;font-weight:700;color:#fff}
+
+    /* ── Layout ── */
+    .container{max-width:820px;margin:0 auto;padding:2rem 1rem 4rem}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;gap:0;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:5px;margin-bottom:1.5rem}
+    .tab-btn{flex:1;padding:.65rem 1rem;border:none;background:transparent;color:#64748b;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:600;border-radius:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+    .tab-btn.active{background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);color:#fff;box-shadow:0 2px 12px rgba(202,138,4,.4)}
+    .tab-btn:not(.active):hover{color:#e2e8f0;background:rgba(255,255,255,.05)}
+
+    /* ── Cards ── */
+    .card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+    .card-title{font-size:.75rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+    .card-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .card-title-row .card-title{margin-bottom:0}
+
+    /* ── Textarea block ── */
+    .textarea-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+    .entry-count{font-size:.8rem;font-weight:600;color:#ca8a04;font-family:'JetBrains Mono',monospace}
+    .textarea-actions{display:flex;gap:.5rem}
+    .sm-btn{background:transparent;border:1px solid #334155;border-radius:7px;color:#94a3b8;font-family:'Outfit',sans-serif;font-size:.75rem;padding:.3rem .65rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:all .15s;white-space:nowrap}
+    .sm-btn:hover{border-color:#ca8a04;color:#fde68a}
+    .sm-btn.danger:hover{border-color:#ef4444;color:#ef4444}
+    .entries-textarea{width:100%;min-height:130px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:.85rem;padding:.8rem 1rem;resize:vertical;outline:none;transition:border-color .2s;line-height:1.6}
+    .entries-textarea:focus{border-color:#ca8a04}
+    .entries-textarea::placeholder{color:#334155}
+
+    /* ── Separator hint ── */
+    .sep-hint{margin-top:.5rem;font-size:.72rem;color:#475569;display:flex;align-items:center;gap:.4rem}
+    .sep-hint kbd{font-family:'JetBrains Mono',monospace;background:#0f172a;border:1px solid #334155;border-radius:4px;padding:1px 5px;font-size:.68rem;color:#64748b}
+
+    /* ── Buttons ── */
+    .action-row{display:flex;gap:.75rem;flex-wrap:wrap}
+    .primary-btn{padding:.85rem 1.75rem;background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);border:none;border-radius:12px;color:#fff;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 3px 16px rgba(202,138,4,.3);display:flex;align-items:center;gap:.5rem}
+    .primary-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 24px rgba(202,138,4,.45)}
+    .primary-btn:active:not(:disabled){transform:translateY(0)}
+    .primary-btn:disabled{opacity:.4;cursor:not-allowed}
+    .secondary-btn{padding:.85rem 1.5rem;background:transparent;border:1px solid #334155;border-radius:12px;color:#94a3b8;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.5rem}
+    .secondary-btn:hover:not(:disabled){border-color:#ca8a04;color:#fde68a}
+    .secondary-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── Pick count control ── */
+    .pick-count-row{display:flex;align-items:center;gap:1rem;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:.6rem 1rem;flex:1;min-width:180px}
+    .pick-count-label{flex:1;font-size:.9rem;color:#94a3b8}
+    .count-ctrl{display:flex;align-items:center;background:#1e293b;border:1px solid #334155;border-radius:8px;overflow:hidden}
+    .cnt-btn{width:32px;height:32px;background:transparent;border:none;color:#ca8a04;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;font-size:.85rem}
+    .cnt-btn:hover:not(:disabled){background:rgba(202,138,4,.15)}
+    .cnt-btn:disabled{color:#475569;cursor:not-allowed}
+    .cnt-val{min-width:36px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:#fde68a;border-left:1px solid #334155;border-right:1px solid #334155;height:32px;line-height:32px}
+
+    /* ── Drumroll result ── */
+    .result-area{min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:.5rem}
+    .result-placeholder{display:flex;flex-direction:column;align-items:center;gap:.6rem;color:#334155;font-size:.9rem}
+    .result-placeholder i{font-size:2.5rem}
+    .drumroll-single{text-align:center}
+    .drumroll-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748b;margin-bottom:.4rem}
+    .drumroll-value{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:700;color:#fde68a;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275) forwards;word-break:break-word;text-align:center;line-height:1.2}
+    .drumroll-flash{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:700;color:#64748b;animation:flash .07s ease infinite;text-align:center}
+    @keyframes popIn{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+    @keyframes flash{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+
+    .multi-results{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;width:100%}
+    .multi-chip{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:.5rem 1rem;font-family:'JetBrains Mono',monospace;font-size:.9rem;color:#fde68a;animation:chipIn .3s ease-out both;word-break:break-word}
+    .multi-chip:nth-child(1){animation-delay:0ms}
+    .multi-chip:nth-child(2){animation-delay:50ms}
+    .multi-chip:nth-child(3){animation-delay:100ms}
+    .multi-chip:nth-child(4){animation-delay:150ms}
+    .multi-chip:nth-child(5){animation-delay:200ms}
+    .multi-chip:nth-child(n+6){animation-delay:250ms}
+    @keyframes chipIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* ── Pick History ── */
+    .hist-empty{color:#475569;font-size:.85rem;text-align:center;padding:1.25rem 0}
+    .pick-hist-item{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem .85rem;background:#0f172a;border:1px solid #1e293b;border-radius:8px;animation:fadeSlide .2s ease-out}
+    @keyframes fadeSlide{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+    .pick-hist-num{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;color:#ca8a04;min-width:24px;padding-top:.1rem}
+    .pick-hist-vals{flex:1;font-size:.85rem;color:#e2e8f0;word-break:break-word;line-height:1.5}
+    .pick-hist-time{font-size:.7rem;color:#334155;white-space:nowrap;padding-top:.15rem}
+
+    /* ── Groups Mode ── */
+    .group-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    @media(max-width:520px){.group-config-grid{grid-template-columns:1fr}}
+
+    .toggle-row{display:flex;gap:0;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:4px;margin-bottom:1rem}
+    .toggle-opt{flex:1;padding:.5rem .75rem;border:none;background:transparent;color:#64748b;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;border-radius:7px;cursor:pointer;transition:all .2s;text-align:center}
+    .toggle-opt.active{background:rgba(202,138,4,.2);color:#fde68a;border:1px solid rgba(202,138,4,.3)}
+
+    .num-input-wrap{position:relative}
+    .num-input-wrap label{display:block;font-size:.8rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
+    .num-input{width:100%;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#fde68a;font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;padding:.65rem 1rem;outline:none;transition:border-color .2s;-moz-appearance:textfield}
+    .num-input:focus{border-color:#ca8a04}
+    .num-input::-webkit-outer-spin-button,.num-input::-webkit-inner-spin-button{-webkit-appearance:none}
+    .calc-result-hint{font-size:.8rem;color:#64748b;margin-top:.4rem;font-family:'JetBrains Mono',monospace;min-height:1.2em}
+    .calc-result-hint span{color:#ca8a04}
+
+    /* ── Group cards ── */
+    .groups-output{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:.25rem}
+    .group-card{border-radius:12px;padding:1.1rem;border:1px solid;animation:groupIn .35s ease-out both}
+    @keyframes groupIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+    .group-card:nth-child(1){animation-delay:0ms}
+    .group-card:nth-child(2){animation-delay:50ms}
+    .group-card:nth-child(3){animation-delay:100ms}
+    .group-card:nth-child(4){animation-delay:150ms}
+    .group-card:nth-child(5){animation-delay:200ms}
+    .group-card:nth-child(n+6){animation-delay:250ms}
+    .group-card-title{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem}
+    .group-card-title i{font-size:.65rem}
+    .group-member{font-size:.9rem;color:#e2e8f0;padding:.28rem 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:.5rem;word-break:break-word}
+    .group-member:last-child{border-bottom:none}
+    .group-member-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .groups-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;padding:2rem;color:#334155;font-size:.9rem;text-align:center}
+    .groups-placeholder i{font-size:2.5rem}
+
+    /* group color palette */
+    .gc-0{background:rgba(202,138,4,.06);border-color:rgba(202,138,4,.2)}.gc-0 .group-card-title{color:#fbbf24}.gc-0 .group-member-dot{background:#fbbf24}
+    .gc-1{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)}.gc-1 .group-card-title{color:#60a5fa}.gc-1 .group-member-dot{background:#60a5fa}
+    .gc-2{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}.gc-2 .group-card-title{color:#34d399}.gc-2 .group-member-dot{background:#34d399}
+    .gc-3{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2)}.gc-3 .group-card-title{color:#f87171}.gc-3 .group-member-dot{background:#f87171}
+    .gc-4{background:rgba(168,85,247,.06);border-color:rgba(168,85,247,.2)}.gc-4 .group-card-title{color:#c084fc}.gc-4 .group-member-dot{background:#c084fc}
+    .gc-5{background:rgba(236,72,153,.06);border-color:rgba(236,72,153,.2)}.gc-5 .group-card-title{color:#f472b6}.gc-5 .group-member-dot{background:#f472b6}
+    .gc-6{background:rgba(20,184,166,.06);border-color:rgba(20,184,166,.2)}.gc-6 .group-card-title{color:#2dd4bf}.gc-6 .group-member-dot{background:#2dd4bf}
+    .gc-7{background:rgba(249,115,22,.06);border-color:rgba(249,115,22,.2)}.gc-7 .group-card-title{color:#fb923c}.gc-7 .group-member-dot{background:#fb923c}
+
+    /* ── Groups export row ── */
+    .export-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+    .copy-btn{padding:.55rem 1.1rem;background:transparent;border:1px solid #334155;border-radius:9px;color:#94a3b8;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.4rem}
+    .copy-btn:hover{border-color:#ca8a04;color:#fde68a}
+    .copy-btn.success{border-color:#10b981;color:#34d399}
+
+    /* ── Groups history ── */
+    .group-hist-item{padding:.65rem .85rem;background:#0f172a;border:1px solid #1e293b;border-radius:8px;animation:fadeSlide .2s ease-out;cursor:pointer;transition:border-color .2s}
+    .group-hist-item:hover{border-color:#334155}
+    .group-hist-meta{display:flex;align-items:center;gap:.75rem;margin-bottom:.3rem}
+    .group-hist-badge{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;color:#ca8a04}
+    .group-hist-summary{flex:1;font-size:.8rem;color:#64748b}
+    .group-hist-time{font-size:.7rem;color:#334155}
+    .group-hist-preview{font-size:.78rem;color:#475569;line-height:1.4;word-break:break-word}
+
+    /* ── Toasts ── */
+    .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;border:1px solid #ca8a04;border-radius:10px;padding:.65rem 1.2rem;color:#fde68a;font-size:.85rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:.5rem}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ── Mode panel toggle ── */
+    .mode-panel{display:none}
+    .mode-panel.active{display:block}
+
+    @media(max-width:480px){
+      .action-row{flex-direction:column}
+      .primary-btn,.secondary-btn{justify-content:center}
+      .pick-count-row{min-width:0}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <div class="header-title"><i class="fa-solid fa-shuffle"></i> Random Picker & Group Sorter</div>
+</div>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-picker" onclick="switchTab('picker')">
+      <i class="fa-solid fa-wand-sparkles"></i> Random Picker
+    </button>
+    <button class="tab-btn" id="tab-groups" onclick="switchTab('groups')">
+      <i class="fa-solid fa-layer-group"></i> Random Groups
+    </button>
+  </div>
+
+  <!-- ══════════ MODE 1: RANDOM PICKER ══════════ -->
+  <div class="mode-panel active" id="panel-picker">
+
+    <!-- Entries input -->
+    <div class="card">
+      <div class="textarea-meta">
+        <div class="card-title" style="margin-bottom:0">Entries</div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <span class="entry-count" id="picker-count">0 entries</span>
+          <div class="textarea-actions">
+            <button class="sm-btn" onclick="pasteEntries('picker')"><i class="fa-solid fa-clipboard"></i> Paste</button>
+            <button class="sm-btn danger" onclick="clearEntries('picker')"><i class="fa-solid fa-xmark"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+      <textarea class="entries-textarea" id="picker-textarea" placeholder="Enter items here — one per line or comma-separated&#10;e.g. Alice, Bob, Charlie&#10;or&#10;Alice&#10;Bob&#10;Charlie" oninput="onPickerInput()"></textarea>
+      <div class="sep-hint"><i class="fa-solid fa-circle-info" style="color:#ca8a04;font-size:.7rem"></i> One item per line, or comma-separated — auto-detected</div>
+    </div>
+
+    <!-- Pick controls -->
+    <div class="card">
+      <div class="card-title">Pick Options</div>
+      <div class="action-row">
+        <button class="primary-btn" id="pick-one-btn" onclick="pickOne()" disabled>
+          <i class="fa-solid fa-dice-one"></i> Pick One
+        </button>
+        <div class="pick-count-row">
+          <span class="pick-count-label">Pick multiple:</span>
+          <div class="count-ctrl">
+            <button class="cnt-btn" id="multi-minus" onclick="changeMultiCount(-1)" disabled><i class="fa-solid fa-minus"></i></button>
+            <div class="cnt-val" id="multi-count-val">2</div>
+            <button class="cnt-btn" id="multi-plus" onclick="changeMultiCount(1)"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        </div>
+        <button class="secondary-btn" id="pick-multi-btn" onclick="pickMulti()" disabled>
+          <i class="fa-solid fa-dice"></i> Pick <span id="pick-multi-label">2</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Result display -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Result</div>
+        <button class="sm-btn" id="pick-again-btn" onclick="pickAgain()" style="display:none"><i class="fa-solid fa-rotate-right"></i> Pick Again</button>
+      </div>
+      <div class="result-area" id="result-area">
+        <div class="result-placeholder">
+          <i class="fa-solid fa-wand-sparkles"></i>
+          <span>Your result will appear here</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pick History -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Pick History <span style="font-weight:400;color:#334155">(last 10)</span></div>
+        <button class="sm-btn danger" onclick="clearPickHistory()"><i class="fa-solid fa-trash-can"></i> Clear</button>
+      </div>
+      <div id="pick-history-list"><div class="hist-empty">No picks yet.</div></div>
+    </div>
+
+  </div><!-- /panel-picker -->
+
+  <!-- ══════════ MODE 2: RANDOM GROUPS ══════════ -->
+  <div class="mode-panel" id="panel-groups">
+
+    <!-- Entries input -->
+    <div class="card">
+      <div class="textarea-meta">
+        <div class="card-title" style="margin-bottom:0">Entries</div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <span class="entry-count" id="groups-count">0 entries</span>
+          <div class="textarea-actions">
+            <button class="sm-btn" onclick="pasteEntries('groups')"><i class="fa-solid fa-clipboard"></i> Paste</button>
+            <button class="sm-btn danger" onclick="clearEntries('groups')"><i class="fa-solid fa-xmark"></i> Clear</button>
+          </div>
+        </div>
+      </div>
+      <textarea class="entries-textarea" id="groups-textarea" placeholder="Enter items here — one per line or comma-separated&#10;e.g. Alice, Bob, Charlie, Dave, Eve, Frank" oninput="onGroupsInput()"></textarea>
+      <div class="sep-hint"><i class="fa-solid fa-circle-info" style="color:#ca8a04;font-size:.7rem"></i> One item per line, or comma-separated — auto-detected</div>
+    </div>
+
+    <!-- Group configuration -->
+    <div class="card">
+      <div class="card-title">Group Configuration</div>
+      <div class="toggle-row">
+        <button class="toggle-opt active" id="toggle-by-size" onclick="setGroupMode('size')">
+          <i class="fa-solid fa-users"></i> By group size
+        </button>
+        <button class="toggle-opt" id="toggle-by-count" onclick="setGroupMode('count')">
+          <i class="fa-solid fa-hashtag"></i> By number of groups
+        </button>
+      </div>
+      <div class="group-config-grid">
+        <div class="num-input-wrap" id="size-input-wrap">
+          <label>People per group</label>
+          <input class="num-input" type="number" id="group-size-input" min="1" value="3" oninput="updateGroupCalc()"/>
+          <div class="calc-result-hint" id="size-calc-hint">Enter entries above</div>
+        </div>
+        <div class="num-input-wrap" id="count-input-wrap" style="display:none">
+          <label>Number of groups</label>
+          <input class="num-input" type="number" id="group-count-input" min="1" value="3" oninput="updateGroupCalc()"/>
+          <div class="calc-result-hint" id="count-calc-hint">Enter entries above</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sort button -->
+    <div class="card">
+      <div class="action-row">
+        <button class="primary-btn" id="sort-groups-btn" onclick="sortGroups()" disabled>
+          <i class="fa-solid fa-shuffle"></i> Sort into Groups
+        </button>
+        <button class="secondary-btn" id="reshuffle-btn" onclick="reshuffleGroups()" disabled>
+          <i class="fa-solid fa-rotate-right"></i> Reshuffle
+        </button>
+      </div>
+    </div>
+
+    <!-- Groups output -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Groups</div>
+        <div id="export-row" class="export-row" style="display:none;margin-top:0">
+          <button class="copy-btn" id="copy-text-btn" onclick="copyGroupsText()"><i class="fa-solid fa-copy"></i> Copy Text</button>
+          <button class="copy-btn" id="copy-csv-btn" onclick="copyGroupsCSV()"><i class="fa-solid fa-file-csv"></i> Copy CSV</button>
+        </div>
+      </div>
+      <div id="groups-output">
+        <div class="groups-placeholder">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Configure groups above and click "Sort into Groups"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Groups History -->
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">Group History <span style="font-weight:400;color:#334155">(last 5)</span></div>
+        <button class="sm-btn danger" onclick="clearGroupHistory()"><i class="fa-solid fa-trash-can"></i> Clear</button>
+      </div>
+      <div id="group-history-list"><div class="hist-empty">No group arrangements yet.</div></div>
+    </div>
+
+  </div><!-- /panel-groups -->
+
+</div><!-- /container -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   STATE & STORAGE
+═══════════════════════════════════════════ */
+const LS_KEY = 'randompicker_v1';
+let state = {
+  pickerText: '',
+  groupsText: '',
+  pickHistory: [],      // [{vals:[], time:''}]
+  groupHistory: [],     // [{groups:[[]], config:{}, time:''}]
+  multiCount: 2,
+  groupMode: 'size',    // 'size' | 'count'
+  groupSizeVal: 3,
+  groupCountVal: 3,
+};
+
+let currentMode = 'picker';
+let lastPickMode = null;   // 'one' | 'multi'
+let lastGroups = null;
+
+function save() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e){}
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    Object.assign(state, d);
+  } catch(e){}
+}
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════ */
+function parseEntries(text) {
+  if (!text.trim()) return [];
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  // Detect comma-separated (no newlines or single line with commas)
+  if (lines.length === 1 && lines[0].includes(',')) {
+    return lines[0].split(',').map(s => s.trim()).filter(Boolean);
+  }
+  // Check if multi-line but each line has commas (user pasted csv)
+  const allHaveCommas = lines.every(l => l.includes(','));
+  if (allHaveCommas && lines.length <= 3) {
+    return lines.flatMap(l => l.split(',').map(s => s.trim()).filter(Boolean));
+  }
+  // Default: lines, but also split any line with commas if it looks intentional
+  return lines.flatMap(l => {
+    if (l.includes(',')) return l.split(',').map(s => s.trim()).filter(Boolean);
+    return [l];
+  }).filter(Boolean);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function fmt(count, singular, plural) {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
+
+function timeNow() {
+  return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+function showToast(msg, icon='fa-check') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ═══════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════ */
+function switchTab(mode) {
+  currentMode = mode;
+  document.getElementById('tab-picker').classList.toggle('active', mode === 'picker');
+  document.getElementById('tab-groups').classList.toggle('active', mode === 'groups');
+  document.getElementById('panel-picker').classList.toggle('active', mode === 'picker');
+  document.getElementById('panel-groups').classList.toggle('active', mode === 'groups');
+}
+
+/* ═══════════════════════════════════════════
+   ENTRIES — shared logic
+═══════════════════════════════════════════ */
+async function pasteEntries(which) {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (which === 'picker') {
+      document.getElementById('picker-textarea').value = text;
+      state.pickerText = text;
+      onPickerInput();
+    } else {
+      document.getElementById('groups-textarea').value = text;
+      state.groupsText = text;
+      onGroupsInput();
+    }
+    showToast('Pasted from clipboard');
+  } catch(e) {
+    showToast('Clipboard access denied — paste manually', 'fa-triangle-exclamation');
+  }
+}
+
+function clearEntries(which) {
+  if (which === 'picker') {
+    document.getElementById('picker-textarea').value = '';
+    state.pickerText = '';
+    onPickerInput();
+  } else {
+    document.getElementById('groups-textarea').value = '';
+    state.groupsText = '';
+    onGroupsInput();
+  }
+  save();
+}
+
+/* ═══════════════════════════════════════════
+   PICKER MODE
+═══════════════════════════════════════════ */
+function onPickerInput() {
+  const text = document.getElementById('picker-textarea').value;
+  state.pickerText = text;
+  const entries = parseEntries(text);
+  const n = entries.length;
+  document.getElementById('picker-count').textContent = fmt(n, 'entry', 'entries');
+  document.getElementById('pick-one-btn').disabled = n < 1;
+  updateMultiBtn(n);
+  save();
+}
+
+function changeMultiCount(d) {
+  const entries = parseEntries(state.pickerText);
+  const max = Math.min(entries.length, 50);
+  const next = state.multiCount + d;
+  if (next < 2 || next > Math.max(max, 2)) return;
+  state.multiCount = next;
+  document.getElementById('multi-count-val').textContent = state.multiCount;
+  document.getElementById('pick-multi-label').textContent = state.multiCount;
+  document.getElementById('multi-minus').disabled = state.multiCount <= 2;
+  document.getElementById('multi-plus').disabled = state.multiCount >= max;
+  save();
+}
+
+function updateMultiBtn(n) {
+  const max = Math.min(n, 50);
+  if (state.multiCount > max && max >= 2) state.multiCount = max;
+  if (state.multiCount < 2) state.multiCount = 2;
+  document.getElementById('multi-count-val').textContent = state.multiCount;
+  document.getElementById('pick-multi-label').textContent = state.multiCount;
+  document.getElementById('multi-minus').disabled = state.multiCount <= 2;
+  document.getElementById('multi-plus').disabled = state.multiCount >= max || n < 2;
+  document.getElementById('pick-multi-btn').disabled = n < 2;
+}
+
+function pickOne() {
+  const entries = parseEntries(state.pickerText);
+  if (!entries.length) return;
+  lastPickMode = 'one';
+  document.getElementById('pick-again-btn').style.display = 'none';
+  runDrumroll(entries, 1, (picked) => {
+    showPickResult([picked[0]], 'one');
+    addPickHistory([picked[0]]);
+    document.getElementById('pick-again-btn').style.display = 'flex';
+  });
+}
+
+function pickMulti() {
+  const entries = parseEntries(state.pickerText);
+  if (entries.length < 2) return;
+  const n = Math.min(state.multiCount, entries.length);
+  lastPickMode = 'multi';
+  document.getElementById('pick-again-btn').style.display = 'none';
+  runDrumroll(entries, n, (picked) => {
+    showPickResult(picked, 'multi');
+    addPickHistory(picked);
+    document.getElementById('pick-again-btn').style.display = 'flex';
+  });
+}
+
+function pickAgain() {
+  if (lastPickMode === 'one') pickOne();
+  else if (lastPickMode === 'multi') pickMulti();
+}
+
+function runDrumroll(entries, n, callback) {
+  const area = document.getElementById('result-area');
+  let ticks = 0;
+  const totalTicks = 22;
+
+  function showFlash() {
+    const sample = shuffle(entries).slice(0, n);
+    if (n === 1) {
+      area.innerHTML = `<div class="drumroll-flash">${sample[0]}</div>`;
+    } else {
+      area.innerHTML = `<div class="multi-results">${
+        sample.map(v => `<div class="multi-chip" style="color:#64748b">${v}</div>`).join('')
+      }</div>`;
+    }
+  }
+
+  showFlash();
+  let delay = 30;
+  function tick() {
+    ticks++;
+    const progress = ticks / totalTicks;
+    // Slow down near end
+    delay = 30 + Math.pow(progress, 2) * 180;
+    showFlash();
+    if (ticks < totalTicks) {
+      setTimeout(tick, delay);
+    } else {
+      // Final pick
+      const shuffled = shuffle(entries);
+      const picked = shuffled.slice(0, n);
+      callback(picked);
+    }
+  }
+  setTimeout(tick, delay);
+}
+
+function showPickResult(vals, type) {
+  const area = document.getElementById('result-area');
+  if (type === 'one') {
+    area.innerHTML = `
+      <div class="drumroll-single">
+        <div class="drumroll-label"><i class="fa-solid fa-star" style="color:#ca8a04"></i> Selected</div>
+        <div class="drumroll-value">${escHtml(vals[0])}</div>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <div style="width:100%">
+        <div class="drumroll-label" style="text-align:center;margin-bottom:.75rem">
+          <i class="fa-solid fa-star" style="color:#ca8a04"></i> ${vals.length} Selected
+        </div>
+        <div class="multi-results">${
+          vals.map(v => `<div class="multi-chip">${escHtml(v)}</div>`).join('')
+        }</div>
+      </div>`;
+  }
+}
+
+function addPickHistory(vals) {
+  state.pickHistory.unshift({ vals, time: timeNow() });
+  if (state.pickHistory.length > 10) state.pickHistory.pop();
+  renderPickHistory();
+  save();
+}
+
+function renderPickHistory() {
+  const el = document.getElementById('pick-history-list');
+  if (!state.pickHistory.length) {
+    el.innerHTML = '<div class="hist-empty">No picks yet.</div>';
+    return;
+  }
+  el.innerHTML = state.pickHistory.map((h, i) => `
+    <div class="pick-hist-item" style="animation-delay:${i * 30}ms">
+      <div class="pick-hist-num">#${i+1}</div>
+      <div class="pick-hist-vals">${h.vals.map(v => escHtml(v)).join(' &middot; ')}</div>
+      <div class="pick-hist-time">${h.time}</div>
+    </div>`).join('');
+}
+
+function clearPickHistory() {
+  state.pickHistory = [];
+  renderPickHistory();
+  save();
+  showToast('Pick history cleared');
+}
+
+/* ═══════════════════════════════════════════
+   GROUPS MODE
+═══════════════════════════════════════════ */
+function onGroupsInput() {
+  const text = document.getElementById('groups-textarea').value;
+  state.groupsText = text;
+  const entries = parseEntries(text);
+  const n = entries.length;
+  document.getElementById('groups-count').textContent = fmt(n, 'entry', 'entries');
+  document.getElementById('sort-groups-btn').disabled = n < 2;
+  updateGroupCalc();
+  save();
+}
+
+function setGroupMode(mode) {
+  state.groupMode = mode;
+  document.getElementById('toggle-by-size').classList.toggle('active', mode === 'size');
+  document.getElementById('toggle-by-count').classList.toggle('active', mode === 'count');
+  document.getElementById('size-input-wrap').style.display = mode === 'size' ? '' : 'none';
+  document.getElementById('count-input-wrap').style.display = mode === 'count' ? '' : 'none';
+  updateGroupCalc();
+  save();
+}
+
+function updateGroupCalc() {
+  const entries = parseEntries(state.groupsText);
+  const n = entries.length;
+  const sizeEl = document.getElementById('size-calc-hint');
+  const countEl = document.getElementById('count-calc-hint');
+
+  if (state.groupMode === 'size') {
+    const s = parseInt(document.getElementById('group-size-input').value) || 1;
+    state.groupSizeVal = s;
+    if (n < 2) { sizeEl.innerHTML = 'Enter entries above'; return; }
+    const numGroups = Math.ceil(n / s);
+    sizeEl.innerHTML = `<span>${numGroups} group${numGroups !== 1 ? 's' : ''}</span> &middot; last group may have ${n % s || s} ${n % s === 1 ? 'person' : 'people'}`;
+  } else {
+    const g = parseInt(document.getElementById('group-count-input').value) || 1;
+    state.groupCountVal = g;
+    if (n < 2) { countEl.innerHTML = 'Enter entries above'; return; }
+    const sizePerGroup = Math.ceil(n / g);
+    countEl.innerHTML = `~<span>${sizePerGroup}</span> per group &middot; ${g} group${g !== 1 ? 's' : ''}`;
+  }
+  save();
+}
+
+function buildGroups(entries) {
+  const shuffled = shuffle(entries);
+  const n = shuffled.length;
+  let numGroups;
+
+  if (state.groupMode === 'size') {
+    const s = Math.max(1, parseInt(document.getElementById('group-size-input').value) || 3);
+    numGroups = Math.ceil(n / s);
+  } else {
+    numGroups = Math.max(1, Math.min(parseInt(document.getElementById('group-count-input').value) || 3, n));
+  }
+
+  const groups = Array.from({ length: numGroups }, () => []);
+  shuffled.forEach((item, i) => groups[i % numGroups].push(item));
+  return groups;
+}
+
+function sortGroups() {
+  const entries = parseEntries(state.groupsText);
+  if (entries.length < 2) return;
+  const groups = buildGroups(entries);
+  lastGroups = groups;
+  document.getElementById('reshuffle-btn').disabled = false;
+  renderGroups(groups);
+  addGroupHistory(groups);
+}
+
+function reshuffleGroups() {
+  if (!state.groupsText.trim()) return;
+  const entries = parseEntries(state.groupsText);
+  const groups = buildGroups(entries);
+  lastGroups = groups;
+  renderGroups(groups);
+  addGroupHistory(groups);
+}
+
+function renderGroups(groups) {
+  const out = document.getElementById('groups-output');
+  const exportRow = document.getElementById('export-row');
+  if (!groups || !groups.length) {
+    out.innerHTML = '<div class="groups-placeholder"><i class="fa-solid fa-layer-group"></i><span>No groups to display.</span></div>';
+    exportRow.style.display = 'none';
+    return;
+  }
+  exportRow.style.display = 'flex';
+  out.innerHTML = `<div class="groups-output">${
+    groups.map((g, i) => `
+      <div class="group-card gc-${i % 8}" style="animation-delay:${i * 55}ms">
+        <div class="group-card-title">
+          <i class="fa-solid fa-users"></i> Group ${i + 1}
+          <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:.65rem;opacity:.5">${g.length}</span>
+        </div>
+        ${g.map(m => `
+          <div class="group-member">
+            <div class="group-member-dot"></div>
+            <span>${escHtml(m)}</span>
+          </div>`).join('')}
+      </div>`).join('')
+  }</div>`;
+}
+
+function addGroupHistory(groups) {
+  const n = groups.reduce((s, g) => s + g.length, 0);
+  state.groupHistory.unshift({
+    groups: groups.map(g => [...g]),
+    summary: `${groups.length} groups, ${n} entries`,
+    time: timeNow()
+  });
+  if (state.groupHistory.length > 5) state.groupHistory.pop();
+  renderGroupHistory();
+  save();
+}
+
+function renderGroupHistory() {
+  const el = document.getElementById('group-history-list');
+  if (!state.groupHistory.length) {
+    el.innerHTML = '<div class="hist-empty">No group arrangements yet.</div>';
+    return;
+  }
+  el.innerHTML = state.groupHistory.map((h, i) => `
+    <div class="group-hist-item" onclick="loadHistoryGroup(${i})" style="animation-delay:${i * 30}ms">
+      <div class="group-hist-meta">
+        <span class="group-hist-badge">${h.groups.length} groups</span>
+        <span class="group-hist-summary">${h.summary}</span>
+        <span class="group-hist-time">${h.time}</span>
+      </div>
+      <div class="group-hist-preview">${
+        h.groups.map((g, gi) => `<strong>G${gi+1}:</strong> ${g.map(m => escHtml(m)).join(', ')}`).join(' &nbsp;|&nbsp; ')
+      }</div>
+    </div>`).join('');
+}
+
+function loadHistoryGroup(i) {
+  const h = state.groupHistory[i];
+  if (!h) return;
+  lastGroups = h.groups;
+  document.getElementById('reshuffle-btn').disabled = false;
+  renderGroups(h.groups);
+  showToast('Loaded from history');
+}
+
+function clearGroupHistory() {
+  state.groupHistory = [];
+  renderGroupHistory();
+  save();
+  showToast('Group history cleared');
+}
+
+/* ═══════════════════════════════════════════
+   EXPORT
+═══════════════════════════════════════════ */
+function copyGroupsText() {
+  if (!lastGroups) return;
+  const text = lastGroups.map((g, i) =>
+    `Group ${i+1}:\n${g.map(m => `  - ${m}`).join('\n')}`
+  ).join('\n\n');
+  copyToClipboard(text, 'copy-text-btn', 'Groups copied as text');
+}
+
+function copyGroupsCSV() {
+  if (!lastGroups) return;
+  const maxLen = Math.max(...lastGroups.map(g => g.length));
+  const header = lastGroups.map((_, i) => `Group ${i+1}`).join(',');
+  const rows = [];
+  for (let r = 0; r < maxLen; r++) {
+    rows.push(lastGroups.map(g => `"${(g[r] || '').replace(/"/g, '""')}"`).join(','));
+  }
+  copyToClipboard([header, ...rows].join('\n'), 'copy-csv-btn', 'Groups copied as CSV');
+}
+
+function copyToClipboard(text, btnId, msg) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.classList.add('success');
+    showToast(msg);
+    setTimeout(() => btn.classList.remove('success'), 1800);
+  }).catch(() => {
+    showToast('Copy failed — try manually', 'fa-triangle-exclamation');
+  });
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+function init() {
+  load();
+
+  // Restore picker textarea
+  if (state.pickerText) {
+    document.getElementById('picker-textarea').value = state.pickerText;
+    onPickerInput();
+  }
+
+  // Restore groups textarea
+  if (state.groupsText) {
+    document.getElementById('groups-textarea').value = state.groupsText;
+    onGroupsInput();
+  }
+
+  // Restore multi count
+  document.getElementById('multi-count-val').textContent = state.multiCount;
+  document.getElementById('pick-multi-label').textContent = state.multiCount;
+  document.getElementById('multi-minus').disabled = state.multiCount <= 2;
+
+  // Restore group mode
+  setGroupMode(state.groupMode || 'size');
+
+  // Restore group config inputs
+  document.getElementById('group-size-input').value = state.groupSizeVal || 3;
+  document.getElementById('group-count-input').value = state.groupCountVal || 3;
+
+  // Render histories
+  renderPickHistory();
+  renderGroupHistory();
+}
+
+init();
+</script>
+</body>
+</html>

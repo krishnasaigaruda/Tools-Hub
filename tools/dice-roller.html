@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dice Roller | Tools Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <!-- Three.js UMD (no fetch / module import needed, works on file://) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+
+    .header{background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+    .back-btn{display:flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.9rem;font-weight:500;background:rgba(255,255,255,.15);padding:.4rem .8rem;border-radius:8px;transition:background .2s}
+    .back-btn:hover{background:rgba(255,255,255,.25)}
+    .header-title{display:flex;align-items:center;gap:.6rem;font-size:1.25rem;font-weight:700;color:#fff}
+
+    .container{max-width:780px;margin:0 auto;padding:2rem 1rem 4rem}
+    .card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+    .card-title{font-size:.75rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+    .card-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .card-title-row .card-title{margin-bottom:0}
+
+    .count-row{display:flex;align-items:center;gap:1rem}
+    .count-label{flex:1;font-size:.95rem;color:#cbd5e1;font-weight:500}
+    .count-ctrl{display:flex;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:10px;overflow:hidden}
+    .cnt-btn{width:38px;height:38px;background:transparent;border:none;color:#ca8a04;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+    .cnt-btn:hover:not(:disabled){background:rgba(202,138,4,.15)}
+    .cnt-btn:disabled{color:#475569;cursor:not-allowed}
+    .cnt-val{min-width:42px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700;color:#fde68a;border-left:1px solid #334155;border-right:1px solid #334155;height:38px;line-height:38px}
+
+    .dice-types{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    @media(max-width:500px){.dice-types{grid-template-columns:repeat(4,1fr)}}
+    .dt-btn{border:1px solid #334155;background:#0f172a;border-radius:10px;cursor:pointer;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .18s;color:#94a3b8}
+    .dt-btn:hover:not(.active){border-color:#ca8a04;color:#fde68a}
+    .dt-btn.active{background:linear-gradient(135deg,#92400e,#ca8a04);border-color:#ca8a04;color:#fff;box-shadow:0 0 14px rgba(202,138,4,.35)}
+    .dt-label{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700}
+    .die-shape-svg{width:36px;height:36px;flex-shrink:0}
+
+    .roll-wrap{display:flex;flex-direction:column;align-items:center;gap:.6rem}
+    .roll-btn{padding:1rem 3.5rem;background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);border:none;border-radius:14px;color:#fff;font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(202,138,4,.3);display:flex;align-items:center;gap:.6rem;letter-spacing:.02em}
+    .roll-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 8px 30px rgba(202,138,4,.5)}
+    .roll-btn:active:not(:disabled){transform:translateY(0)}
+    .roll-btn:disabled{opacity:.5;cursor:not-allowed}
+    .hint{font-size:.75rem;color:#475569}
+    .hint kbd{font-family:'JetBrains Mono',monospace;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 5px;font-size:.7rem;color:#94a3b8}
+
+    .canvas-wrap{position:relative;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%, #0d1f3c 0%, #050c1a 100%)}
+    #diceCanvas{display:block;width:100%;height:300px}
+    #rollLabel{font-size:.75rem;color:#64748b;text-align:center;margin-top:.5rem;min-height:1.1em;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+
+    .dice-grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;min-height:90px;align-items:center}
+    .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90px;color:#334155;gap:.5rem;font-size:.85rem}
+    .placeholder i{font-size:2.5rem}
+
+    .die-result{width:80px;height:80px;background:#0f172a;border:2px solid #334155;border-radius:12px;position:relative;padding:10px;display:grid;gap:4px;animation:dieIn .35s ease-out forwards;opacity:0;animation-delay:var(--d,0ms)}
+    .die-result.max{border-color:#fbbf24;box-shadow:0 0 18px rgba(251,191,36,.4)}
+    .die-result.min{border-color:#475569}
+    @keyframes dieIn{
+      0%  {opacity:0;transform:scale(.7) rotate(var(--rot,5deg))}
+      65% {opacity:1;transform:scale(1.1) rotate(calc(var(--rot,-5deg)*-0.3))}
+      100%{opacity:1;transform:scale(1) rotate(0deg)}
+    }
+    .die-d6{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}
+    .pip{width:10px;height:10px;background:#ca8a04;border-radius:50%;align-self:center;justify-self:center}
+    .pip.off{background:transparent}
+
+    .die-svg-result{width:80px;height:80px;animation:dieIn .35s ease-out forwards;opacity:0;animation-delay:var(--d,0ms)}
+
+    .total-row{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #334155;text-align:center}
+    .total-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748b}
+    .total-num{font-family:'JetBrains Mono',monospace;font-size:3.5rem;font-weight:700;color:#fde68a;line-height:1;animation:totalPop .4s ease-out}
+    @keyframes totalPop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+    .total-break{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#475569;margin-top:.25rem}
+
+    .hist-item{display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;background:#0f172a;border:1px solid #1e293b;border-radius:8px;animation:fadeIn .2s ease-out}
+    @keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+    .hist-notation{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;color:#ca8a04;min-width:56px}
+    .hist-rolls{flex:1;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#475569}
+    .hist-total{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:#fde68a;min-width:36px;text-align:right}
+    .hist-time{font-size:.7rem;color:#334155;min-width:48px;text-align:right}
+    .hist-empty{color:#475569;font-size:.85rem;text-align:center;padding:1rem 0}
+    .clr-btn{background:transparent;border:1px solid #334155;border-radius:7px;color:#64748b;font-family:'Outfit',sans-serif;font-size:.75rem;padding:.35rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .15s}
+    .clr-btn:hover{border-color:#ef4444;color:#ef4444}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../Tools.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  <div class="header-title"><i class="fa-solid fa-dice"></i> Dice Roller</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">Number of Dice</div>
+    <div class="count-row">
+      <div class="count-label">How many dice to roll?</div>
+      <div class="count-ctrl">
+        <button class="cnt-btn" id="btnMinus"><i class="fa-solid fa-minus"></i></button>
+        <div class="cnt-val" id="cntDisplay">1</div>
+        <button class="cnt-btn" id="btnPlus"><i class="fa-solid fa-plus"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dice Type</div>
+    <div class="dice-types" id="diceTypes"></div>
+  </div>
+
+  <div class="card">
+    <div class="roll-wrap">
+      <button class="roll-btn" id="rollBtn">
+        <i class="fa-solid fa-dice"></i> Roll Dice
+      </button>
+      <p class="hint">Press <kbd>Space</kbd> to roll</p>
+    </div>
+  </div>
+
+  <!-- 3D View -->
+  <div class="card">
+    <div class="card-title">3D Roll</div>
+    <div class="canvas-wrap">
+      <canvas id="diceCanvas"></canvas>
+    </div>
+    <div id="rollLabel">Idle — hit Roll Dice to throw</div>
+  </div>
+
+  <!-- Results -->
+  <div class="card">
+    <div class="card-title">Results</div>
+    <div class="dice-grid" id="diceGrid">
+      <div class="placeholder"><i class="fa-solid fa-dice-d20"></i><span>Roll the dice to see results</span></div>
+    </div>
+    <div id="totalRow"></div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-title-row">
+      <div class="card-title">Roll History <span style="margin-left:.5rem;font-weight:400;color:#334155">(saved)</span></div>
+      <button class="clr-btn" id="clrBtn"><i class="fa-solid fa-trash-can"></i> Clear</button>
+    </div>
+    <div id="histList"><div class="hist-empty">No rolls yet.</div></div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   Constants / state
+════════════════════════════════════════════════ */
+const LS_KEY = 'diceroller_v2';
+
+const DIE_SVG = {
+  4: `<svg viewBox="0 0 40 40" class="die-shape-svg"><polygon points="20,3 38,36 2,36" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><polygon points="20,3 38,36 2,36" fill="currentColor" opacity=".12"/></svg>`,
+  6: `<svg viewBox="0 0 40 40" class="die-shape-svg"><rect x="3" y="3" width="34" height="34" rx="7" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="3" y="3" width="34" height="34" rx="7" fill="currentColor" opacity=".12"/><circle cx="14" cy="14" r="3" fill="currentColor" opacity=".7"/><circle cx="26" cy="26" r="3" fill="currentColor" opacity=".7"/></svg>`,
+  8: `<svg viewBox="0 0 40 40" class="die-shape-svg"><polygon points="20,2 38,20 20,38 2,20" fill="none" stroke="currentColor" stroke-width="2.5"/><polygon points="20,2 38,20 20,38 2,20" fill="currentColor" opacity=".12"/></svg>`,
+  10:`<svg viewBox="0 0 40 40" class="die-shape-svg"><polygon points="20,2 36,12 38,30 20,38 2,30 4,12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><polygon points="20,2 36,12 38,30 20,38 2,30 4,12" fill="currentColor" opacity=".12"/></svg>`,
+  12:`<svg viewBox="0 0 40 40" class="die-shape-svg"><polygon points="20,2 31,6 38,16 38,24 31,34 20,38 9,34 2,24 2,16 9,6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><polygon points="20,2 31,6 38,16 38,24 31,34 20,38 9,34 2,24 2,16 9,6" fill="currentColor" opacity=".12"/></svg>`,
+  20:`<svg viewBox="0 0 40 40" class="die-shape-svg"><polygon points="20,2 37,14 31,34 9,34 3,14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><polygon points="20,2 37,14 31,34 9,34 3,14" fill="currentColor" opacity=".12"/></svg>`,
+  100:`<svg viewBox="0 0 40 40" class="die-shape-svg"><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="20" r="17" fill="currentColor" opacity=".12"/><text x="20" y="25" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="currentColor" opacity=".8">%</text></svg>`
+};
+
+const PIP_LAYOUTS = {
+  1:[[0,0,0],[0,1,0],[0,0,0]],
+  2:[[0,0,1],[0,0,0],[1,0,0]],
+  3:[[0,0,1],[0,1,0],[1,0,0]],
+  4:[[1,0,1],[0,0,0],[1,0,1]],
+  5:[[1,0,1],[0,1,0],[1,0,1]],
+  6:[[1,0,1],[1,0,1],[1,0,1]]
+};
+
+let diceCount   = 1;
+let diceType    = 6;
+let rollHistory = [];
+let isRolling   = false;
+
+/* ════════════════════════════════════════════════
+   Three.js scene
+════════════════════════════════════════════════ */
+let renderer, scene, camera, diceGroup;
+let velX = 0, velY = 0, velZ = 0;
+let rolling3D    = false;
+let idleSpinning = true;
+let settling     = false;
+let settleTarget = null; // THREE.Quaternion
+let currentMeshSides = -1; // which die type is currently loaded
+
+/* ── Canvas face textures for d6 ── */
+function makePipTexture(n) {
+  const C = document.createElement('canvas');
+  C.width = C.height = 256;
+  const ctx = C.getContext('2d');
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 256, 256);
+  grad.addColorStop(0, '#0e1e38');
+  grad.addColorStop(1, '#091628');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(4, 4, 248, 248, 28);
+  ctx.fill();
+
+  // Gold border
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.roundRect(8, 8, 240, 240, 24);
+  ctx.stroke();
+
+  // Pips
+  const layout = PIP_LAYOUTS[n];
+  const xs = [52, 128, 204];
+  const ys = [52, 128, 204];
+  layout.forEach((row, ri) => {
+    row.forEach((on, ci) => {
+      if (!on) return;
+      const gr = ctx.createRadialGradient(xs[ci]-4, ys[ri]-4, 2, xs[ci], ys[ri], 22);
+      gr.addColorStop(0, '#fde68a');
+      gr.addColorStop(1, '#b45309');
+      ctx.beginPath();
+      ctx.arc(xs[ci], ys[ri], 22, 0, Math.PI * 2);
+      ctx.fillStyle = gr;
+      ctx.fill();
+    });
+  });
+
+  return new THREE.CanvasTexture(C);
+}
+
+/* ── Poly face texture (number in center) ── */
+function makeNumberTexture(n, color) {
+  const C = document.createElement('canvas');
+  C.width = C.height = 256;
+  const ctx = C.getContext('2d');
+  ctx.clearRect(0, 0, 256, 256);
+
+  ctx.font = 'bold 110px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color || '#fde68a';
+  ctx.fillText(String(n), 128, 138);
+
+  return new THREE.CanvasTexture(C);
+}
+
+/* ── d10 custom geometry ── */
+function makeD10Geo(r) {
+  const verts = [], idx = [];
+  verts.push(0, r, 0); // 0 top
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
+    verts.push(r * 0.92 * Math.cos(a), r * 0.12, r * 0.92 * Math.sin(a));
+  }
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    verts.push(r * 0.92 * Math.cos(a), -r * 0.12, r * 0.92 * Math.sin(a));
+  }
+  verts.push(0, -r, 0); // 11 bottom
+  for (let i = 0; i < 5; i++) idx.push(0, 1 + i, 1 + (i + 1) % 5);
+  for (let i = 0; i < 5; i++) {
+    idx.push(1 + i, 6 + i, 6 + (i + 4) % 5);
+    idx.push(1 + i, 1 + (i + 1) % 5, 6 + i);
+  }
+  for (let i = 0; i < 5; i++) idx.push(11, 6 + (i + 1) % 5, 6 + i);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function getDieGeometry(sides) {
+  switch (sides) {
+    case 4:   return new THREE.TetrahedronGeometry(2.2);
+    case 6:   return new THREE.BoxGeometry(2.1, 2.1, 2.1);
+    case 8:   return new THREE.OctahedronGeometry(2.15);
+    case 10:  return makeD10Geo(2.2);
+    case 12:  return new THREE.DodecahedronGeometry(2.1);
+    case 20:  return new THREE.IcosahedronGeometry(2.1);
+    case 100: return new THREE.IcosahedronGeometry(2.1, 1);
+    default:  return new THREE.IcosahedronGeometry(2.1);
+  }
+}
+
+function buildDieMesh(sides) {
+  const geo = getDieGeometry(sides);
+
+  if (sides === 6) {
+    // Per-face canvas textures with pips
+    const mats = [2, 5, 3, 4, 1, 6].map(n =>
+      new THREE.MeshStandardMaterial({ map: makePipTexture(n), roughness: 0.28, metalness: 0.15 })
+    );
+    return new THREE.Mesh(geo, mats);
+  }
+
+  // All other types: metallic body + gold edge lines
+  const body = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    color: 0x0e1e38,
+    roughness: 0.15,
+    metalness: 0.88,
+    emissive: new THREE.Color(0x061020),
+    emissiveIntensity: 0.2,
+  }));
+
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geo),
+    new THREE.LineBasicMaterial({ color: 0xca8a04 })
+  );
+
+  const group = new THREE.Group();
+  group.add(body);
+  group.add(edges);
+  return group;
+}
+
+/* ── Face-up quaternions for d6 (so result face points toward camera +Z) ──
+   BoxGeometry group order: [+X, -X, +Y, -Y, +Z, -Z] = [2, 5, 3, 4, 1, 6]
+   Camera at +Z, so +Z face (value 1) faces camera by default.
+   Ry(θ): +X face toward cam → θ = -π/2.  -X → +π/2.
+   Rx(θ): +Y (value 3) toward cam → sin(θ)=1 → θ = +π/2.
+           -Y (value 4) toward cam → sin(θ)=-1 → θ = -π/2.           ── */
+const D6_QUATS = {
+  1: new THREE.Quaternion(),
+  6: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
+  2: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -Math.PI / 2, 0)),
+  5: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,  Math.PI / 2, 0)),
+  3: new THREE.Quaternion().setFromEuler(new THREE.Euler( Math.PI / 2, 0, 0)), // +Y → cam
+  4: new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), // -Y → cam
+};
+
+function initScene() {
+  const canvasEl = document.getElementById('diceCanvas');
+  const wrap     = canvasEl.parentElement;
+  const W = wrap.clientWidth;
+  const H = 300;
+
+  renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  scene  = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 200);
+  camera.position.set(0, 0.8, 7);
+  camera.lookAt(0, 0, 0);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x304060, 1.0));
+
+  const key = new THREE.DirectionalLight(0xffd47a, 3.0);
+  key.position.set(5, 10, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x4466dd, 0.7);
+  fill.position.set(-5, 3, -4);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xff8800, 0.45);
+  rim.position.set(0, -4, -7);
+  scene.add(rim);
+
+  // Shadow floor
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.ShadowMaterial({ opacity: 0.4 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -2.2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  diceGroup = new THREE.Group();
+  scene.add(diceGroup);
+
+  swapDieMesh(diceType);
+
+  // Resize
+  new ResizeObserver(() => {
+    const W2 = wrap.clientWidth;
+    renderer.setSize(W2, H);
+    camera.aspect = W2 / H;
+    camera.updateProjectionMatrix();
+  }).observe(wrap);
+
+  // Animate loop
+  (function loop() {
+    requestAnimationFrame(loop);
+
+    if (diceGroup.children.length) {
+      if (rolling3D) {
+        diceGroup.rotation.x += velX;
+        diceGroup.rotation.y += velY;
+        diceGroup.rotation.z += velZ;
+        velX *= 0.976;
+        velY *= 0.976;
+        velZ *= 0.976;
+      } else if (settling && settleTarget) {
+        diceGroup.quaternion.slerp(settleTarget, 0.07);
+        if (diceGroup.quaternion.angleTo(settleTarget) < 0.005) {
+          diceGroup.quaternion.copy(settleTarget);
+          settling = false;
+        }
+      } else if (idleSpinning) {
+        diceGroup.rotation.y += 0.006;
+        diceGroup.rotation.x += 0.0012;
+      }
+    }
+
+    renderer.render(scene, camera);
+  })();
+}
+
+function swapDieMesh(sides) {
+  if (currentMeshSides === sides) return;
+  currentMeshSides = sides;
+
+  // Clear old mesh
+  while (diceGroup.children.length) {
+    const c = diceGroup.children[0];
+    diceGroup.remove(c);
+    c.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+      }
+    });
+  }
+
+  const mesh = buildDieMesh(sides);
+  diceGroup.add(mesh);
+  diceGroup.rotation.set(0.55, 0.65, 0.15); // angled so it never shows flat-on
+
+  // Enable shadows on mesh
+  diceGroup.traverse(o => {
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+  });
+}
+
+function triggerRoll(sides, resultValue, callback) {
+  swapDieMesh(sides);
+
+  rolling3D    = true;
+  idleSpinning = false;
+  settling     = false;
+  settleTarget = null;
+
+  velX = (Math.random() - 0.5) * 0.72 + (Math.random() > 0.5 ? 0.28 : -0.28);
+  velY = (Math.random() - 0.5) * 0.72 + (Math.random() > 0.5 ? 0.28 : -0.28);
+  velZ = (Math.random() - 0.5) * 0.38;
+
+  // Bounce on Y
+  const bounce = { t: 0 };
+  const startY = 0;
+  const bounceId = setInterval(() => {
+    bounce.t += 0.06;
+    diceGroup.position.y = Math.abs(Math.sin(bounce.t * 3.2)) * 0.7 * Math.max(0, 1 - bounce.t / 2.8);
+  }, 16);
+
+  setTimeout(() => {
+    rolling3D = false;
+    clearInterval(bounceId);
+    diceGroup.position.y = startY;
+    velX = velY = velZ = 0;
+
+    // Settle to show result face (only d6 has per-face meaning)
+    if (sides === 6 && D6_QUATS[resultValue]) {
+      settleTarget = D6_QUATS[resultValue].clone();
+      settling     = true;
+    } else {
+      // For other types: snap to a neutral "display" angle
+      settleTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.2, 0.4, 0.05));
+      settling     = true;
+    }
+
+    callback();
+    setTimeout(() => { if (!rolling3D) idleSpinning = false; }, 3000);
+  }, 1350);
+}
+
+/* ════════════════════════════════════════════════
+   2-D result helpers
+════════════════════════════════════════════════ */
+function buildD6(value, isMax, isMin) {
+  const layout = PIP_LAYOUTS[value] || PIP_LAYOUTS[1];
+  const cls    = isMax ? 'max' : isMin ? 'min' : '';
+  const pips   = layout.flat().map(on => `<div class="pip${on ? '' : ' off'}"></div>`).join('');
+  return `<div class="die-result die-d6 ${cls}">${pips}</div>`;
+}
+
+function dieSVGResult(sides, value, isMax, isMin) {
+  const bc   = isMax ? '#fbbf24' : isMin ? '#475569' : '#334155';
+  const glow = isMax ? 'filter:drop-shadow(0 0 8px rgba(251,191,36,.6))' : '';
+  const shapes = {
+    4:  `<polygon points="40,5 74,68 6,68" stroke="${bc}" stroke-width="3" fill="#0f172a" stroke-linejoin="round"/>`,
+    8:  `<polygon points="40,4 74,40 40,76 6,40" stroke="${bc}" stroke-width="3" fill="#0f172a"/>`,
+    10: `<polygon points="40,4 66,16 72,48 40,72 8,48 14,16" stroke="${bc}" stroke-width="3" fill="#0f172a" stroke-linejoin="round"/>`,
+    12: `<polygon points="40,4 60,10 72,28 68,50 50,64 30,64 12,50 8,28 20,10" stroke="${bc}" stroke-width="3" fill="#0f172a" stroke-linejoin="round"/>`,
+    20: `<polygon points="40,4 72,26 60,68 20,68 8,26" stroke="${bc}" stroke-width="3" fill="#0f172a" stroke-linejoin="round"/>`,
+    100:`<circle cx="40" cy="40" r="36" stroke="${bc}" stroke-width="3" fill="#0f172a"/>`,
+  };
+  const shape = shapes[sides] || shapes[100];
+  const ty    = sides === 4 ? 56 : 48;
+  const fs    = value >= 100 ? 14 : value >= 10 ? 20 : 24;
+  return `<svg viewBox="0 0 80 80" class="die-svg-result" style="${glow}">
+    ${shape}
+    <text x="40" y="${ty}" text-anchor="middle" dominant-baseline="central"
+      font-family="'JetBrains Mono',monospace" font-size="${fs}" font-weight="700"
+      fill="${isMax ? '#fbbf24' : '#fde68a'}">${value}</text>
+  </svg>`;
+}
+
+/* ════════════════════════════════════════════════
+   Type buttons
+════════════════════════════════════════════════ */
+function buildTypeButtons() {
+  const container = document.getElementById('diceTypes');
+  [4, 6, 8, 10, 12, 20, 100].forEach(sides => {
+    const btn = document.createElement('button');
+    btn.className = 'dt-btn' + (sides === diceType ? ' active' : '');
+    btn.dataset.sides = sides;
+    btn.innerHTML = (DIE_SVG[sides] || '') + `<span class="dt-label">d${sides}</span>`;
+    btn.addEventListener('click', () => selectType(sides));
+    container.appendChild(btn);
+  });
+}
+
+function selectType(sides) {
+  diceType = sides;
+  document.querySelectorAll('.dt-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.sides) === sides));
+  swapDieMesh(sides);
+}
+
+function changeDiceCount(d) {
+  const next = diceCount + d;
+  if (next < 1 || next > 10) return;
+  diceCount = next;
+  document.getElementById('cntDisplay').textContent = diceCount;
+  document.getElementById('btnMinus').disabled = diceCount === 1;
+  document.getElementById('btnPlus').disabled  = diceCount === 10;
+}
+
+/* ════════════════════════════════════════════════
+   Roll
+════════════════════════════════════════════════ */
+function rollDice() {
+  if (isRolling) return;
+  isRolling = true;
+  document.getElementById('rollBtn').disabled = true;
+  document.getElementById('diceGrid').innerHTML = '';
+  document.getElementById('totalRow').innerHTML = '';
+  document.getElementById('rollLabel').textContent = `Rolling ${diceCount}d${diceType}…`;
+
+  // Pre-roll the values so we know the result value for d6 face-settling
+  const rolls   = Array.from({length: diceCount}, () => Math.floor(Math.random() * diceType) + 1);
+  const primary = rolls[0]; // use first die's value to orient 3-D model
+
+  triggerRoll(diceType, primary, () => finishRoll(rolls));
+}
+
+function finishRoll(rolls) {
+  const total  = rolls.reduce((a, b) => a + b, 0);
+  const maxVal = diceType;
+  const grid   = document.getElementById('diceGrid');
+
+  grid.innerHTML = rolls.map((v, i) => {
+    const rot   = (Math.random() * 10 - 5).toFixed(1);
+    const delay = i * 55;
+    const isMax = v === maxVal;
+    const isMin = v === 1;
+    return `<div style="--d:${delay}ms;--rot:${rot}deg">${
+      diceType === 6 ? buildD6(v, isMax, isMin) : dieSVGResult(diceType, v, isMax, isMin)
+    }</div>`;
+  }).join('');
+
+  document.getElementById('totalRow').innerHTML = `
+    <div class="total-row">
+      <div class="total-lbl">Total</div>
+      <div class="total-num">${total}</div>
+      ${rolls.length > 1 ? `<div class="total-break">[${rolls.join(' + ')}]</div>` : ''}
+    </div>`;
+
+  document.getElementById('rollLabel').textContent = `Rolled ${diceCount}d${diceType} → ${total}`;
+
+  addToHistory(diceCount, diceType, rolls, total);
+  isRolling = false;
+  document.getElementById('rollBtn').disabled = false;
+}
+
+/* ════════════════════════════════════════════════
+   History / localStorage
+════════════════════════════════════════════════ */
+function save()  { localStorage.setItem(LS_KEY, JSON.stringify({ rollHistory })); }
+function load()  {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    if (d.rollHistory) rollHistory = d.rollHistory;
+  } catch(e) {}
+}
+function addToHistory(count, sides, rolls, total) {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  rollHistory.unshift({count, sides, rolls, total, time});
+  if (rollHistory.length > 20) rollHistory.pop();
+  renderHistory();
+  save();
+}
+function renderHistory() {
+  const el = document.getElementById('histList');
+  if (!rollHistory.length) { el.innerHTML = '<div class="hist-empty">No rolls yet.</div>'; return; }
+  el.innerHTML = rollHistory.map(h => `
+    <div class="hist-item">
+      <div class="hist-notation">${h.count}d${h.sides}</div>
+      <div class="hist-rolls">[${h.rolls.join(', ')}]</div>
+      <div class="hist-total">${h.total}</div>
+      <div class="hist-time">${h.time}</div>
+    </div>`).join('');
+}
+function clearHistory() { rollHistory = []; renderHistory(); save(); }
+
+/* ════════════════════════════════════════════════
+   Boot
+════════════════════════════════════════════════ */
+document.getElementById('btnMinus').disabled = true;
+document.getElementById('btnMinus').addEventListener('click', () => changeDiceCount(-1));
+document.getElementById('btnPlus').addEventListener('click',  () => changeDiceCount(1));
+document.getElementById('rollBtn').addEventListener('click',  rollDice);
+document.getElementById('clrBtn').addEventListener('click',   clearHistory);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && document.activeElement === document.body) { e.preventDefault(); rollDice(); }
+});
+
+buildTypeButtons();
+load();
+renderHistory();
+initScene();
+</script>
+</body>
+</html>

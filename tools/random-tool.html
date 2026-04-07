@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Random Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #92400e, #b45309, #ca8a04);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      position: relative;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 0.4rem 0.85rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .back-btn:hover {
+      background: rgba(0,0,0,0.32);
+      color: #fff;
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .header-title i {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Slot Machine Card ── */
+    .slot-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      margin-bottom: 2rem;
+    }
+
+    .slot-window-wrapper {
+      position: relative;
+      margin: 0 auto 2rem;
+      width: 100%;
+      max-width: 420px;
+      height: 72px;
+      background: #0f172a;
+      border: 2px solid #334155;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* amber glow edges */
+    .slot-window-wrapper::before,
+    .slot-window-wrapper::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 24px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .slot-window-wrapper::before {
+      top: 0;
+      background: linear-gradient(to bottom, #0f172a, transparent);
+    }
+    .slot-window-wrapper::after {
+      bottom: 0;
+      background: linear-gradient(to top, #0f172a, transparent);
+    }
+
+    /* center highlight bar */
+    .slot-highlight {
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 36px;
+      transform: translateY(-50%);
+      border-top: 1px solid rgba(202,138,4,0.45);
+      border-bottom: 1px solid rgba(202,138,4,0.45);
+      background: rgba(202,138,4,0.07);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .slot-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      will-change: transform;
+    }
+
+    .slot-item {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 0.02em;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .slot-item.center {
+      color: #fbbf24;
+    }
+
+    /* ── Result display ── */
+    .result-display {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      animation: fadeIn 0.4s ease;
+    }
+    .result-display.visible {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #92400e, #ca8a04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(202,138,4,0.35);
+    }
+
+    .result-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .result-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    /* ── Idle placeholder ── */
+    .idle-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      color: #475569;
+    }
+    .idle-placeholder i {
+      font-size: 2.2rem;
+      color: #334155;
+    }
+    .idle-placeholder p {
+      font-size: 0.95rem;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      justify-content: center;
+      margin-top: 1.75rem;
+    }
+
+    button {
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 0.65rem 1.5rem;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    button:active { transform: scale(0.96); }
+
+    .btn-spin {
+      background: linear-gradient(135deg, #b45309, #ca8a04);
+      color: #fff;
+      font-size: 1.15rem;
+      padding: 0.8rem 2.4rem;
+      box-shadow: 0 4px 18px rgba(202,138,4,0.35);
+    }
+    .btn-spin:hover {
+      box-shadow: 0 6px 24px rgba(202,138,4,0.55);
+      background: linear-gradient(135deg, #ca8a04, #d97706);
+    }
+    .btn-spin:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-go {
+      background: #ca8a04;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(202,138,4,0.3);
+    }
+    .btn-go:hover { background: #d97706; }
+
+    .btn-again {
+      background: transparent;
+      border: 1.5px solid #334155;
+      color: #94a3b8;
+    }
+    .btn-again:hover {
+      border-color: #ca8a04;
+      color: #fbbf24;
+    }
+
+    /* ── History Card ── */
+    .history-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+    .history-header i { color: #ca8a04; }
+
+    .history-empty {
+      text-align: center;
+      color: #475569;
+      font-size: 0.9rem;
+      padding: 1rem 0;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .history-item:hover {
+      border-color: #ca8a04;
+      background: #1a2234;
+    }
+
+    .history-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: #475569;
+      min-width: 18px;
+    }
+
+    .history-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: rgba(202,138,4,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: #ca8a04;
+      flex-shrink: 0;
+    }
+
+    .history-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      flex: 1;
+    }
+
+    .history-arrow {
+      color: #475569;
+      font-size: 0.75rem;
+    }
+
+    /* ── Confetti ── */
+    .confetti-container {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 0;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      opacity: 0;
+      animation: confettiFall 1.6s ease-in forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .slot-card { padding: 1.75rem 1.25rem; }
+      .result-name { font-size: 1.25rem; }
+      .btn-spin { font-size: 1rem; padding: 0.75rem 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../Tools.html" class="back-btn">
+    <i class="fa-solid fa-arrow-left"></i> Back
+  </a>
+  <div class="header-title">
+    <i class="fa-solid fa-shuffle"></i>
+    Random Tool
+  </div>
+</header>
+
+<main>
+  <p class="subtitle">Feeling adventurous? Let fate decide your next tool.</p>
+
+  <!-- Slot Machine Card -->
+  <div class="slot-card">
+
+    <!-- Slot window -->
+    <div class="slot-window-wrapper" id="slotWindowWrapper">
+      <div class="slot-highlight"></div>
+      <div class="slot-track" id="slotTrack">
+        <!-- items injected by JS -->
+      </div>
+    </div>
+
+    <!-- Idle state -->
+    <div class="idle-placeholder" id="idlePlaceholder">
+      <i class="fa-solid fa-circle-question"></i>
+      <p>Hit Spin! to discover a random tool</p>
+    </div>
+
+    <!-- Result -->
+    <div class="result-display" id="resultDisplay">
+      <div class="result-icon" id="resultIcon">
+        <i class="fa-solid fa-star" id="resultIconEl"></i>
+      </div>
+      <div class="result-name" id="resultName">—</div>
+      <div class="result-path" id="resultPath">—</div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn-spin" id="spinBtn" onclick="startSpin()">
+        <i class="fa-solid fa-rotate"></i> Spin!
+      </button>
+      <button class="btn-go" id="goBtn" style="display:none" onclick="goToTool()">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Go to Tool
+      </button>
+      <button class="btn-again" id="againBtn" style="display:none" onclick="startSpin()">
+        <i class="fa-solid fa-arrows-rotate"></i> Spin Again
+      </button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-header">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      Recent Picks
+    </div>
+    <div class="history-empty" id="historyEmpty">No spins yet — give it a whirl!</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</main>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+  /* ── Tool list ── */
+  const TOOLS = [
+    { name: 'Document Creator',      path: 'tools/document.html',        icon: 'fa-solid fa-file-lines' },
+    { name: 'Spreadsheet',           path: 'tools/spreadsheet.html',     icon: 'fa-solid fa-table' },
+    { name: 'Presentation',          path: 'tools/presentation.html',    icon: 'fa-solid fa-display' },
+    { name: 'Notes',                 path: 'tools/notes.html',           icon: 'fa-solid fa-note-sticky' },
+    { name: 'Notebook',              path: 'tools/onenote.html',         icon: 'fa-solid fa-book' },
+    { name: 'To-Do List',            path: 'tools/todo.html',            icon: 'fa-solid fa-list-check' },
+    { name: 'Calendar',              path: 'tools/calendar.html',        icon: 'fa-solid fa-calendar-days' },
+    { name: 'Whiteboard',            path: 'tools/whiteboard.html',      icon: 'fa-solid fa-chalkboard' },
+    { name: 'Image Editor',          path: 'tools/image-editor.html',    icon: 'fa-solid fa-image' },
+    { name: 'Drawing Pad',           path: 'tools/drawing-pad.html',     icon: 'fa-solid fa-pen-nib' },
+    { name: 'Color Picker',          path: 'tools/color-picker.html',    icon: 'fa-solid fa-palette' },
+    { name: 'Calculator',            path: 'tools/calculator.html',      icon: 'fa-solid fa-calculator' },
+    { name: 'Scientific Calculator', path: 'tools/scientific-calc.html', icon: 'fa-solid fa-square-root-variable' },
+    { name: 'Graph Plotter',         path: 'tools/graph-plotter.html',   icon: 'fa-solid fa-chart-line' },
+    { name: 'Password Generator',    path: 'tools/password-gen.html',    icon: 'fa-solid fa-key' },
+    { name: 'QR Code Generator',     path: 'tools/qr-generator.html',    icon: 'fa-solid fa-qrcode' },
+    { name: 'Map',                   path: 'tools/map.html',             icon: 'fa-solid fa-map-location-dot' },
+    { name: 'Dice Roller',           path: 'tools/dice-roller.html',     icon: 'fa-solid fa-dice' },
+    { name: 'Coin Flip',             path: 'tools/coin-flip.html',       icon: 'fa-solid fa-coins' },
+    { name: 'Random Number',         path: 'tools/random-generator.html',icon: 'fa-solid fa-hashtag' },
+    { name: 'Random Word',           path: 'tools/random-word.html',     icon: 'fa-solid fa-spell-check' },
+  ];
+
+  /* ── State ── */
+  let spinning      = false;
+  let currentTool   = null;
+  let history       = [];
+  const LS_KEY = 'randomtool_v1';
+  function saveHistory() { try { localStorage.setItem(LS_KEY, JSON.stringify(history)); } catch(e) {} }
+  function loadHistory() { try { const d = JSON.parse(localStorage.getItem(LS_KEY)||'[]'); if (Array.isArray(d)) { history = d; renderHistory(); } } catch(e) {} }
+  const ITEM_H      = 72;  // px — must match .slot-item height
+
+  /* ── Build initial slot track (3 visible items, center is index 1) ── */
+  const track = document.getElementById('slotTrack');
+
+  function buildTrackItems(names) {
+    track.innerHTML = '';
+    names.forEach((name, i) => {
+      const div = document.createElement('div');
+      div.className = 'slot-item' + (i === 1 ? ' center' : '');
+      div.textContent = name;
+      track.appendChild(div);
+    });
+    // position track so item[1] sits centered in the 72px window
+    track.style.transform = `translateY(${-ITEM_H}px)`;
+  }
+
+  // Initialise with 3 placeholder names
+  buildTrackItems([
+    TOOLS[TOOLS.length - 1].name,
+    TOOLS[0].name,
+    TOOLS[1].name
+  ]);
+  loadHistory();
+
+  /* ── Spin logic ── */
+  function startSpin() {
+    if (spinning) return;
+    spinning = true;
+
+    // Reset UI
+    document.getElementById('idlePlaceholder').style.display = 'none';
+    document.getElementById('resultDisplay').classList.remove('visible');
+    document.getElementById('goBtn').style.display   = 'none';
+    document.getElementById('againBtn').style.display = 'none';
+    document.getElementById('spinBtn').disabled = true;
+
+    // Pick winner
+    const winnerIndex = Math.floor(Math.random() * TOOLS.length);
+    const winner = TOOLS[winnerIndex];
+
+    // Build a long sequence ending on the winner
+    // We'll show ~40 items total, last one is winner
+    const TOTAL = 42;
+    const sequence = [];
+    for (let i = 0; i < TOTAL - 1; i++) {
+      sequence.push(TOOLS[Math.floor(Math.random() * TOOLS.length)].name);
+    }
+    sequence.push(winner.name);
+
+    // We display a window of 3 items at a time.
+    // The "position" index means: center item = sequence[pos]
+    // We start at pos = 0 and animate to pos = TOTAL-1
+    let pos = 0;
+
+    // Rebuild track with enough items
+    // track needs: items from index (pos-1) to (pos+1)
+    // We'll pre-render all positions by moving a big track
+    // For simplicity, render all items in the track and scroll
+
+    // Build full track (TOTAL items)
+    track.innerHTML = '';
+    // prepend one item before start for visual continuity
+    const allNames = sequence;
+    allNames.forEach((name, i) => {
+      const div = document.createElement('div');
+      div.className = 'slot-item';
+      div.textContent = name;
+      track.appendChild(div);
+    });
+
+    // Start positioned so item[0] is center → offset = 0
+    track.style.transition = 'none';
+    track.style.transform  = `translateY(0px)`;
+
+    // Timing parameters
+    // Phase 1: fast spin (first 60% of items, short interval)
+    // Phase 2: decelerate (last 40%)
+    const fastCount   = Math.floor(TOTAL * 0.55);
+    const slowCount   = TOTAL - 1 - fastCount; // remaining steps to winner
+
+    let step         = 0;
+    let delay        = 40; // ms between steps initially
+
+    function doStep() {
+      if (step >= TOTAL - 1) {
+        // Land on winner
+        landOnWinner(winner);
+        return;
+      }
+
+      step++;
+      // Ease out: increase delay as we approach end
+      const progress = step / (TOTAL - 1);
+      if (progress < 0.55) {
+        delay = 40;
+      } else {
+        // quadratic ease-out
+        const t = (progress - 0.55) / 0.45;
+        delay = 40 + Math.round(t * t * 340);
+      }
+
+      // Move track up by one item
+      const yOffset = -step * ITEM_H;
+      track.style.transition = `transform ${delay * 0.9}ms linear`;
+      track.style.transform  = `translateY(${yOffset}px)`;
+
+      // Highlight center item
+      const items = track.querySelectorAll('.slot-item');
+      items.forEach((el, idx) => {
+        el.classList.toggle('center', idx === step);
+      });
+
+      setTimeout(doStep, delay);
+    }
+
+    doStep();
+  }
+
+  function landOnWinner(winner) {
+    spinning = false;
+    currentTool = winner;
+
+    // Update result display
+    const resultDisplay = document.getElementById('resultDisplay');
+    document.getElementById('resultIconEl').className = winner.icon;
+    document.getElementById('resultName').textContent  = winner.name;
+    document.getElementById('resultPath').textContent  = winner.path;
+    resultDisplay.classList.add('visible');
+
+    // Show action buttons
+    document.getElementById('goBtn').style.display    = 'inline-flex';
+    document.getElementById('againBtn').style.display = 'inline-flex';
+    document.getElementById('spinBtn').disabled       = false;
+
+    // Confetti burst
+    launchConfetti();
+
+    // Add to history
+    addToHistory(winner);
+  }
+
+  function goToTool() {
+    if (currentTool) {
+      // path is relative to the hub root; we're at tools/random-tool.html
+      window.location.href = '../' + currentTool.path;
+    }
+  }
+
+  /* ── History ── */
+  function addToHistory(tool) {
+    // Remove duplicate if present
+    history = history.filter(t => t.path !== tool.path);
+    history.unshift(tool);
+    if (history.length > 5) history = history.slice(0, 5);
+    renderHistory();
+    saveHistory();
+  }
+
+  function renderHistory() {
+    const empty = document.getElementById('historyEmpty');
+    const list  = document.getElementById('historyList');
+
+    if (history.length === 0) {
+      empty.style.display = 'block';
+      list.innerHTML = '';
+      return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = history.map((tool, i) => `
+      <a class="history-item" href="../${tool.path}">
+        <span class="history-num">#${i + 1}</span>
+        <div class="history-icon"><i class="${tool.icon}"></i></div>
+        <span class="history-name">${tool.name}</span>
+        <i class="fa-solid fa-chevron-right history-arrow"></i>
+      </a>
+    `).join('');
+  }
+
+  /* ── Confetti ── */
+  const CONFETTI_COLORS = ['#ca8a04','#fbbf24','#f59e0b','#fcd34d','#92400e','#d97706'];
+
+  function launchConfetti() {
+    const container = document.getElementById('confettiContainer');
+    container.innerHTML = '';
+    const count = 60;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left             = Math.random() * 100 + 'vw';
+      el.style.top              = '-10px';
+      el.style.background       = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      el.style.width            = (6 + Math.random() * 6) + 'px';
+      el.style.height           = (6 + Math.random() * 6) + 'px';
+      el.style.borderRadius     = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.animationDelay   = (Math.random() * 0.5) + 's';
+      el.style.animationDuration= (1.2 + Math.random() * 0.8) + 's';
+      container.appendChild(el);
+    }
+    // clean up after animation
+    setTimeout(() => { container.innerHTML = ''; }, 2800);
+  }
+</script>
+</body>
+</html>

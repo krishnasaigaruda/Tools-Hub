@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random Number Generator – Tools Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #92400e, #b45309, #ca8a04);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { background: rgba(0,0,0,0.35); color: #fff; }
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .header-text h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .header-text p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 2px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #ca8a04;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Inputs ── */
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .inputs-grid { grid-template-columns: 1fr 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .field input[type="number"] {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      -moz-appearance: textfield;
+    }
+    .field input[type="number"]::-webkit-outer-spin-button,
+    .field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .field input[type="number"]:focus {
+      outline: none;
+      border-color: #ca8a04;
+      box-shadow: 0 0 0 3px rgba(202,138,4,0.2);
+    }
+
+    /* ── Toggles ── */
+    .toggles-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: #cbd5e1;
+    }
+    .toggle-label:hover { color: #e2e8f0; }
+
+    .toggle-wrap { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #334155;
+      border-radius: 999px;
+      transition: background 0.2s;
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #94a3b8;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-wrap input:checked ~ .toggle-track { background: #ca8a04; }
+    .toggle-wrap input:checked ~ .toggle-thumb { transform: translateX(18px); background: #fff; }
+
+    /* ── Generate Button ── */
+    .generate-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #b45309, #ca8a04);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 16px rgba(202,138,4,0.3);
+      margin-top: 24px;
+      letter-spacing: 0.02em;
+    }
+    .generate-btn:hover { opacity: 0.92; box-shadow: 0 6px 24px rgba(202,138,4,0.45); }
+    .generate-btn:active { transform: scale(0.98); }
+
+    .spacebar-hint {
+      text-align: center;
+      font-size: 12px;
+      color: #475569;
+      margin-top: 8px;
+    }
+    .spacebar-hint kbd {
+      font-family: 'JetBrains Mono', monospace;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* ── Results ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .result-count-badge {
+      background: rgba(202,138,4,0.15);
+      border: 1px solid rgba(202,138,4,0.3);
+      color: #ca8a04;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #94a3b8;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .copy-btn:hover { border-color: #ca8a04; color: #ca8a04; }
+    .copy-btn.copied { color: #22c55e; border-color: #22c55e; }
+
+    /* Chips */
+    .chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chip {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .chip:hover { border-color: #ca8a04; color: #fbbf24; }
+    .chip-lg { font-size: 22px; padding: 16px 22px; min-width: 72px; }
+    .chip-md { font-size: 16px; padding: 10px 16px; min-width: 60px; }
+    .chip-sm { font-size: 13px; padding: 7px 12px; min-width: 50px; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .stat-box {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-box .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .stat-box .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+
+    /* ── History ── */
+    .history-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ca8a04;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0;
+    }
+    .history-toggle .chevron { transition: transform 0.25s; }
+    .history-toggle.open .chevron { transform: rotate(180deg); }
+
+    .history-list {
+      display: none;
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .history-list.hidden { display: none; }
+
+    .history-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .history-item .history-meta {
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #475569;
+      line-height: 1.6;
+      min-width: 60px;
+    }
+    .history-item .history-meta .hist-time { font-weight: 600; color: #64748b; }
+    .history-item .history-numbers {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #94a3b8;
+      word-break: break-all;
+      line-height: 1.7;
+    }
+    .history-item .history-numbers span { color: #fbbf24; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: #475569;
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.4; color: #ca8a04; }
+    .empty-state p { font-size: 15px; }
+
+    /* ── Error ── */
+    .error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      margin-top: 14px;
+    }
+    .error-msg.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <a href="../Tools.html" class="back-btn">
+    <i class="fa-solid fa-arrow-left"></i> Back
+  </a>
+  <div class="header-icon">
+    <i class="fa-solid fa-shuffle"></i>
+  </div>
+  <div class="header-text">
+    <h1>Random Number Generator</h1>
+    <p>Generate random numbers with flexible options</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Configuration Card -->
+  <div class="card">
+    <div class="card-title"><i class="fa-solid fa-sliders"></i> Configuration</div>
+
+    <div class="inputs-grid">
+      <div class="field">
+        <label for="inputMin"><i class="fa-solid fa-down-long"></i> Minimum</label>
+        <input type="number" id="inputMin" value="1" placeholder="1" />
+      </div>
+      <div class="field">
+        <label for="inputMax"><i class="fa-solid fa-up-long"></i> Maximum</label>
+        <input type="number" id="inputMax" value="100" placeholder="100" />
+      </div>
+      <div class="field">
+        <label for="inputCount"><i class="fa-solid fa-hashtag"></i> Count (1–100)</label>
+        <input type="number" id="inputCount" value="1" min="1" max="100" placeholder="1" />
+      </div>
+    </div>
+
+    <div class="toggles-row">
+      <label class="toggle-label">
+        <div class="toggle-wrap">
+          <input type="checkbox" id="toggleDuplicates" checked />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </div>
+        Allow Duplicates
+      </label>
+      <label class="toggle-label">
+        <div class="toggle-wrap">
+          <input type="checkbox" id="toggleSort" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </div>
+        Sort Results
+      </label>
+    </div>
+
+    <div class="error-msg" id="errorMsg">
+      <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorText"></span>
+    </div>
+
+    <button class="generate-btn" id="generateBtn">
+      <i class="fa-solid fa-shuffle"></i> Generate Numbers
+    </button>
+    <div class="spacebar-hint">Press <kbd>Space</kbd> to generate</div>
+  </div>
+
+  <!-- Results Card -->
+  <div class="card">
+    <div class="results-header">
+      <div class="card-title" style="margin-bottom:0;"><i class="fa-solid fa-star"></i> Results</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="result-count-badge" id="resultBadge" style="display:none;"></span>
+        <button class="copy-btn" id="copyBtn" style="display:none;" onclick="copyAll()">
+          <i class="fa-solid fa-copy"></i> Copy All
+        </button>
+      </div>
+    </div>
+
+    <div id="resultsArea">
+      <div class="empty-state">
+        <i class="fa-solid fa-dice"></i>
+        <p>Configure your settings and click <strong>Generate</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Card -->
+  <div class="card" id="statsCard" style="display:none;">
+    <div class="card-title"><i class="fa-solid fa-chart-simple"></i> Statistics</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label"><i class="fa-solid fa-down-long"></i> Min</div>
+        <div class="stat-value" id="statMin">–</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label"><i class="fa-solid fa-up-long"></i> Max</div>
+        <div class="stat-value" id="statMax">–</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label"><i class="fa-solid fa-equals"></i> Average</div>
+        <div class="stat-value" id="statAvg">–</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label"><i class="fa-solid fa-sigma"></i> Sum</div>
+        <div class="stat-value" id="statSum">–</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Card -->
+  <div class="card" id="historyCard" style="display:none;">
+    <button class="history-toggle" id="historyToggle" onclick="toggleHistory()">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      History (last 5)
+      <i class="fa-solid fa-chevron-down chevron"></i>
+    </button>
+    <div class="history-list hidden" id="historyList"></div>
+  </div>
+
+</div>
+
+<script>
+  const inputMin  = document.getElementById('inputMin');
+  const inputMax  = document.getElementById('inputMax');
+  const inputCount = document.getElementById('inputCount');
+  const toggleDuplicates = document.getElementById('toggleDuplicates');
+  const toggleSort = document.getElementById('toggleSort');
+  const generateBtn = document.getElementById('generateBtn');
+  const resultsArea = document.getElementById('resultsArea');
+  const resultBadge = document.getElementById('resultBadge');
+  const copyBtn = document.getElementById('copyBtn');
+  const statsCard = document.getElementById('statsCard');
+  const historyCard = document.getElementById('historyCard');
+  const historyList = document.getElementById('historyList');
+  const historyToggle = document.getElementById('historyToggle');
+  const errorMsg = document.getElementById('errorMsg');
+  const errorText = document.getElementById('errorText');
+
+  let lastNumbers = [];
+  let history = [];
+  const LS_KEY = 'randgen_v1';
+  function saveHistory() { try { localStorage.setItem(LS_KEY, JSON.stringify(history)); } catch(e) {} }
+  function loadHistory() { try { const d = JSON.parse(localStorage.getItem(LS_KEY)||'[]'); if (Array.isArray(d)) { history = d; if (history.length) renderHistory(); } } catch(e) {} }
+
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorMsg.classList.add('visible');
+  }
+  function hideError() {
+    errorMsg.classList.remove('visible');
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function generate() {
+    hideError();
+    const min   = parseInt(inputMin.value, 10);
+    const max   = parseInt(inputMax.value, 10);
+    const count = parseInt(inputCount.value, 10);
+    const allowDups = toggleDuplicates.checked;
+    const doSort    = toggleSort.checked;
+
+    if (isNaN(min) || isNaN(max)) { showError('Please enter valid Min and Max values.'); return; }
+    if (min > max) { showError('Minimum must be less than or equal to Maximum.'); return; }
+    if (isNaN(count) || count < 1 || count > 100) { showError('Count must be between 1 and 100.'); return; }
+    if (!allowDups) {
+      const rangeSize = max - min + 1;
+      if (count > rangeSize) {
+        showError(`Cannot generate ${count} unique numbers in range [${min}, ${max}]. Range only has ${rangeSize} distinct values.`);
+        return;
+      }
+    }
+
+    let numbers = [];
+    if (allowDups) {
+      for (let i = 0; i < count; i++) numbers.push(randInt(min, max));
+    } else {
+      const pool = [];
+      for (let i = min; i <= max; i++) pool.push(i);
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      numbers = pool.slice(0, count);
+    }
+
+    if (doSort) numbers.sort((a, b) => a - b);
+
+    lastNumbers = numbers;
+    renderResults(numbers);
+    if (count > 1) renderStats(numbers);
+    else statsCard.style.display = 'none';
+
+    addHistory(numbers, min, max, count);
+  }
+
+  function chipSize(count) {
+    if (count <= 10) return 'chip-lg';
+    if (count <= 30) return 'chip-md';
+    return 'chip-sm';
+  }
+
+  function renderResults(numbers) {
+    const size = chipSize(numbers.length);
+    const chips = numbers.map((n, i) => {
+      const delay = Math.min(i * 30, 600);
+      return `<div class="chip ${size}" style="animation-delay:${delay}ms">${n}</div>`;
+    }).join('');
+
+    resultsArea.innerHTML = `<div class="chips-container">${chips}</div>`;
+    resultBadge.textContent = `${numbers.length} number${numbers.length !== 1 ? 's' : ''}`;
+    resultBadge.style.display = 'inline-block';
+    copyBtn.style.display = 'inline-flex';
+    copyBtn.classList.remove('copied');
+    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy All';
+  }
+
+  function renderStats(numbers) {
+    const sum = numbers.reduce((a, b) => a + b, 0);
+    const avg = sum / numbers.length;
+    document.getElementById('statMin').textContent = Math.min(...numbers);
+    document.getElementById('statMax').textContent = Math.max(...numbers);
+    document.getElementById('statAvg').textContent = Number.isInteger(avg) ? avg : avg.toFixed(2);
+    document.getElementById('statSum').textContent = sum;
+    statsCard.style.display = 'block';
+  }
+
+  function addHistory(numbers, min, max, count) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    history.unshift({ numbers: [...numbers], min, max, count, time: timeStr });
+    if (history.length > 5) history.pop();
+    renderHistory();
+    saveHistory();
+  }
+
+  function renderHistory() {
+    historyCard.style.display = 'block';
+    historyList.innerHTML = history.map(h => {
+      const preview = h.numbers.map(n => `<span>${n}</span>`).join(', ');
+      return `
+        <div class="history-item">
+          <div class="history-meta">
+            <div class="hist-time">${h.time}</div>
+            <div>${h.count} num${h.count !== 1 ? 's' : ''}</div>
+            <div>${h.min}–${h.max}</div>
+          </div>
+          <div class="history-numbers">${preview}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleHistory() {
+    historyList.classList.toggle('hidden');
+    historyToggle.classList.toggle('open');
+  }
+
+  function copyAll() {
+    if (!lastNumbers.length) return;
+    const text = lastNumbers.join(', ');
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy All';
+      }, 2000);
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy All';
+      }, 2000);
+    });
+  }
+
+  generateBtn.addEventListener('click', generate);
+  loadHistory();
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      const tag = document.activeElement.tagName.toLowerCase();
+      if (tag !== 'input' && tag !== 'textarea' && tag !== 'button') {
+        e.preventDefault();
+        generate();
+      }
+    }
+  });
+
+  // Also allow spacebar when not focused on an interactive element
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      const tag = document.activeElement.tagName.toLowerCase();
+      if (tag !== 'input' && tag !== 'textarea' && tag !== 'button') {
+        e.preventDefault();
+      }
+    }
+  });
+</script>
+</body>
+</html>

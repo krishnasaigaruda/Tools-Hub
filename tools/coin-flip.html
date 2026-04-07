@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coin Flip | Tools Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column}
+
+    /* Header */
+    header{background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+    .back-btn{color:#fff;text-decoration:none;display:flex;align-items:center;gap:.4rem;font-size:.9rem;font-weight:500;opacity:.85;transition:opacity .2s;background:rgba(255,255,255,.15);padding:.4rem .8rem;border-radius:8px}
+    .back-btn:hover{opacity:1;background:rgba(255,255,255,.25)}
+    .header-title{display:flex;align-items:center;gap:.6rem;font-size:1.25rem;font-weight:700;color:#fff}
+
+    /* Main */
+    main{flex:1;display:flex;flex-direction:column;align-items:center;padding:2.5rem 1rem 3rem;gap:1.5rem}
+
+    /* ── Coin ─────────────────────────────────── */
+    .coin-scene{perspective:1000px;width:200px;height:200px;cursor:pointer;user-select:none}
+    .coin-wrap{width:200px;height:200px;position:relative;transform-style:preserve-3d;transition:transform .05s}
+    .coin-wrap.flipping{animation:coinFlip .85s cubic-bezier(.3,0,.4,1) forwards}
+    @keyframes coinFlip{
+      0%  {transform:rotateY(0deg) rotateZ(0deg)}
+      20% {transform:rotateY(360deg) rotateZ(8deg) scale(1.08)}
+      50% {transform:rotateY(900deg) rotateZ(-5deg) scale(1.1)}
+      80% {transform:rotateY(1350deg) rotateZ(3deg) scale(1.05)}
+      100%{transform:rotateY(1440deg) rotateZ(0deg) scale(1)}
+    }
+
+    /* Knurled edge — outer ring with repeating conic segments */
+    .coin-edge{
+      position:absolute;inset:0;border-radius:50%;
+      background:repeating-conic-gradient(
+        from 0deg,
+        #78350f 0deg 3deg,
+        #ca8a04 3deg 5deg,
+        #92400e 5deg 8deg,
+        #ca8a04 8deg 10deg
+      );
+    }
+
+    /* Two actual faces */
+    .coin-face{
+      position:absolute;width:188px;height:188px;top:6px;left:6px;
+      border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+      overflow:hidden;
+    }
+    .coin-heads{z-index:2;transform:rotateY(0deg)}
+    .coin-tails{z-index:1;transform:rotateY(180deg)}
+
+    .coin-scene:hover .coin-wrap:not(.flipping){filter:brightness(1.1);transform:scale(1.03);transition:transform .2s,filter .2s}
+
+    /* Result */
+    .result-text{font-size:2.2rem;font-weight:800;min-height:2.8rem;color:#fbbf24;letter-spacing:.02em;text-shadow:0 2px 16px rgba(251,191,36,.4);transition:opacity .3s}
+    .result-text.hidden{opacity:0}
+    .result-sub{font-size:.82rem;color:#64748b;margin-top:-.4rem}
+
+    /* Flip button */
+    .flip-btn{background:linear-gradient(135deg,#b45309,#ca8a04);color:#fff;border:none;border-radius:12px;padding:.8rem 2.5rem;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.5rem;transition:filter .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 16px rgba(202,138,4,.3)}
+    .flip-btn:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 6px 24px rgba(202,138,4,.45)}
+    .flip-btn:active:not(:disabled){transform:translateY(0)}
+    .flip-btn:disabled{opacity:.5;cursor:not-allowed}
+    .shortcut-hint{font-size:.75rem;color:#475569}
+    .shortcut-hint kbd{font-family:'JetBrains Mono',monospace;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:1px 5px;font-size:.7rem;color:#94a3b8}
+
+    /* Cards */
+    .card{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:1.5rem;width:100%;max-width:480px}
+    .card-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+    .stat-box{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:.85rem .5rem;text-align:center}
+    .stat-value{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:600;color:#ca8a04;line-height:1}
+    .stat-label{font-size:.7rem;color:#64748b;margin-top:.3rem;text-transform:uppercase;letter-spacing:.05em}
+    .stat-box.heads .stat-value{color:#fbbf24}
+    .stat-box.tails .stat-value{color:#d97706}
+    .progress-wrap{margin-top:1rem;background:#0f172a;border-radius:99px;height:8px;overflow:hidden;border:1px solid #334155}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#ca8a04);border-radius:99px;transition:width .4s ease;width:50%}
+    .progress-labels{display:flex;justify-content:space-between;font-size:.7rem;color:#64748b;margin-top:.4rem}
+    .reset-btn{background:transparent;border:1px solid #334155;color:#64748b;border-radius:8px;padding:.4rem 1rem;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:.4rem;margin-top:.75rem;transition:border-color .2s,color .2s}
+    .reset-btn:hover{border-color:#ca8a04;color:#ca8a04}
+
+    /* History */
+    .history-chips{display:flex;flex-wrap:wrap;gap:.4rem;min-height:2rem}
+    .chip{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;padding:.25rem .6rem;border-radius:6px;line-height:1;display:inline-flex;align-items:center;justify-content:center;width:32px}
+    .chip.H{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+    .chip.T{background:rgba(217,119,6,.15);color:#d97706;border:1px solid rgba(217,119,6,.3)}
+    .empty-history{font-size:.82rem;color:#475569;font-style:italic}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="../Tools.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  <div class="header-title"><i class="fa-solid fa-coins"></i> Coin Flip</div>
+</header>
+
+<main>
+
+  <!-- Coin -->
+  <div class="coin-scene" id="coinScene" title="Click to flip">
+    <div class="coin-wrap" id="coin">
+      <div class="coin-edge"></div>
+
+      <!-- HEADS face -->
+      <div class="coin-face coin-heads">
+        <svg viewBox="0 0 188 188" xmlns="http://www.w3.org/2000/svg" width="188" height="188">
+          <defs>
+            <radialGradient id="hGrad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%"  stop-color="#fef3c7"/>
+              <stop offset="25%" stop-color="#fde68a"/>
+              <stop offset="55%" stop-color="#d97706"/>
+              <stop offset="80%" stop-color="#92400e"/>
+              <stop offset="100%" stop-color="#78350f"/>
+            </radialGradient>
+            <radialGradient id="hShine" cx="35%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </radialGradient>
+            <clipPath id="hClip"><circle cx="94" cy="94" r="94"/></clipPath>
+          </defs>
+          <!-- Base gold -->
+          <circle cx="94" cy="94" r="94" fill="url(#hGrad)"/>
+          <!-- Inner rim -->
+          <circle cx="94" cy="94" r="82" fill="none" stroke="#b45309" stroke-width="2.5" opacity=".7"/>
+          <circle cx="94" cy="94" r="79" fill="none" stroke="#fde68a" stroke-width=".8" opacity=".5"/>
+
+          <!-- Portrait silhouette (Liberty head style) -->
+          <!-- Neck + bust -->
+          <path d="M94,148 C80,148 72,138 72,128 L72,120 C65,116 60,108 60,98 C60,82 70,68 82,62 C87,59 91,58 94,58 C97,58 101,59 106,62 C118,68 128,82 128,98 C128,108 123,116 116,120 L116,128 C116,138 108,148 94,148 Z" fill="#7c2d12" opacity=".85"/>
+          <!-- Face profile -->
+          <path d="M94,62 C86,62 79,67 76,74 C73,80 73,88 76,95 C78,100 82,104 85,107 C86,108 87,112 87,117 L101,117 C101,112 102,108 103,107 C106,104 110,100 112,95 C115,88 115,80 112,74 C109,67 102,62 94,62 Z" fill="#92400e"/>
+          <!-- Hair detail -->
+          <path d="M79,72 C82,65 88,61 94,61 C100,61 106,65 109,72 C104,68 99,67 94,67 C89,67 84,68 79,72 Z" fill="#5a1c0a"/>
+          <!-- Crown/wreath suggestion -->
+          <ellipse cx="94" cy="67" rx="18" ry="4" fill="none" stroke="#fde68a" stroke-width="1.5" opacity=".6"/>
+          <circle cx="94" cy="63" r="2" fill="#fde68a" opacity=".7"/>
+          <circle cx="84" cy="65" r="1.5" fill="#fde68a" opacity=".6"/>
+          <circle cx="104" cy="65" r="1.5" fill="#fde68a" opacity=".6"/>
+
+          <!-- Arched "HEADS" text -->
+          <path id="hArc" d="M 30,94 A 64,64 0 0,1 158,94" fill="none"/>
+          <text font-family="Georgia,serif" font-size="12" font-weight="bold" fill="#fde68a" letter-spacing="3" opacity=".9">
+            <textPath href="#hArc" startOffset="50%" text-anchor="middle">HEADS</textPath>
+          </text>
+          <!-- Bottom year -->
+          <path id="hArcBot" d="M 158,94 A 64,64 0 0,1 30,94" fill="none"/>
+          <text font-family="'JetBrains Mono',monospace" font-size="10" fill="#d97706" letter-spacing="2" opacity=".8">
+            <textPath href="#hArcBot" startOffset="50%" text-anchor="middle">2025</textPath>
+          </text>
+
+          <!-- Stars around inner rim -->
+          <g fill="#fde68a" opacity=".6" font-size="8" font-family="serif" text-anchor="middle">
+            <text x="94" y="24">★</text>
+            <text x="124" y="32">★</text>
+            <text x="64" y="32">★</text>
+            <text x="144" y="56">★</text>
+            <text x="44" y="56">★</text>
+          </g>
+
+          <!-- Shine overlay -->
+          <circle cx="94" cy="94" r="94" fill="url(#hShine)" clip-path="url(#hClip)"/>
+        </svg>
+      </div>
+
+      <!-- TAILS face -->
+      <div class="coin-face coin-tails">
+        <svg viewBox="0 0 188 188" xmlns="http://www.w3.org/2000/svg" width="188" height="188">
+          <defs>
+            <radialGradient id="tGrad" cx="60%" cy="65%" r="65%">
+              <stop offset="0%"  stop-color="#fef3c7"/>
+              <stop offset="25%" stop-color="#fde68a"/>
+              <stop offset="55%" stop-color="#d97706"/>
+              <stop offset="80%" stop-color="#92400e"/>
+              <stop offset="100%" stop-color="#78350f"/>
+            </radialGradient>
+            <radialGradient id="tShine" cx="65%" cy="70%" r="50%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.38)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </radialGradient>
+          </defs>
+          <circle cx="94" cy="94" r="94" fill="url(#tGrad)"/>
+          <!-- Inner rim -->
+          <circle cx="94" cy="94" r="82" fill="none" stroke="#b45309" stroke-width="2.5" opacity=".7"/>
+          <circle cx="94" cy="94" r="79" fill="none" stroke="#fde68a" stroke-width=".8" opacity=".5"/>
+
+          <!-- Eagle body -->
+          <path d="M94,52 C88,52 82,58 80,65 L72,62 L76,70 C70,73 66,78 66,85 C66,88 68,91 70,93 L62,96 L68,100 C66,103 66,107 68,110 C70,113 74,115 78,115 L80,120 L94,125 L108,120 L110,115 C114,115 118,113 120,110 C122,107 122,103 120,100 L126,96 L118,93 C120,91 122,88 122,85 C122,78 118,73 112,70 L116,62 L108,65 C106,58 100,52 94,52 Z" fill="#7c2d12" opacity=".85"/>
+          <!-- Eagle wings spread -->
+          <path d="M80,75 C72,71 58,73 48,80 C56,78 66,80 72,85 C66,82 56,84 50,90 C58,87 68,87 74,92 L80,86 Z" fill="#92400e" opacity=".9"/>
+          <path d="M108,75 C116,71 130,73 140,80 C132,78 122,80 116,85 C122,82 132,84 138,90 C130,87 120,87 114,92 L108,86 Z" fill="#92400e" opacity=".9"/>
+          <!-- Eagle head -->
+          <circle cx="94" cy="64" r="10" fill="#92400e"/>
+          <circle cx="97" cy="62" r="3" fill="#fde68a" opacity=".8"/><!-- eye highlight -->
+          <circle cx="97" cy="62" r="1.5" fill="#3b0a00"/><!-- eye pupil -->
+          <!-- Beak -->
+          <path d="M100,66 L107,68 L100,70 Z" fill="#d97706"/>
+          <!-- Shield on chest -->
+          <path d="M86,85 L102,85 L104,100 L94,106 L84,100 Z" fill="#1e3a8a" opacity=".7"/>
+          <line x1="86" y1="85" x2="86" y2="100" stroke="#fde68a" stroke-width="1" opacity=".5"/>
+          <line x1="90" y1="85" x2="90" y2="103" stroke="#fde68a" stroke-width="1" opacity=".5"/>
+          <line x1="94" y1="85" x2="94" y2="106" stroke="#fde68a" stroke-width="1" opacity=".5"/>
+          <line x1="98" y1="85" x2="98" y2="103" stroke="#fde68a" stroke-width="1" opacity=".5"/>
+          <line x1="102" y1="85" x2="102" y2="100" stroke="#fde68a" stroke-width="1" opacity=".5"/>
+
+          <!-- Arched TAILS -->
+          <path id="tArc" d="M 30,94 A 64,64 0 0,1 158,94" fill="none"/>
+          <text font-family="Georgia,serif" font-size="12" font-weight="bold" fill="#fde68a" letter-spacing="3" opacity=".9">
+            <textPath href="#tArc" startOffset="50%" text-anchor="middle">TAILS</textPath>
+          </text>
+          <!-- E PLURIBUS UNUM bottom -->
+          <path id="tArcBot" d="M 158,94 A 64,64 0 0,1 30,94" fill="none"/>
+          <text font-family="Georgia,serif" font-size="7" fill="#d97706" letter-spacing="1.5" opacity=".8">
+            <textPath href="#tArcBot" startOffset="50%" text-anchor="middle">E PLURIBUS UNUM</textPath>
+          </text>
+
+          <!-- Stars -->
+          <g fill="#fde68a" opacity=".6" font-size="8" font-family="serif" text-anchor="middle">
+            <text x="94" y="24">★</text>
+            <text x="124" y="32">★</text>
+            <text x="64" y="32">★</text>
+            <text x="144" y="56">★</text>
+            <text x="44" y="56">★</text>
+          </g>
+
+          <circle cx="94" cy="94" r="94" fill="url(#tShine)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-text hidden" id="resultText">—</div>
+  <div class="result-sub" id="resultSub">&nbsp;</div>
+
+  <!-- Flip button -->
+  <button class="flip-btn" id="flipBtn"><i class="fa-solid fa-rotate"></i> Flip</button>
+  <p class="shortcut-hint">or press <kbd>Space</kbd></p>
+
+  <!-- Stats -->
+  <div class="card">
+    <div class="card-title"><i class="fa-solid fa-chart-simple"></i> Session Stats</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+      <div class="stat-box heads"><div class="stat-value" id="statHeads">0</div><div class="stat-label">Heads</div></div>
+      <div class="stat-box tails"><div class="stat-value" id="statTails">0</div><div class="stat-label">Tails</div></div>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-labels"><span id="pctHeads">Heads 0%</span><span id="pctTails">Tails 0%</span></div>
+    <button class="reset-btn" id="resetBtn"><i class="fa-solid fa-trash-can"></i> Reset Stats</button>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Flip History <span style="margin-left:auto;font-size:.7rem;color:#334155">(last 30 · saved)</span></div>
+    <div class="history-chips" id="historyChips"><span class="empty-history">No flips yet.</span></div>
+  </div>
+
+</main>
+
+<script>
+  const LS_KEY = 'coinflip_v2';
+  const coin       = document.getElementById('coin');
+  const coinScene  = document.getElementById('coinScene');
+  const flipBtn    = document.getElementById('flipBtn');
+  const resetBtn   = document.getElementById('resetBtn');
+  const resultText = document.getElementById('resultText');
+  const resultSub  = document.getElementById('resultSub');
+  const statTotal  = document.getElementById('statTotal');
+  const statHeads  = document.getElementById('statHeads');
+  const statTails  = document.getElementById('statTails');
+  const progressFill = document.getElementById('progressFill');
+  const pctHeads   = document.getElementById('pctHeads');
+  const pctTails   = document.getElementById('pctTails');
+  const historyChips = document.getElementById('historyChips');
+
+  let isFlipping = false;
+  let stats    = { total:0, heads:0, tails:0 };
+  let history  = [];
+
+  /* ── LocalStorage ── */
+  function save() {
+    localStorage.setItem(LS_KEY, JSON.stringify({ stats, history }));
+  }
+  function load() {
+    try {
+      const d = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      if (d.stats)   stats   = d.stats;
+      if (d.history) history = d.history;
+    } catch(e) {}
+  }
+
+  function flip() {
+    if (isFlipping) return;
+    isFlipping = true;
+    flipBtn.disabled = true;
+
+    const isHeads = Math.random() < 0.5;
+
+    coin.classList.remove('flipping');
+    void coin.offsetWidth;
+    coin.classList.add('flipping');
+
+    coin.addEventListener('animationend', function handler() {
+      coin.removeEventListener('animationend', handler);
+      coin.classList.remove('flipping');
+      coin.style.transform = isHeads ? 'rotateY(0deg)' : 'rotateY(180deg)';
+      showResult(isHeads);
+      updateStats(isHeads);
+      addHistory(isHeads);
+      save();
+      isFlipping = false;
+      flipBtn.disabled = false;
+    });
+  }
+
+  function showResult(isHeads) {
+    resultText.textContent = isHeads ? 'Heads!' : 'Tails!';
+    resultText.classList.remove('hidden');
+    resultSub.textContent  = isHeads ? 'The eagle has landed.' : 'The reverse side wins.';
+  }
+
+  function updateStats(isHeads) {
+    stats.total++;
+    if (isHeads) stats.heads++; else stats.tails++;
+    statTotal.textContent = stats.total;
+    statHeads.textContent = stats.heads;
+    statTails.textContent = stats.tails;
+    const hPct = stats.total ? Math.round((stats.heads / stats.total) * 100) : 50;
+    progressFill.style.width = hPct + '%';
+    pctHeads.textContent = 'Heads ' + hPct + '%';
+    pctTails.textContent = 'Tails ' + (100 - hPct) + '%';
+  }
+
+  function addHistory(isHeads) {
+    history.unshift(isHeads ? 'H' : 'T');
+    if (history.length > 30) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!history.length) {
+      historyChips.innerHTML = '<span class="empty-history">No flips yet.</span>';
+      return;
+    }
+    historyChips.innerHTML = history.map(v => `<span class="chip ${v}">${v}</span>`).join('');
+  }
+
+  function resetStats() {
+    stats   = { total:0, heads:0, tails:0 };
+    history = [];
+    statTotal.textContent = statHeads.textContent = statTails.textContent = '0';
+    progressFill.style.width = '50%';
+    pctHeads.textContent = 'Heads 0%';
+    pctTails.textContent = 'Tails 0%';
+    resultText.classList.add('hidden');
+    resultSub.textContent = '\u00a0';
+    coin.style.transform = 'rotateY(0deg)';
+    renderHistory();
+    save();
+  }
+
+  /* ── Restore from localStorage ── */
+  function restoreUI() {
+    statTotal.textContent = stats.total;
+    statHeads.textContent = stats.heads;
+    statTails.textContent = stats.tails;
+    const hPct = stats.total ? Math.round((stats.heads / stats.total) * 100) : 50;
+    progressFill.style.width = hPct + '%';
+    pctHeads.textContent = 'Heads ' + hPct + '%';
+    pctTails.textContent = 'Tails ' + (100 - hPct) + '%';
+    renderHistory();
+  }
+
+  flipBtn.addEventListener('click', flip);
+  coinScene.addEventListener('click', flip);
+  resetBtn.addEventListener('click', resetStats);
+  document.addEventListener('keydown', function(e) {
+    if (e.code === 'Space' && !flipBtn.disabled && document.activeElement === document.body) {
+      e.preventDefault(); flip();
+    }
+  });
+
+  load();
+  restoreUI();
+</script>
+</body>
+</html>
