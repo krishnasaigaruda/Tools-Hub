@@ -81,11 +81,18 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .viewer::-webkit-scrollbar{width:8px}
 .viewer::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
 .viewer.light-mode{background:#808080}
-.page{background:#fff;width:8.5in;min-height:11in;padding:1in;margin:0 auto 24px;box-shadow:0 2px 24px rgba(0,0,0,.4);position:relative}
-.page-editor{min-height:calc(11in - 2in);outline:none;font-size:16px;line-height:1.6;color:#222;font-family:'IBM Plex Sans',sans-serif}
+/* ── Page shell ──────────────────────────────────────────────────── */
+.page{background:#fff;width:816px;min-height:1056px;margin:0 auto 24px;box-shadow:0 2px 24px rgba(0,0,0,.4);position:relative;overflow:hidden}
+/* PDF.js canvas — renders the full page faithfully (text, images, graphics) */
+.page-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;display:block}
+/* ── Editor: blank pages ─────────────────────────────────────────── */
+.page-editor{padding:96px;outline:none;font-size:16px;line-height:1.6;color:#222;font-family:'IBM Plex Sans',sans-serif;position:relative;z-index:1;min-height:864px;word-wrap:break-word}
+/* ── Editor: overlay on PDF pages — transparent until focused ────── */
+.page.has-canvas .page-editor{position:absolute;inset:0;padding:96px;min-height:unset;color:transparent;caret-color:transparent;background:transparent;overflow:hidden;z-index:1;transition:background .15s,color .15s,caret-color .15s}
+.page.has-canvas.editing .page-editor{background:rgba(255,255,255,.92);color:#222;caret-color:#222;overflow:auto}
 .page-editor p{margin:0 0 0.15em 0}
 .page-editor h1,.page-editor h2,.page-editor h3{margin:0.4em 0 0.2em 0}
-.page-editor:empty:before{content:'Start typing...';color:#bbb;pointer-events:none}
+.page:not(.has-canvas) .page-editor:empty:before{content:'Start typing...';color:#bbb;pointer-events:none}
 .page-editor ul,.page-editor ol{margin-left:20px;padding-left:20px}
 .page-editor li{margin:4px 0}
 .page-editor img{max-width:100%;border-radius:4px;margin:4px 0;cursor:pointer}
@@ -93,7 +100,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .page-float-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
 .float-img{position:absolute;cursor:move;user-select:none;pointer-events:all;box-sizing:border-box;max-width:none}
 .float-img.selected{outline:2px solid #dc2626}
-.page-num{position:absolute;bottom:.5in;right:1in;font-size:11px;color:#999;font-family:'IBM Plex Mono',monospace}
+.page-num{position:absolute;bottom:48px;right:96px;font-size:11px;color:#999;font-family:'IBM Plex Mono',monospace;z-index:11}
+/* hint badge: click to edit */
+.page.has-canvas:not(.editing)::after{content:'Click to edit text';position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:3px 10px;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:12}
+.page.has-canvas:not(.editing):hover::after{opacity:1}
 
 /* Image resize overlay */
 .img-overlay{position:fixed;pointer-events:none;z-index:300;border:2px solid #dc2626;box-sizing:border-box;display:none}
@@ -607,7 +617,7 @@ async function loadPDF(file) {
     var page = await pdfDoc.getPage(i);
     var viewport = page.getViewport({ scale: 1 });
     var pageWidth = viewport.width;
-    setLoadingStatus('Extracting page ' + i + ' of ' + totalPagesCount + '...', 15 + Math.round((i / totalPagesCount) * 40));
+    setLoadingStatus('Extracting page ' + i + ' of ' + totalPagesCount + '...', 15 + Math.round((i / totalPagesCount) * 55));
 
     var content = null;
     try { content = await page.getTextContent({ includeMarkedContent: false }); } catch(e) {}
@@ -633,32 +643,24 @@ async function loadPDF(file) {
 
     // Fallback 3: OCR via Tesseract.js (for scanned/image-only PDFs)
     if (!html.trim()) {
-      setLoadingStatus('OCR scanning page ' + i + ' of ' + totalPagesCount + '...', 55 + Math.round((i / totalPagesCount) * 40), 'Running OCR');
+      setLoadingStatus('OCR scanning page ' + i + ' of ' + totalPagesCount + '...', 40 + Math.round((i / totalPagesCount) * 30), 'Running OCR');
       html = await ocrPageToHTML(page);
     }
 
-    // Fallback 4: canvas image (absolute last resort — uneditable)
-    if (!html.trim()) {
-      try {
-        var vp2 = page.getViewport({ scale: 2 });
-        var cv = document.createElement('canvas');
-        cv.width = vp2.width; cv.height = vp2.height;
-        await page.render({ canvasContext: cv.getContext('2d'), viewport: vp2 }).promise;
-        html = '<img src="' + cv.toDataURL('image/jpeg', 0.9) + '" style="width:100%;display:block;border-radius:0" draggable="false">';
-      } catch(e) { html = ''; }
-    }
+    // Generate small thumbnail for sidebar (low-res, ~160px wide)
+    var thumbDataUrl = '';
+    var pageAspect = viewport.height / viewport.width;
+    try {
+      var TSCALE = 160 / viewport.width;
+      var tvp = page.getViewport({ scale: TSCALE });
+      var tc = document.createElement('canvas');
+      tc.width = Math.ceil(tvp.width); tc.height = Math.ceil(tvp.height);
+      await page.render({ canvasContext: tc.getContext('2d'), viewport: tvp }).promise;
+      thumbDataUrl = tc.toDataURL('image/jpeg', 0.75);
+    } catch(e) {}
 
-    // Extract any <img> tags from OCR/text fallback → float them
-    var floatingImgs = [];
-    var tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    tempDiv.querySelectorAll('img').forEach(function(img) {
-      floatingImgs.push({ src: img.src || img.getAttribute('src'), x: 20, y: 20, w: 300 });
-      img.remove();
-    });
-    html = tempDiv.innerHTML;
-
-    pages.push({ id: Date.now() + i, content: html, fontFamily: '', floatingImgs: floatingImgs });
+    // pdfPageNum links this page data back to the PDF document for live canvas rendering
+    pages.push({ id: Date.now() + i, pdfPageNum: i, content: html, fontFamily: '', floatingImgs: [], thumbDataUrl: thumbDataUrl, aspect: pageAspect });
   }
 
   currentPage = 1;
@@ -886,6 +888,7 @@ async function extractTextByCanvasIntercept(page) {
   } catch(e) { return ''; }
 }
 
+
 async function extractTextViaOpList(page) {
   try {
     var OPS = pdfjsLib.OPS;
@@ -1049,23 +1052,59 @@ function renderAllPages() {
   var container = document.getElementById('pagesContainer');
   container.innerHTML = pages.map(function(pg, i) {
     var fs = pg.fontFamily ? 'font-family:' + pg.fontFamily + ';' : '';
-    // Strip inline <img> from text content — images live in the float layer
     var textContent = (pg.content || '').replace(/<img[^>]*>/gi, '');
-    return '<div class="page" id="page-' + pg.id + '">' +
+    var hasCanvas = !!pg.pdfPageNum;
+    // Height from PDF aspect ratio (CSS width = 816px)
+    var h = pg.aspect ? Math.round(816 * pg.aspect) : 1056;
+    var pageClass = 'page' + (hasCanvas ? ' has-canvas' : '');
+    // Canvas element: PDF.js renders into this — shows full fidelity (text, images, graphics)
+    var canvasEl = hasCanvas ? '<canvas class="page-canvas" id="pcanvas-' + pg.id + '"></canvas>' : '';
+    return '<div class="' + pageClass + '" id="page-' + pg.id + '" style="height:' + h + 'px">' +
+      canvasEl +
       '<div class="page-editor" contenteditable="true" spellcheck="true" id="editor-' + pg.id + '" ' +
       'style="' + fs + '" ' +
-      'oninput="onPageInput(' + pg.id + ')" onfocus="onPageFocus(' + pg.id + ')">' +
+      'oninput="onPageInput(' + pg.id + ')" onfocus="onPageFocus(' + pg.id + ')" onblur="onPageBlur(' + pg.id + ')">' +
       textContent +
       '</div>' +
       '<div class="page-float-layer" id="float-' + pg.id + '"></div>' +
       '<div class="page-num">Page ' + (i + 1) + '</div>' +
       '</div>';
   }).join('');
-  // Render floating images for each page
   pages.forEach(function(pg) { renderFloatingImgs(pg); });
   totalPagesCount = pages.length;
   updateUI();
   renderThumbnails();
+  // Render all PDF pages to their canvas elements using PDF.js API
+  renderAllCanvases();
+}
+
+// ════════════════════════════════════════
+// PDF.JS CANVAS RENDERING
+// ════════════════════════════════════════
+async function renderAllCanvases() {
+  if (!pdfDoc) return;
+  for (var k = 0; k < pages.length; k++) {
+    var pg = pages[k];
+    if (!pg.pdfPageNum) continue;
+    renderPageCanvas(pg);
+  }
+}
+
+async function renderPageCanvas(pg) {
+  if (!pdfDoc || !pg.pdfPageNum) return;
+  var canvas = document.getElementById('pcanvas-' + pg.id);
+  if (!canvas) return;
+  try {
+    var page = await pdfDoc.getPage(pg.pdfPageNum);
+    var nativeVp = page.getViewport({ scale: 1 });
+    // Scale to match CSS width (816px) × devicePixelRatio for crisp rendering
+    var dpr = window.devicePixelRatio || 2;
+    var SCALE = (816 / nativeVp.width) * dpr;
+    var vp = page.getViewport({ scale: SCALE });
+    canvas.width  = Math.ceil(vp.width);
+    canvas.height = Math.ceil(vp.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+  } catch(e) {}
 }
 
 function renderFloatingImgs(pg) {
@@ -1079,6 +1118,7 @@ function renderFloatingImgs(pg) {
     img.style.left = (fi.x || 0) + 'px';
     img.style.top  = (fi.y || 0) + 'px';
     img.style.width = (fi.w || 200) + 'px';
+    if (fi.h) img.style.height = fi.h + 'px';
     img.dataset.pgid = pg.id;
     img.dataset.idx = idx;
     layer.appendChild(img);
@@ -1111,8 +1151,15 @@ function onPageInput(pageId) {
 function onPageFocus(pageId) {
   currentPageId = pageId;
   currentPage = pages.findIndex(function(p) { return p.id === pageId; }) + 1;
+  var pageEl = document.getElementById('page-' + pageId);
+  if (pageEl) pageEl.classList.add('editing');
   switchToolbarTab('text');
   updateUI();
+}
+
+function onPageBlur(pageId) {
+  var pageEl = document.getElementById('page-' + pageId);
+  if (pageEl) pageEl.classList.remove('editing');
 }
 
 // ════════════════════════════════════════
@@ -1362,12 +1409,14 @@ document.getElementById('viewer').addEventListener('click', function(e) {
 function renderThumbnails() {
   var list = document.getElementById('thumbList');
   list.innerHTML = pages.map(function(pg, i) {
-    var preview = (pg.content || '').replace(/<[^>]*>/g, ' ').slice(0, 120);
     var isActive = pg.id === currentPageId;
     var isBookmarked = bookmarks.has(i + 1);
+    var thumbInner = pg.thumbDataUrl
+      ? '<img src="' + pg.thumbDataUrl + '" style="width:100%;display:block;border-radius:0">'
+      : '<div style="background:#fff;border-radius:3px;padding:8px;min-height:80px;font-size:5px;line-height:1.3;color:#333;overflow:hidden">' +
+        ((pg.content || '').replace(/<[^>]*>/g, ' ').slice(0, 120) || '<span style="color:#ccc">Empty</span>') + '</div>';
     return '<div class="thumb-item' + (isActive ? ' active' : '') + (isBookmarked ? ' bookmarked' : '') + '" onclick="goToPage(' + (i + 1) + ')">' +
-      '<div style="background:#fff;border-radius:3px;padding:8px;min-height:80px;font-size:5px;line-height:1.3;color:#333;overflow:hidden">' +
-      (preview || '<span style="color:#ccc">Empty</span>') + '</div>' +
+      thumbInner +
       '<span class="thumb-num">' + (i + 1) + '</span>' +
       '<span class="thumb-bookmark"><i class="fas fa-bookmark"></i></span>' +
       '<div class="thumb-actions">' +
@@ -1448,20 +1497,37 @@ async function savePDF() {
   toast('Generating PDF...');
 
   var container = document.createElement('div');
-  container.style.cssText = "font-family:'IBM Plex Sans',Arial,sans-serif;font-size:16px;line-height:1.6;color:#222;background:#fff;";
+  container.style.cssText = "font-family:'IBM Plex Sans',Arial,sans-serif;font-size:16px;line-height:1.6;color:#222;";
 
   var hasContent = false, pageCount = 0;
-  pages.forEach(function(pg) {
+  for (var pi = 0; pi < pages.length; pi++) {
+    var pg = pages[pi];
     var text = (pg.content || '').replace(/<[^>]*>/g, '').trim();
-    var hasImg = pg.content.includes('<img');
-    if (!text && !hasImg) return;
+    var hasPdfPage = !!pg.pdfPageNum;
+    if (!text && !hasPdfPage) continue;
     hasContent = true;
+    var h = pg.aspect ? Math.round(816 * pg.aspect) : 1056;
     var div = document.createElement('div');
-    if (pageCount > 0) div.style.pageBreakBefore = 'always';
-    div.innerHTML = pg.content;
+    div.style.cssText = 'position:relative;width:816px;height:' + h + 'px;overflow:hidden;background:#fff;' + (pageCount > 0 ? 'page-break-before:always;' : '');
+
+    // Snapshot the live PDF.js canvas into an img for export
+    if (hasPdfPage) {
+      var srcCanvas = document.getElementById('pcanvas-' + pg.id);
+      if (srcCanvas && srcCanvas.width > 0) {
+        var snapImg = document.createElement('img');
+        snapImg.src = srcCanvas.toDataURL('image/jpeg', 0.92);
+        snapImg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
+        div.appendChild(snapImg);
+      }
+    }
+
+    var textDiv = document.createElement('div');
+    textDiv.style.cssText = 'position:absolute;inset:0;padding:96px;color:#222;font-size:16px;line-height:1.6;';
+    textDiv.innerHTML = (pg.content || '').replace(/<img[^>]*>/gi, '');
+    div.appendChild(textDiv);
     container.appendChild(div);
     pageCount++;
-  });
+  }
 
   if (!hasContent) { toast('No content to save'); return; }
 
@@ -1470,12 +1536,12 @@ async function savePDF() {
 
   try {
     await html2pdf().set({
-      margin: 10,
+      margin: 0,
       filename: filename + '.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       pagebreak: { mode: ['css'] },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      html2canvas: { scale: 1, useCORS: true, allowTaint: true },
+      jsPDF: { unit: 'px', format: [816, h], orientation: 'portrait' }
     }).from(container).save();
     toast('Downloaded ' + filename + '.pdf');
   } catch(e) {
