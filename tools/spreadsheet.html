@@ -6,6 +6,8 @@
     <title>Spreadsheet - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -579,8 +581,8 @@
             <button class="header-btn" onclick="saveSpreadsheet()">
                 <i class="fas fa-file-pdf"></i> PDF
             </button>
-            <button class="header-btn" onclick="exportCSV()">
-                <i class="fas fa-file-csv"></i> CSV
+            <button class="header-btn" onclick="exportXLSX()">
+                <i class="fas fa-file-excel"></i> Excel
             </button>
         </div>
     </div>
@@ -1205,6 +1207,171 @@
                     if (m) { const el = document.getElementById(m[1]); return el ? el.value.length : 0; }
                 }
 
+                // Handle MEDIAN function
+                if (expression.startsWith('MEDIAN(')) {
+                    const range = expression.match(/MEDIAN\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) {
+                        const vals = getCellsInRange(range[1], range[2]).map(c => getCellValue(c)).filter(v => !isNaN(v) && v !== 0 || (document.getElementById(range[1]) && document.getElementById(range[1]).value.trim() !== '')).sort((a, b) => a - b);
+                        if (vals.length === 0) return 0;
+                        const mid = Math.floor(vals.length / 2);
+                        return vals.length % 2 !== 0 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+                    }
+                }
+
+                // Handle MODE function
+                if (expression.startsWith('MODE(')) {
+                    const range = expression.match(/MODE\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) {
+                        const vals = getCellsInRange(range[1], range[2]).map(c => getCellValue(c)).filter(v => !isNaN(v));
+                        const freq = {};
+                        vals.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+                        let maxFreq = 0, mode = 0;
+                        for (const k in freq) { if (freq[k] > maxFreq) { maxFreq = freq[k]; mode = parseFloat(k); } }
+                        return mode;
+                    }
+                }
+
+                // Handle PRODUCT function
+                if (expression.startsWith('PRODUCT(')) {
+                    const range = expression.match(/PRODUCT\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) {
+                        const vals = getCellsInRange(range[1], range[2]).map(c => getCellValue(c)).filter(v => !isNaN(v) && v !== 0);
+                        return vals.length ? vals.reduce((a, b) => a * b, 1) : 0;
+                    }
+                }
+
+                // Handle SUMIF function: =SUMIF(A1:A10,">5") or =SUMIF(A1:A10,">=10")
+                if (expression.startsWith('SUMIF(')) {
+                    const m = expression.match(/SUMIF\(([A-Z]+\d+):([A-Z]+\d+),"(.+)"\)$/);
+                    if (m) {
+                        const cells = getCellsInRange(m[1], m[2]);
+                        const cond = m[3];
+                        let sum = 0;
+                        cells.forEach(c => {
+                            const v = getCellValue(c);
+                            try { if (eval(v + cond) || eval('"' + v + '"==' + '"' + cond + '"')) sum += v; } catch(e) { if (String(v) === cond) sum += v; }
+                        });
+                        return sum;
+                    }
+                }
+
+                // Handle COUNTIF function: =COUNTIF(A1:A10,">5")
+                if (expression.startsWith('COUNTIF(')) {
+                    const m = expression.match(/COUNTIF\(([A-Z]+\d+):([A-Z]+\d+),"(.+)"\)$/);
+                    if (m) {
+                        const cells = getCellsInRange(m[1], m[2]);
+                        const cond = m[3];
+                        let count = 0;
+                        cells.forEach(c => {
+                            const v = getCellValue(c);
+                            const el = document.getElementById(c);
+                            const raw = el ? el.value.trim() : '';
+                            try { if (eval(v + cond)) count++; } catch(e) { if (raw === cond) count++; }
+                        });
+                        return count;
+                    }
+                }
+
+                // Handle TRIM function
+                if (expression.startsWith('TRIM(')) {
+                    const m = expression.match(/TRIM\(([A-Z]+\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.trim().replace(/\s+/g, ' ') : ''; }
+                }
+
+                // Handle LEFT function: =LEFT(A1,3)
+                if (expression.startsWith('LEFT(')) {
+                    const m = expression.match(/LEFT\(([A-Z]+\d+),(\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.substring(0, parseInt(m[2])) : ''; }
+                }
+
+                // Handle RIGHT function: =RIGHT(A1,3)
+                if (expression.startsWith('RIGHT(')) {
+                    const m = expression.match(/RIGHT\(([A-Z]+\d+),(\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.slice(-parseInt(m[2])) : ''; }
+                }
+
+                // Handle MID function: =MID(A1,2,3)
+                if (expression.startsWith('MID(')) {
+                    const m = expression.match(/MID\(([A-Z]+\d+),(\d+),(\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.substring(parseInt(m[2]) - 1, parseInt(m[2]) - 1 + parseInt(m[3])) : ''; }
+                }
+
+                // Handle CEILING function: =CEILING(A1,10)
+                if (expression.startsWith('CEILING(')) {
+                    const m = expression.match(/CEILING\((.+),(.+)\)$/);
+                    if (m) {
+                        let val = parseFloat(m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        let sig = parseFloat(m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        return Math.ceil(val / sig) * sig;
+                    }
+                }
+
+                // Handle FLOOR function: =FLOOR(A1,10)
+                if (expression.startsWith('FLOOR(')) {
+                    const m = expression.match(/FLOOR\((.+),(.+)\)$/);
+                    if (m) {
+                        let val = parseFloat(m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        let sig = parseFloat(m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        return Math.floor(val / sig) * sig;
+                    }
+                }
+
+                // Handle MOD function: =MOD(A1,3)
+                if (expression.startsWith('MOD(')) {
+                    const m = expression.match(/MOD\((.+),(.+)\)$/);
+                    if (m) {
+                        let a = parseFloat(m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        let b = parseFloat(m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        return a % b;
+                    }
+                }
+
+                // Handle LOG function: =LOG(A1) or =LOG(A1,2)
+                if (expression.startsWith('LOG(')) {
+                    const m = expression.match(/LOG\((.+?)(?:,(.+))?\)$/);
+                    if (m) {
+                        let val = parseFloat(m[1].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                        if (m[2]) {
+                            let base = parseFloat(m[2].replace(/([A-Z]+\d+)/g, (match) => getCellValue(match)));
+                            return Math.log(val) / Math.log(base);
+                        }
+                        return Math.log10(val);
+                    }
+                }
+
+                // Handle RAND and RANDBETWEEN
+                if (expression === 'RAND()') return Math.random();
+                if (expression.startsWith('RANDBETWEEN(')) {
+                    const m = expression.match(/RANDBETWEEN\((\d+),(\d+)\)$/);
+                    if (m) { return Math.floor(Math.random() * (parseInt(m[2]) - parseInt(m[1]) + 1)) + parseInt(m[1]); }
+                }
+
+                // Handle STDEV function (sample standard deviation)
+                if (expression.startsWith('STDEV(')) {
+                    const range = expression.match(/STDEV\(([A-Z]+\d+):([A-Z]+\d+)\)/);
+                    if (range) {
+                        const vals = getCellsInRange(range[1], range[2]).map(c => getCellValue(c)).filter(v => !isNaN(v));
+                        if (vals.length < 2) return 0;
+                        const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                        const variance = vals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (vals.length - 1);
+                        return Math.sqrt(variance);
+                    }
+                }
+
+                // Handle PROPER function (capitalize first letter of each word)
+                if (expression.startsWith('PROPER(')) {
+                    const m = expression.match(/PROPER\(([A-Z]+\d+)\)$/);
+                    if (m) { const el = document.getElementById(m[1]); return el ? el.value.replace(/\b\w/g, c => c.toUpperCase()) : ''; }
+                }
+
+                // Handle REPT function: =REPT("*",5)
+                if (expression.startsWith('REPT(')) {
+                    const m = expression.match(/REPT\("(.+)",(\d+)\)$/);
+                    if (m) return m[1].repeat(parseInt(m[2]));
+                    const m2 = expression.match(/REPT\(([A-Z]+\d+),(\d+)\)$/);
+                    if (m2) { const el = document.getElementById(m2[1]); return el ? el.value.repeat(parseInt(m2[2])) : ''; }
+                }
+
                 // Handle NOW/TODAY
                 if (expression === 'NOW()') return new Date().toLocaleString();
                 if (expression === 'TODAY()') return new Date().toLocaleDateString();
@@ -1713,6 +1880,156 @@
             setTimeout(() => {
                 document.getElementById('saveStatus').textContent = 'Ready';
             }, 2000);
+        }
+
+        // Helper: convert any color string to hex ARGB for ExcelJS (e.g. "FF3B82F6")
+        function colorToARGB(color) {
+            if (!color) return null;
+            // Already hex like #3b82f6
+            if (color.startsWith('#')) {
+                const hex = color.replace('#', '');
+                if (hex.length === 3) return 'FF' + hex.split('').map(c => c + c).join('');
+                if (hex.length === 6) return 'FF' + hex.toUpperCase();
+                return hex.toUpperCase();
+            }
+            // rgb(r,g,b)
+            const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            if (m) {
+                const toHex = n => parseInt(n).toString(16).padStart(2, '0');
+                return 'FF' + toHex(m[1]) + toHex(m[2]) + toHex(m[3]);
+            }
+            return null;
+        }
+
+        // Export as XLSX with styles, colors, and images using ExcelJS
+        async function exportXLSX() {
+            document.getElementById('saveStatus').textContent = 'Exporting Excel...';
+
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const sheet = workbook.addWorksheet(currentSpreadsheetName || 'Sheet1');
+
+                // Find data bounds (include styled/image cells)
+                let maxRow = 0, maxCol = 0;
+                const allKeys = new Set([...Object.keys(cellData), ...Object.keys(cellStyles)]);
+                allKeys.forEach(id => {
+                    if (cellData[id] || (cellStyles[id] && (cellStyles[id].backgroundColor || cellStyles[id].imageData || cellStyles[id].color))) {
+                        maxCol = Math.max(maxCol, id.charCodeAt(0) - 65);
+                        maxRow = Math.max(maxRow, parseInt(id.substring(1)));
+                    }
+                });
+
+                if (maxRow === 0) { alert('No data to export.'); document.getElementById('saveStatus').textContent = 'Ready'; return; }
+
+                // Set column widths
+                for (let c = 0; c <= maxCol; c++) {
+                    sheet.getColumn(c + 1).width = 15;
+                }
+
+                // Fill cells
+                for (let r = 1; r <= maxRow; r++) {
+                    const row = sheet.getRow(r);
+                    for (let c = 0; c <= maxCol; c++) {
+                        const cellId = String.fromCharCode(65 + c) + r;
+                        const cellEl = document.getElementById(cellId);
+                        const style = cellStyles[cellId] || {};
+                        const excelCell = row.getCell(c + 1);
+
+                        // Set value
+                        const displayValue = cellEl ? cellEl.value : '';
+                        const numVal = parseFloat(displayValue);
+                        if (displayValue !== '' && !isNaN(numVal) && isFinite(numVal) && String(numVal) === displayValue.trim()) {
+                            excelCell.value = numVal;
+                        } else {
+                            excelCell.value = displayValue;
+                        }
+
+                        // Font
+                        const font = {};
+                        if (style.fontWeight === 'bold') font.bold = true;
+                        if (style.fontStyle === 'italic') font.italic = true;
+                        if (style.textDecoration === 'underline') font.underline = true;
+                        if (style.fontFamily) font.name = style.fontFamily;
+                        if (style.fontSize) font.size = Math.round(parseInt(style.fontSize) * 0.75); // px to pt
+                        const textColor = colorToARGB(style.color);
+                        if (textColor && textColor !== 'FF000000') font.color = { argb: textColor };
+                        if (Object.keys(font).length > 0) excelCell.font = font;
+
+                        // Fill (background color)
+                        const bgColor = colorToARGB(style.backgroundColor);
+                        if (bgColor && bgColor !== 'FFFFFFFF') {
+                            excelCell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: bgColor }
+                            };
+                        }
+
+                        // Alignment
+                        if (style.textAlign) {
+                            excelCell.alignment = { horizontal: style.textAlign };
+                        }
+
+                        // Border
+                        excelCell.border = {
+                            top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                            left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                            bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+                            right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+                        };
+                    }
+                }
+
+                // Embed images (stored as cellStyles[id].imageData)
+                for (const cellId of Object.keys(cellStyles)) {
+                    const style = cellStyles[cellId];
+                    if (!style || !style.imageData) continue;
+
+                    const col = cellId.charCodeAt(0) - 65;
+                    const row = parseInt(cellId.substring(1));
+                    const imgW = style.imageWidth || 120;
+                    const imgH = style.imageHeight || 80;
+
+                    try {
+                        const dataUrl = style.imageData;
+                        const base64Data = dataUrl.split(',')[1];
+                        const mimeMatch = dataUrl.match(/data:image\/([\w+]+)/);
+                        let extension = mimeMatch ? mimeMatch[1] : 'png';
+                        if (extension === 'jpeg') extension = 'jpeg';
+
+                        const imageId = workbook.addImage({
+                            base64: base64Data,
+                            extension: extension
+                        });
+
+                        // Set row height to fit image
+                        sheet.getRow(row).height = imgH * 0.75;
+                        // Set column width to fit image
+                        const colWidth = Math.max(sheet.getColumn(col + 1).width || 15, imgW / 7);
+                        sheet.getColumn(col + 1).width = colWidth;
+
+                        sheet.addImage(imageId, {
+                            tl: { col: col, row: row - 1 },
+                            ext: { width: imgW, height: imgH }
+                        });
+                    } catch (imgErr) {
+                        console.warn('Could not embed image for', cellId, imgErr);
+                    }
+                }
+
+                // Write and download
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, (currentSpreadsheetName || 'spreadsheet') + '.xlsx');
+
+                document.getElementById('saveStatus').textContent = 'Excel Exported!';
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
+            } catch (err) {
+                console.error('XLSX export error:', err);
+                document.getElementById('saveStatus').textContent = 'Export failed!';
+                setTimeout(() => { document.getElementById('saveStatus').textContent = 'Ready'; }, 2000);
+                alert('Export failed: ' + err.message);
+            }
         }
 
         // Print spreadsheet
