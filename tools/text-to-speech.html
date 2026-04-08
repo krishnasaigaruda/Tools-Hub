@@ -460,7 +460,7 @@
             <button class="btn btn-primary" id="speakBtn"><i class="fas fa-play"></i> Speak</button>
             <button class="btn btn-secondary" id="pauseBtn" style="display:none;"><i class="fas fa-pause"></i> Pause</button>
             <button class="btn btn-secondary" id="downloadBtn" onclick="downloadAudio()"><i class="fas fa-download"></i> Download MP3</button>
-            <span style="font-size:0.7rem;color:var(--text-dim);align-self:center;margin-left:-0.25rem;" title="Browser voices can't be saved as files. Download uses a Google voice in the same language instead."><i class="fas fa-info-circle"></i> Google voice</span>
+            <span style="font-size:0.7rem;color:var(--text-dim);align-self:center;margin-left:-0.25rem;" title="Downloads an MP3 using Lingva TTS in the selected language."><i class="fas fa-info-circle"></i> Lingva voice</span>
             <button class="btn btn-secondary btn-icon" onclick="printText()" title="Print"><i class="fas fa-print"></i></button>
             <button class="btn btn-secondary btn-icon" onclick="copyText()" title="Copy"><i class="fas fa-copy"></i></button>
             <button class="btn btn-secondary btn-icon" onclick="shareText()" title="Share"><i class="fas fa-share-nodes"></i></button>
@@ -739,40 +739,23 @@
         charCount.textContent = '0 characters';
     }
 
-    // --- Download Audio (Sound of Text API) ---
-    const DL_VOICE_MAP = {
-        'en-us': 'en-US', 'en-gb': 'en-GB', 'en-au': 'en-AU', 'en-in': 'en-IN', 'en': 'en-US',
-        'es-es': 'es-ES', 'es-mx': 'es-ES', 'es-us': 'es-ES', 'es': 'es-ES',
-        'fr-fr': 'fr-FR', 'fr-ca': 'fr-FR', 'fr': 'fr-FR',
-        'de-de': 'de-DE', 'de': 'de-DE',
-        'it-it': 'it-IT', 'it': 'it-IT',
-        'pt-br': 'pt-BR', 'pt-pt': 'pt-BR', 'pt': 'pt-BR',
-        'ja-jp': 'ja-JP', 'ja': 'ja-JP',
-        'ko-kr': 'ko-KR', 'ko': 'ko-KR',
-        'zh-cn': 'cmn-Hant-TW', 'zh-tw': 'cmn-Hant-TW', 'zh-hk': 'cmn-Hant-TW', 'zh': 'cmn-Hant-TW', 'cmn': 'cmn-Hant-TW',
-        'ru-ru': 'ru-RU', 'ru': 'ru-RU',
-        'tr-tr': 'tr-TR', 'tr': 'tr-TR',
-        'hi-in': 'hi-IN', 'hi': 'hi-IN',
-        'pl-pl': 'pl-PL', 'pl': 'pl-PL',
-        'nl-nl': 'nl-NL', 'nl-be': 'nl-NL', 'nl': 'nl-NL',
-        'sv-se': 'sv-SE', 'sv': 'sv-SE',
-        'nb-no': 'nb-NO', 'nb': 'nb-NO', 'no': 'nb-NO',
-        'da-dk': 'da-DK', 'da': 'da-DK',
-        'fi-fi': 'fi-FI', 'fi': 'fi-FI',
-        'el-gr': 'el-GR', 'el': 'el-GR',
-        'th-th': 'th-TH', 'th': 'th-TH',
-        'vi-vn': 'vi-VN', 'vi': 'vi-VN',
-        'id-id': 'id-ID', 'id': 'id-ID',
-        'uk-ua': 'uk-UA', 'uk': 'uk-UA',
-        'ro-ro': 'ro-RO', 'ro': 'ro-RO',
-        'hu-hu': 'hu-HU', 'hu': 'hu-HU',
-    };
-
-    function getDownloadVoice() {
+    // --- Download Audio (Lingva Translate TTS API — CORS-friendly, open source) ---
+    function getDownloadLang() {
         const selected = voices[voiceSelect.value];
-        if (!selected) return 'en-US';
-        const lang = selected.lang.toLowerCase();
-        return DL_VOICE_MAP[lang] || DL_VOICE_MAP[lang.split('-')[0]] || 'en-US';
+        if (!selected) return 'en';
+        return selected.lang.split('-')[0].toLowerCase();
+    }
+
+    function splitTextIntoChunks(text, maxLen) {
+        const chunks = [];
+        while (text.length > 0) {
+            if (text.length <= maxLen) { chunks.push(text); break; }
+            let cut = text.lastIndexOf(' ', maxLen);
+            if (cut === -1 || cut === 0) cut = maxLen;
+            chunks.push(text.substring(0, cut).trim());
+            text = text.substring(cut).trim();
+        }
+        return chunks;
     }
 
     async function downloadAudio() {
@@ -783,41 +766,40 @@
         dlBtn.classList.add('downloading');
         dlBtn.innerHTML = '<i class="fas fa-spinner"></i> Generating...';
 
-        const voice = getDownloadVoice();
+        const lang = getDownloadLang();
+        const LINGVA_BASE = 'https://lingva.ml/api/v1/audio';
 
         try {
-            // Step 1: Request audio generation
-            const createResp = await fetch('https://api.soundoftext.com/sounds', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ engine: 'Google', data: { text, voice } })
-            });
-            const createData = await createResp.json();
-            if (!createData.success) throw new Error('Generation failed');
+            const chunks = splitTextIntoChunks(text, 200);
+            const audioBuffers = [];
 
-            // Step 2: Poll for completion
-            const id = createData.id;
-            let audioUrl = null;
-            for (let i = 0; i < 20; i++) {
-                const statusResp = await fetch(`https://api.soundoftext.com/sounds/${id}`);
-                const statusData = await statusResp.json();
-                if (statusData.status === 'Done') {
-                    audioUrl = statusData.location;
-                    break;
-                }
-                if (statusData.status === 'Error') throw new Error('Generation error');
-                await new Promise(r => setTimeout(r, 500));
+            for (const chunk of chunks) {
+                const resp = await fetch(`${LINGVA_BASE}/${encodeURIComponent(lang)}/${encodeURIComponent(chunk)}`);
+                if (!resp.ok) throw new Error('TTS request failed');
+                const data = await resp.json();
+                if (!data.audio || !data.audio.length) throw new Error('No audio returned');
+                audioBuffers.push(new Uint8Array(data.audio));
             }
 
-            if (!audioUrl) throw new Error('Timeout');
+            // Combine all chunks into one file
+            const totalLen = audioBuffers.reduce((sum, buf) => sum + buf.length, 0);
+            const combined = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const buf of audioBuffers) {
+                combined.set(buf, offset);
+                offset += buf.length;
+            }
 
-            // Step 3: Download the MP3 via direct link
+            const blob = new Blob([combined], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = audioUrl;
-            a.download = '';
-            a.target = '_blank';
+            a.href = url;
+            a.download = 'speech.mp3';
+            document.body.appendChild(a);
             a.click();
-            showToast('Downloading MP3 (Google voice)');
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('MP3 downloaded!');
         } catch (err) {
             showToast('Download failed. Try again.');
         }
