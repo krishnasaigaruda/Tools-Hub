@@ -284,14 +284,14 @@ var map = L.map('map', { zoomControl: false, scrollWheelZoom: true, zoomAnimatio
 L.control.zoom({ position: 'topright' }).addTo(map);
 
 var tileLayers = {
-  streets: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png', { attribution: '© CartoDB © OpenStreetMap', maxZoom: 20 }),
+  streets: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png', { attribution: '© <a href="https://carto.com/">CartoDB</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>', maxZoom: 20 }),
   satellite: L.layerGroup([
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '© Esri', maxZoom: 19 }),
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 19, pane: 'overlayPane' })
   ]),
-  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '© OpenTopoMap', maxZoom: 17 }),
-  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 19 }),
-  transit: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© CartoDB', maxZoom: 19 })
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>', maxZoom: 17 }),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© <a href="https://carto.com/">CartoDB</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>', maxZoom: 19 }),
+  transit: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© <a href="https://carto.com/">CartoDB</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>', maxZoom: 19 })
 };
 tileLayers.streets.addTo(map);
 var currentLayer = 'streets';
@@ -672,7 +672,12 @@ async function showPlaceInfo(r) {
     } catch(e) {}
   }
 
-  document.getElementById('placeDesc').textContent = desc || 'No description available.';
+  var descEl = document.getElementById('placeDesc');
+  if (desc) {
+    descEl.innerHTML = esc(desc) + ' <span style="font-size:.7rem;color:var(--t3);">— Source: <a href="https://en.wikipedia.org" target="_blank" rel="noopener" style="color:var(--accent);">Wikipedia</a> (CC BY-SA 4.0)</span>';
+  } else {
+    descEl.textContent = 'No description available.';
+  }
 
   // Info grid
   var grid = '';
