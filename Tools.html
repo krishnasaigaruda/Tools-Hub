@@ -38,6 +38,38 @@
         .header {
             padding: 36px 0 28px;
             text-align: center;
+            position: relative;
+        }
+
+        .try-webos-btn {
+            position: absolute;
+            top: 36px;
+            right: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            border: 1px solid rgba(139,92,246,0.4);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            box-shadow: 0 4px 20px rgba(139,92,246,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .try-webos-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(236,72,153,0.45);
+        }
+        @media (max-width: 720px) {
+            .try-webos-btn {
+                position: static;
+                margin-bottom: 16px;
+            }
         }
 
         .header-badge {
@@ -418,6 +450,7 @@
 <body>
     <div class="page-wrap">
         <div class="header">
+            <a href="https://github.com/krishnasaigaruda/webOS" target="_blank" rel="noopener" class="try-webos-btn"><i class="fas fa-desktop"></i> Try WebOS</a>
             <div class="header-badge"><i class="fas fa-bolt"></i> 60+ Tools</div>
             <h1>Tools Hub</h1>
             <p class="subtitle">Your all-in-one productivity toolkit</p>
