@@ -287,7 +287,7 @@
         <div class="sidebar-section">
             <h3><i class="fas fa-function"></i> Add Function</h3>
             <div class="input-row">
-                <input type="text" id="funcInput" class="func-input" placeholder="e.g. sin(x), x^2" spellcheck="false">
+                <input type="text" id="funcInput" class="func-input" placeholder="e.g. sin(x), x^2, x^2+y^2=9" spellcheck="false">
                 <button class="btn btn-primary" id="addBtn" title="Plot function"><i class="fas fa-plus"></i></button>
             </div>
         </div>
@@ -418,7 +418,8 @@
         return e;
     }
 
-    function buildFunction(expr) {
+    // Turn a human-friendly expression into a JS source string (supports x and y).
+    function transformExpr(expr) {
         let e = expr.trim();
         // Protect function names by replacing them with placeholders
         const funcs = ['sin','cos','tan','asin','acos','atan','sqrt','abs','log','log2','log10','ceil','floor','round','exp','sinh','cosh','tanh'];
@@ -440,22 +441,49 @@
         });
         e = e.replace(/\)([a-zA-Z0-9])/g, ')*$1');
         e = e.replace(/\)\(/g, ')*(');
-        e = e.replace(/([a-zA-Z])(\()/g, '$1$2');
         // Restore function names with Math. prefix
         Object.keys(placeholders).forEach(ph => {
             e = e.replace(new RegExp(ph.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 'Math.' + placeholders[ph]);
         });
         // Validate: only allow safe characters
-        if (/[^0-9x+\-*/().,%\s\w]/.test(e.replace(/Math\.\w+/g, ''))) {
+        if (/[^0-9xy+\-*/().,%\s\w]/.test(e.replace(/Math\.\w+/g, ''))) {
             throw new Error('Invalid characters in expression');
         }
+        return e;
+    }
+
+    // An input is implicit if it contains an '=' or references the y variable.
+    function isImplicit(expr) {
+        return /=/.test(expr) || /\by\b/.test(expr);
+    }
+
+    // Explicit function: compiles to f(x).
+    function buildFunction(expr) {
+        const src = transformExpr(expr);
         try {
-            const fn = new Function('x', `"use strict"; return (${e});`);
-            // Test it
+            const fn = new Function('x', `"use strict"; return (${src});`);
             fn(1);
             return fn;
         } catch(err) {
             throw new Error('Could not parse expression: ' + err.message);
+        }
+    }
+
+    // Implicit relation: compiles "lhs = rhs" into F(x,y) = lhs - rhs (zero contour is the curve).
+    function buildRelation(expr) {
+        let e = expr.trim();
+        if (e.includes('=')) {
+            const parts = e.split('=');
+            if (parts.length !== 2) throw new Error('Use exactly one "=" sign');
+            e = `(${parts[0]}) - (${parts[1]})`;
+        }
+        const src = transformExpr(e);
+        try {
+            const fn = new Function('x', 'y', `"use strict"; return (${src});`);
+            fn(1, 1);
+            return fn;
+        } catch(err) {
+            throw new Error('Could not parse equation: ' + err.message);
         }
     }
 
@@ -491,7 +519,7 @@
 
         drawGrid();
         drawAxes();
-        functions.forEach(f => drawFunction(f));
+        functions.forEach(f => f.implicit ? drawImplicit(f) : drawFunction(f));
     }
 
     function niceStep(range, targetTicks) {
@@ -658,20 +686,96 @@
         ctx.stroke();
     }
 
+    // Render an implicit relation F(x,y)=0 via marching squares over a pixel grid.
+    function drawImplicit(funcObj) {
+        const f = funcObj.compiled2;
+        const w = canvas.width, h = canvas.height;
+        const res = 6;                       // grid spacing in pixels
+        const cols = Math.ceil(w / res);
+        const rows = Math.ceil(h / res);
+        const big = 1e6;                     // skip near-asymptote cells
+
+        // Precompute world coords for each grid line, then sample F on the grid.
+        const xs = new Array(cols + 1), ys = new Array(rows + 1);
+        for (let i = 0; i <= cols; i++) xs[i] = canvasToX(i * res);
+        for (let j = 0; j <= rows; j++) ys[j] = canvasToY(j * res);
+
+        const vals = new Array(rows + 1);
+        for (let j = 0; j <= rows; j++) {
+            const row = new Float64Array(cols + 1);
+            const yv = ys[j];
+            for (let i = 0; i <= cols; i++) {
+                let v;
+                try { v = f(xs[i], yv); } catch { v = NaN; }
+                row[i] = v;
+            }
+            vals[j] = row;
+        }
+
+        ctx.strokeStyle = funcObj.color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+
+        for (let j = 0; j < rows; j++) {
+            for (let i = 0; i < cols; i++) {
+                const tl = vals[j][i], tr = vals[j][i + 1];
+                const bl = vals[j + 1][i], br = vals[j + 1][i + 1];
+                if (!(isFinite(tl) && isFinite(tr) && isFinite(br) && isFinite(bl))) continue;
+                if (Math.abs(tl) > big || Math.abs(tr) > big || Math.abs(br) > big || Math.abs(bl) > big) continue;
+
+                let idx = 0;
+                if (tl > 0) idx |= 8;
+                if (tr > 0) idx |= 4;
+                if (br > 0) idx |= 2;
+                if (bl > 0) idx |= 1;
+                if (idx === 0 || idx === 15) continue;
+
+                const x0 = i * res, x1 = x0 + res, y0 = j * res, y1 = y0 + res;
+                const top    = () => [x0 + (tl / (tl - tr)) * res, y0];
+                const right  = () => [x1, y0 + (tr / (tr - br)) * res];
+                const bottom = () => [x0 + (bl / (bl - br)) * res, y1];
+                const left   = () => [x0, y0 + (tl / (tl - bl)) * res];
+                const seg = (a, b) => { ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); };
+
+                switch (idx) {
+                    case 1:  seg(left(), bottom()); break;
+                    case 2:  seg(bottom(), right()); break;
+                    case 3:  seg(left(), right()); break;
+                    case 4:  seg(top(), right()); break;
+                    case 5:  seg(top(), right()); seg(left(), bottom()); break;
+                    case 6:  seg(top(), bottom()); break;
+                    case 7:  seg(top(), left()); break;
+                    case 8:  seg(top(), left()); break;
+                    case 9:  seg(top(), bottom()); break;
+                    case 10: seg(top(), left()); seg(bottom(), right()); break;
+                    case 11: seg(top(), right()); break;
+                    case 12: seg(left(), right()); break;
+                    case 13: seg(bottom(), right()); break;
+                    case 14: seg(left(), bottom()); break;
+                }
+            }
+        }
+        ctx.stroke();
+    }
+
     /* ── Add / Remove Functions ── */
     function addFunction(expr) {
         if (!expr || !expr.trim()) return;
         expr = expr.trim();
         try {
-            const compiled = buildFunction(expr);
+            const implicit = isImplicit(expr);
+            const compiled = implicit ? null : buildFunction(expr);
+            const compiled2 = implicit ? buildRelation(expr) : null;
             const color = COLORS[colorIndex % COLORS.length];
             colorIndex++;
-            functions.push({ expr, compiled, color });
+            functions.push({ expr, compiled, compiled2, implicit, color });
             updateFuncList();
             draw();
             saveState();
             funcInput.value = '';
-            statusMsg.textContent = `Plotted: y = ${expr}`;
+            statusMsg.textContent = `Plotted: ${implicit ? expr : 'y = ' + expr}`;
         } catch(e) {
             statusMsg.textContent = 'Error: ' + e.message;
         }
@@ -707,7 +811,7 @@
             li.className = 'func-list-item';
             li.innerHTML = `
                 <span class="func-color-dot" style="background:${f.color}"></span>
-                <span class="func-expr" title="y = ${f.expr}">y = ${f.expr}</span>
+                <span class="func-expr" title="${f.implicit ? f.expr : 'y = ' + f.expr}">${f.implicit ? '' : 'y = '}${f.expr}</span>
                 <button class="func-delete-btn" data-index="${i}" title="Remove"><i class="fas fa-times"></i></button>
             `;
             funcList.appendChild(li);
@@ -808,7 +912,7 @@
     /* ── State Persistence ── */
     function saveState() {
         const state = {
-            functions: functions.map(f => ({ expr: f.expr, color: f.color })),
+            functions: functions.map(f => ({ expr: f.expr, color: f.color, implicit: f.implicit })),
             view,
             colorIndex
         };
@@ -828,8 +932,10 @@
             if (state.functions) {
                 state.functions.forEach(f => {
                     try {
-                        const compiled = buildFunction(f.expr);
-                        functions.push({ expr: f.expr, compiled, color: f.color });
+                        const implicit = f.implicit !== undefined ? f.implicit : isImplicit(f.expr);
+                        const compiled = implicit ? null : buildFunction(f.expr);
+                        const compiled2 = implicit ? buildRelation(f.expr) : null;
+                        functions.push({ expr: f.expr, compiled, compiled2, implicit, color: f.color });
                     } catch {}
                 });
                 updateFuncList();
