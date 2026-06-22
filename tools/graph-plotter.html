@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Graph Plotter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Official Desmos Graphing Calculator API -->
+    <script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
             font-family: 'DM Sans', sans-serif;
             background: #0f172a;
             color: #e2e8f0;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -24,6 +26,7 @@
             background: #1e293b;
             border-bottom: 1px solid #334155;
             gap: 16px;
+            flex-wrap: wrap;
         }
         .back-btn {
             background: none;
@@ -42,98 +45,34 @@
         .back-btn:hover { background: #334155; color: #e2e8f0; }
         .header h1 { font-size: 1.3rem; color: #818cf8; font-weight: 700; }
         .header h1 i { margin-right: 8px; }
-
-        .main-container {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
-            min-width: 320px;
-            background: #1e293b;
-            border-right: 1px solid #334155;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-        .sidebar-section {
-            padding: 16px 18px;
-            border-bottom: 1px solid #334155;
-        }
-        .sidebar-section h3 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
+        .header .spacer { flex: 1; }
+        .powered {
+            font-size: 0.72rem;
             color: #64748b;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .func-input {
-            flex: 1;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            padding: 10px 14px;
-            border-radius: 8px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
         }
-        .func-input:focus { border-color: #818cf8; }
-        .func-input::placeholder { color: #475569; }
+        .powered a { color: #818cf8; text-decoration: none; }
 
-        .btn {
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        .btn-primary {
-            background: #4f46e5;
-            color: white;
-        }
-        .btn-primary:hover { background: #4338ca; }
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-        .btn-danger:hover { background: #b91c1c; }
-        .btn-sm {
-            padding: 6px 10px;
-            font-size: 0.78rem;
-        }
-        .btn-outline {
-            background: none;
-            border: 1px solid #475569;
-            color: #94a3b8;
-        }
-        .btn-outline:hover { background: #334155; color: #e2e8f0; }
-
-        /* Preset buttons */
-        .presets-grid {
+        /* Preset / action toolbar */
+        .toolbar {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
             gap: 6px;
+            padding: 10px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            overflow-x: auto;
+        }
+        .toolbar .label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-right: 4px;
+            white-space: nowrap;
         }
         .preset-btn {
-            padding: 5px 10px;
+            padding: 5px 11px;
             border-radius: 6px;
             border: 1px solid #334155;
             background: #0f172a;
@@ -141,6 +80,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.75rem;
             cursor: pointer;
+            white-space: nowrap;
             transition: all 0.2s;
         }
         .preset-btn:hover {
@@ -148,130 +88,31 @@
             color: #818cf8;
             background: rgba(79, 70, 229, 0.1);
         }
+        .preset-btn.danger { color: #f87171; }
+        .preset-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+        .toolbar .divider { width: 1px; height: 22px; background: #334155; margin: 0 4px; flex-shrink: 0; }
 
-        /* Function list */
-        .func-list {
-            list-style: none;
-        }
-        .func-list-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(51,65,85,0.5);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-        }
-        .func-list-item:last-child { border-bottom: none; }
-        .func-color-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .func-expr {
+        /* Calculator surface */
+        #calculator {
             flex: 1;
-            color: #cbd5e1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .func-delete-btn {
-            background: none;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            font-size: 0.8rem;
-        }
-        .func-delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
-        .empty-msg {
-            color: #475569;
-            font-size: 0.82rem;
-            font-style: italic;
-        }
-
-        /* Range controls */
-        .range-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .range-group label {
-            display: block;
-            font-size: 0.72rem;
-            color: #64748b;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .range-group input {
             width: 100%;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: #e2e8f0;
-            padding: 7px 10px;
-            border-radius: 6px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            outline: none;
-            transition: border-color 0.2s;
         }
-        .range-group input:focus { border-color: #818cf8; }
-
-        /* Zoom controls */
-        .zoom-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .zoom-controls .btn { flex: 1; }
-
-        /* Canvas area */
-        .canvas-area {
+        .fallback {
             flex: 1;
-            display: flex;
+            display: none;
             flex-direction: column;
-            position: relative;
-        }
-        #graphCanvas {
-            flex: 1;
-            display: block;
-            cursor: crosshair;
-        }
-
-        /* Status bar */
-        .status-bar {
-            padding: 8px 18px;
-            background: #1e293b;
-            border-top: 1px solid #334155;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            color: #64748b;
+            justify-content: center;
+            gap: 10px;
+            color: #94a3b8;
+            text-align: center;
+            padding: 24px;
         }
-        .status-bar .coords { color: #818cf8; }
+        .fallback i { font-size: 2rem; color: #f87171; }
 
-        /* Scrollbar */
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        .sidebar::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            .sidebar {
-                width: 100%;
-                min-width: unset;
-                max-height: 260px;
-                border-right: none;
-                border-bottom: 1px solid #334155;
-            }
-        }
+        /* Scrollbar for toolbar */
+        .toolbar::-webkit-scrollbar { height: 6px; }
+        .toolbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -279,746 +120,95 @@
 <div class="header">
     <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
     <h1><i class="fas fa-chart-line"></i> Graph Plotter</h1>
+    <span class="spacer"></span>
+    <span class="powered">powered by <a href="https://www.desmos.com/" target="_blank" rel="noopener">Desmos</a></span>
 </div>
 
-<div class="main-container">
-    <div class="sidebar">
-        <!-- Function Input -->
-        <div class="sidebar-section">
-            <h3><i class="fas fa-function"></i> Add Function</h3>
-            <div class="input-row">
-                <input type="text" id="funcInput" class="func-input" placeholder="e.g. sin(x), x^2, x^2+y^2=9" spellcheck="false">
-                <button class="btn btn-primary" id="addBtn" title="Plot function"><i class="fas fa-plus"></i></button>
-            </div>
-        </div>
+<div class="toolbar" id="toolbar">
+    <span class="label">Presets</span>
+    <button class="preset-btn" data-latex="y=\sin(x)">sin(x)</button>
+    <button class="preset-btn" data-latex="y=\cos(x)">cos(x)</button>
+    <button class="preset-btn" data-latex="y=\tan(x)">tan(x)</button>
+    <button class="preset-btn" data-latex="y=x^2">x&sup2;</button>
+    <button class="preset-btn" data-latex="y=x^3">x&sup3;</button>
+    <button class="preset-btn" data-latex="y=\sqrt{x}">&radic;x</button>
+    <button class="preset-btn" data-latex="y=\left|x\right|">|x|</button>
+    <button class="preset-btn" data-latex="y=\ln(x)">ln(x)</button>
+    <button class="preset-btn" data-latex="y=\frac{1}{x}">1/x</button>
+    <button class="preset-btn" data-latex="x^2+y^2=25">circle</button>
+    <button class="preset-btn" data-latex="\frac{x^2}{9}+\frac{y^2}{4}=1">ellipse</button>
+    <button class="preset-btn" data-latex="y=a\sin(x)">slider</button>
+    <span class="divider"></span>
+    <button class="preset-btn" id="resetView"><i class="fas fa-home"></i> Reset view</button>
+    <button class="preset-btn danger" id="clearAll"><i class="fas fa-trash"></i> Clear all</button>
+</div>
 
-        <!-- Presets -->
-        <div class="sidebar-section">
-            <h3><i class="fas fa-star"></i> Presets</h3>
-            <div class="presets-grid">
-                <button class="preset-btn" data-func="sin(x)">sin(x)</button>
-                <button class="preset-btn" data-func="cos(x)">cos(x)</button>
-                <button class="preset-btn" data-func="tan(x)">tan(x)</button>
-                <button class="preset-btn" data-func="x^2">x&sup2;</button>
-                <button class="preset-btn" data-func="x^3">x&sup3;</button>
-                <button class="preset-btn" data-func="sqrt(x)">&radic;x</button>
-                <button class="preset-btn" data-func="abs(x)">|x|</button>
-                <button class="preset-btn" data-func="log(x)">ln(x)</button>
-                <button class="preset-btn" data-func="1/x">1/x</button>
-                <button class="preset-btn" data-func="2*x+1">2x+1</button>
-                <button class="preset-btn" data-func="sin(x)/x">sinc</button>
-                <button class="preset-btn" data-func="x^2-4">x&sup2;-4</button>
-            </div>
-        </div>
-
-        <!-- Plotted Functions -->
-        <div class="sidebar-section" style="flex:1;">
-            <h3><i class="fas fa-list"></i> Plotted Functions</h3>
-            <ul class="func-list" id="funcList">
-                <li class="empty-msg" id="emptyMsg">No functions plotted yet.</li>
-            </ul>
-        </div>
-
-        <!-- Range Controls -->
-        <div class="sidebar-section">
-            <h3><i class="fas fa-arrows-alt"></i> View Range</h3>
-            <div class="range-grid">
-                <div class="range-group">
-                    <label>X Min</label>
-                    <input type="number" id="xMin" value="-10" step="1">
-                </div>
-                <div class="range-group">
-                    <label>X Max</label>
-                    <input type="number" id="xMax" value="10" step="1">
-                </div>
-                <div class="range-group">
-                    <label>Y Min</label>
-                    <input type="number" id="yMin" value="-10" step="1">
-                </div>
-                <div class="range-group">
-                    <label>Y Max</label>
-                    <input type="number" id="yMax" value="10" step="1">
-                </div>
-            </div>
-            <div style="margin-top:10px;">
-                <button class="btn btn-outline btn-sm" id="applyRange" style="width:100%;"><i class="fas fa-check"></i> Apply Range</button>
-            </div>
-        </div>
-
-        <!-- Zoom & Clear -->
-        <div class="sidebar-section">
-            <h3><i class="fas fa-search"></i> Controls</h3>
-            <div class="zoom-controls" style="margin-bottom:8px;">
-                <button class="btn btn-outline btn-sm" id="zoomIn"><i class="fas fa-search-plus"></i> Zoom In</button>
-                <button class="btn btn-outline btn-sm" id="zoomOut"><i class="fas fa-search-minus"></i> Zoom Out</button>
-                <button class="btn btn-outline btn-sm" id="resetView"><i class="fas fa-home"></i></button>
-            </div>
-            <button class="btn btn-danger btn-sm" id="clearAll" style="width:100%;"><i class="fas fa-trash"></i> Clear All</button>
-        </div>
-    </div>
-
-    <div class="canvas-area">
-        <canvas id="graphCanvas"></canvas>
-        <div class="status-bar">
-            <span id="statusMsg">Hover over the graph to see coordinates</span>
-            <span class="coords" id="coordsDisplay">x: — , y: —</span>
-        </div>
-    </div>
+<div id="calculator"></div>
+<div class="fallback" id="fallback">
+    <i class="fas fa-wifi"></i>
+    <div><strong>Desmos failed to load.</strong></div>
+    <div>This graphing calculator needs an internet connection. Check your network and reload.</div>
 </div>
 
 <script>
 (function() {
     'use strict';
 
-    const COLORS = [
-        '#818cf8', '#f472b6', '#34d399', '#fbbf24', '#fb923c',
-        '#a78bfa', '#22d3ee', '#f87171', '#4ade80', '#e879f9',
-        '#38bdf8', '#facc15'
-    ];
+    const STORAGE_KEY = 'graphPlotterDesmosState';
+    const elt = document.getElementById('calculator');
 
-    const STORAGE_KEY = 'graphPlotterState';
-
-    let functions = [];
-    let colorIndex = 0;
-
-    // View state
-    let view = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
-
-    // Pan state
-    let isPanning = false;
-    let panStart = { x: 0, y: 0 };
-    let panViewStart = {};
-
-    const canvas = document.getElementById('graphCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // DOM refs
-    const funcInput = document.getElementById('funcInput');
-    const addBtn = document.getElementById('addBtn');
-    const funcList = document.getElementById('funcList');
-    const emptyMsg = document.getElementById('emptyMsg');
-    const xMinEl = document.getElementById('xMin');
-    const xMaxEl = document.getElementById('xMax');
-    const yMinEl = document.getElementById('yMin');
-    const yMaxEl = document.getElementById('yMax');
-    const coordsDisplay = document.getElementById('coordsDisplay');
-    const statusMsg = document.getElementById('statusMsg');
-
-    /* ── Math Parser ── */
-    function prepareMathExpr(expr) {
-        let e = expr.trim();
-        // Replace caret with **
-        e = e.replace(/\^/g, '**');
-        // Handle implicit multiplication: 2x -> 2*x, )(  -> )*(, x( -> x*(, )x -> )*x
-        e = e.replace(/(\d)([a-zA-Z(])/g, '$1*$2');
-        e = e.replace(/([a-zA-Z)])(\d)/g, '$1*$2');
-        e = e.replace(/\)\(/g, ')*(');
-        // But fix function names that got broken by the above (e.g., s*i*n -> sin)
-        // Instead, let's do a smarter approach: replace known functions first
-        return e;
+    // Guard: Desmos script must be available (needs internet).
+    if (typeof Desmos === 'undefined') {
+        elt.style.display = 'none';
+        document.getElementById('fallback').style.display = 'flex';
+        return;
     }
 
-    // Turn a human-friendly expression into a JS source string (supports x and y).
-    function transformExpr(expr) {
-        let e = expr.trim();
-        // Protect function names by replacing them with placeholders
-        const funcs = ['sin','cos','tan','asin','acos','atan','sqrt','abs','log','log2','log10','ceil','floor','round','exp','sinh','cosh','tanh'];
-        const placeholders = {};
-        funcs.forEach((fn, i) => {
-            const ph = `__FN${i}__`;
-            placeholders[ph] = fn;
-            e = e.replace(new RegExp('\\b' + fn + '\\b', 'g'), ph);
-        });
-        // Replace constants
-        e = e.replace(/\bPI\b/gi, 'Math.PI');
-        e = e.replace(/\bE\b/g, 'Math.E');
-        // Replace ^ with **
-        e = e.replace(/\^/g, '**');
-        // Implicit multiplication (skip underscores to protect __FN__ placeholders)
-        e = e.replace(/(\d)([a-zA-Z(])/g, function(m, d, c) {
-            if (c === '_') return m;
-            return d + '*' + c;
-        });
-        e = e.replace(/\)([a-zA-Z0-9])/g, ')*$1');
-        e = e.replace(/\)\(/g, ')*(');
-        // Restore function names with Math. prefix
-        Object.keys(placeholders).forEach(ph => {
-            e = e.replace(new RegExp(ph.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 'Math.' + placeholders[ph]);
-        });
-        // Validate: only allow safe characters
-        if (/[^0-9xy+\-*/().,%\s\w]/.test(e.replace(/Math\.\w+/g, ''))) {
-            throw new Error('Invalid characters in expression');
-        }
-        return e;
-    }
-
-    // An input is implicit if it contains an '=' or references the y variable.
-    function isImplicit(expr) {
-        return /=/.test(expr) || /\by\b/.test(expr);
-    }
-
-    // Explicit function: compiles to f(x).
-    function buildFunction(expr) {
-        const src = transformExpr(expr);
-        try {
-            const fn = new Function('x', `"use strict"; return (${src});`);
-            fn(1);
-            return fn;
-        } catch(err) {
-            throw new Error('Could not parse expression: ' + err.message);
-        }
-    }
-
-    // Implicit relation: compiles "lhs = rhs" into F(x,y) = lhs - rhs (zero contour is the curve).
-    function buildRelation(expr) {
-        let e = expr.trim();
-        if (e.includes('=')) {
-            const parts = e.split('=');
-            if (parts.length !== 2) throw new Error('Use exactly one "=" sign');
-            e = `(${parts[0]}) - (${parts[1]})`;
-        }
-        const src = transformExpr(e);
-        try {
-            const fn = new Function('x', 'y', `"use strict"; return (${src});`);
-            fn(1, 1);
-            return fn;
-        } catch(err) {
-            throw new Error('Could not parse equation: ' + err.message);
-        }
-    }
-
-    /* ── Canvas Sizing ── */
-    function resizeCanvas() {
-        const area = canvas.parentElement;
-        const bar = area.querySelector('.status-bar');
-        canvas.width = area.clientWidth;
-        canvas.height = area.clientHeight - bar.offsetHeight;
-        draw();
-    }
-
-    /* ── Coordinate Transforms ── */
-    function xToCanvas(x) {
-        return (x - view.xMin) / (view.xMax - view.xMin) * canvas.width;
-    }
-    function yToCanvas(y) {
-        return canvas.height - (y - view.yMin) / (view.yMax - view.yMin) * canvas.height;
-    }
-    function canvasToX(cx) {
-        return view.xMin + cx / canvas.width * (view.xMax - view.xMin);
-    }
-    function canvasToY(cy) {
-        return view.yMax - cy / canvas.height * (view.yMax - view.yMin);
-    }
-
-    /* ── Drawing ── */
-    function draw() {
-        const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, w, h);
-
-        drawGrid();
-        drawAxes();
-        functions.forEach(f => f.implicit ? drawImplicit(f) : drawFunction(f));
-    }
-
-    function niceStep(range, targetTicks) {
-        const rough = range / targetTicks;
-        const mag = Math.pow(10, Math.floor(Math.log10(rough)));
-        const residual = rough / mag;
-        let nice;
-        if (residual <= 1.5) nice = 1;
-        else if (residual <= 3) nice = 2;
-        else if (residual <= 7) nice = 5;
-        else nice = 10;
-        return nice * mag;
-    }
-
-    function drawGrid() {
-        const w = canvas.width, h = canvas.height;
-        const xRange = view.xMax - view.xMin;
-        const yRange = view.yMax - view.yMin;
-        const xStep = niceStep(xRange, 10);
-        const yStep = niceStep(yRange, 10);
-
-        ctx.strokeStyle = '#1e293b';
-        ctx.lineWidth = 1;
-
-        // Vertical grid lines
-        let xStart = Math.ceil(view.xMin / xStep) * xStep;
-        for (let x = xStart; x <= view.xMax; x += xStep) {
-            const cx = xToCanvas(x);
-            ctx.beginPath();
-            ctx.moveTo(cx, 0);
-            ctx.lineTo(cx, h);
-            ctx.stroke();
-        }
-
-        // Horizontal grid lines
-        let yStart = Math.ceil(view.yMin / yStep) * yStep;
-        for (let y = yStart; y <= view.yMax; y += yStep) {
-            const cy = yToCanvas(y);
-            ctx.beginPath();
-            ctx.moveTo(0, cy);
-            ctx.lineTo(w, cy);
-            ctx.stroke();
-        }
-
-        // Tick labels
-        ctx.fillStyle = '#475569';
-        ctx.font = '11px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-
-        const originY = yToCanvas(0);
-        const originX = xToCanvas(0);
-
-        for (let x = xStart; x <= view.xMax; x += xStep) {
-            if (Math.abs(x) < xStep * 0.01) continue;
-            const cx = xToCanvas(x);
-            const labelY = Math.max(0, Math.min(h - 16, originY + 6));
-            ctx.fillText(formatNum(x), cx, labelY);
-        }
-
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        for (let y = yStart; y <= view.yMax; y += yStep) {
-            if (Math.abs(y) < yStep * 0.01) continue;
-            const cy = yToCanvas(y);
-            const labelX = Math.max(30, Math.min(w - 4, originX - 8));
-            ctx.fillText(formatNum(y), labelX, cy);
-        }
-    }
-
-    function formatNum(n) {
-        if (Math.abs(n) >= 1e6 || (Math.abs(n) < 0.01 && n !== 0)) return n.toExponential(1);
-        const s = parseFloat(n.toPrecision(6));
-        return String(s);
-    }
-
-    function drawAxes() {
-        const w = canvas.width, h = canvas.height;
-        const ox = xToCanvas(0), oy = yToCanvas(0);
-
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 1.5;
-
-        // X axis
-        if (oy >= 0 && oy <= h) {
-            ctx.beginPath();
-            ctx.moveTo(0, oy);
-            ctx.lineTo(w, oy);
-            ctx.stroke();
-            // Arrow
-            ctx.fillStyle = '#475569';
-            ctx.beginPath();
-            ctx.moveTo(w, oy);
-            ctx.lineTo(w - 8, oy - 4);
-            ctx.lineTo(w - 8, oy + 4);
-            ctx.fill();
-        }
-
-        // Y axis
-        if (ox >= 0 && ox <= w) {
-            ctx.beginPath();
-            ctx.moveTo(ox, 0);
-            ctx.lineTo(ox, h);
-            ctx.stroke();
-            // Arrow
-            ctx.fillStyle = '#475569';
-            ctx.beginPath();
-            ctx.moveTo(ox, 0);
-            ctx.lineTo(ox - 4, 8);
-            ctx.lineTo(ox + 4, 8);
-            ctx.fill();
-        }
-
-        // Origin label
-        if (ox >= 0 && ox <= w && oy >= 0 && oy <= h) {
-            ctx.fillStyle = '#64748b';
-            ctx.font = '11px "JetBrains Mono", monospace';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'top';
-            ctx.fillText('0', ox - 6, oy + 6);
-        }
-    }
-
-    function drawFunction(funcObj) {
-        const w = canvas.width;
-        const step = (view.xMax - view.xMin) / w;
-        const fn = funcObj.compiled;
-
-        ctx.strokeStyle = funcObj.color;
-        ctx.lineWidth = 2.5;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-
-        let started = false;
-        let prevY = null;
-
-        for (let px = 0; px <= w; px++) {
-            const x = canvasToX(px);
-            let y;
-            try { y = fn(x); } catch { y = NaN; }
-
-            if (!isFinite(y) || isNaN(y)) {
-                started = false;
-                prevY = null;
-                continue;
-            }
-
-            const cy = yToCanvas(y);
-
-            // Detect discontinuities (like tan)
-            if (prevY !== null && Math.abs(cy - prevY) > canvas.height * 1.5) {
-                started = false;
-            }
-
-            if (!started) {
-                ctx.moveTo(px, cy);
-                started = true;
-            } else {
-                ctx.lineTo(px, cy);
-            }
-            prevY = cy;
-        }
-        ctx.stroke();
-    }
-
-    // Render an implicit relation F(x,y)=0 via marching squares over a pixel grid.
-    function drawImplicit(funcObj) {
-        const f = funcObj.compiled2;
-        const w = canvas.width, h = canvas.height;
-        const res = 6;                       // grid spacing in pixels
-        const cols = Math.ceil(w / res);
-        const rows = Math.ceil(h / res);
-        const big = 1e6;                     // skip near-asymptote cells
-
-        // Precompute world coords for each grid line, then sample F on the grid.
-        const xs = new Array(cols + 1), ys = new Array(rows + 1);
-        for (let i = 0; i <= cols; i++) xs[i] = canvasToX(i * res);
-        for (let j = 0; j <= rows; j++) ys[j] = canvasToY(j * res);
-
-        const vals = new Array(rows + 1);
-        for (let j = 0; j <= rows; j++) {
-            const row = new Float64Array(cols + 1);
-            const yv = ys[j];
-            for (let i = 0; i <= cols; i++) {
-                let v;
-                try { v = f(xs[i], yv); } catch { v = NaN; }
-                row[i] = v;
-            }
-            vals[j] = row;
-        }
-
-        ctx.strokeStyle = funcObj.color;
-        ctx.lineWidth = 2.5;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-
-        for (let j = 0; j < rows; j++) {
-            for (let i = 0; i < cols; i++) {
-                const tl = vals[j][i], tr = vals[j][i + 1];
-                const bl = vals[j + 1][i], br = vals[j + 1][i + 1];
-                if (!(isFinite(tl) && isFinite(tr) && isFinite(br) && isFinite(bl))) continue;
-                if (Math.abs(tl) > big || Math.abs(tr) > big || Math.abs(br) > big || Math.abs(bl) > big) continue;
-
-                let idx = 0;
-                if (tl > 0) idx |= 8;
-                if (tr > 0) idx |= 4;
-                if (br > 0) idx |= 2;
-                if (bl > 0) idx |= 1;
-                if (idx === 0 || idx === 15) continue;
-
-                const x0 = i * res, x1 = x0 + res, y0 = j * res, y1 = y0 + res;
-                const top    = () => [x0 + (tl / (tl - tr)) * res, y0];
-                const right  = () => [x1, y0 + (tr / (tr - br)) * res];
-                const bottom = () => [x0 + (bl / (bl - br)) * res, y1];
-                const left   = () => [x0, y0 + (tl / (tl - bl)) * res];
-                const seg = (a, b) => { ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); };
-
-                switch (idx) {
-                    case 1:  seg(left(), bottom()); break;
-                    case 2:  seg(bottom(), right()); break;
-                    case 3:  seg(left(), right()); break;
-                    case 4:  seg(top(), right()); break;
-                    case 5:  seg(top(), right()); seg(left(), bottom()); break;
-                    case 6:  seg(top(), bottom()); break;
-                    case 7:  seg(top(), left()); break;
-                    case 8:  seg(top(), left()); break;
-                    case 9:  seg(top(), bottom()); break;
-                    case 10: seg(top(), left()); seg(bottom(), right()); break;
-                    case 11: seg(top(), right()); break;
-                    case 12: seg(left(), right()); break;
-                    case 13: seg(bottom(), right()); break;
-                    case 14: seg(left(), bottom()); break;
-                }
-            }
-        }
-        ctx.stroke();
-    }
-
-    /* ── Add / Remove Functions ── */
-    function addFunction(expr) {
-        if (!expr || !expr.trim()) return;
-        expr = expr.trim();
-        try {
-            const implicit = isImplicit(expr);
-            const compiled = implicit ? null : buildFunction(expr);
-            const compiled2 = implicit ? buildRelation(expr) : null;
-            const color = COLORS[colorIndex % COLORS.length];
-            colorIndex++;
-            functions.push({ expr, compiled, compiled2, implicit, color });
-            updateFuncList();
-            draw();
-            saveState();
-            funcInput.value = '';
-            statusMsg.textContent = `Plotted: ${implicit ? expr : 'y = ' + expr}`;
-        } catch(e) {
-            statusMsg.textContent = 'Error: ' + e.message;
-        }
-    }
-
-    function removeFunction(index) {
-        functions.splice(index, 1);
-        updateFuncList();
-        draw();
-        saveState();
-    }
-
-    function clearAllFunctions() {
-        functions = [];
-        colorIndex = 0;
-        updateFuncList();
-        draw();
-        saveState();
-        statusMsg.textContent = 'All functions cleared.';
-    }
-
-    function updateFuncList() {
-        funcList.innerHTML = '';
-        if (functions.length === 0) {
-            const li = document.createElement('li');
-            li.className = 'empty-msg';
-            li.textContent = 'No functions plotted yet.';
-            funcList.appendChild(li);
-            return;
-        }
-        functions.forEach((f, i) => {
-            const li = document.createElement('li');
-            li.className = 'func-list-item';
-            li.innerHTML = `
-                <span class="func-color-dot" style="background:${f.color}"></span>
-                <span class="func-expr" title="${f.implicit ? f.expr : 'y = ' + f.expr}">${f.implicit ? '' : 'y = '}${f.expr}</span>
-                <button class="func-delete-btn" data-index="${i}" title="Remove"><i class="fas fa-times"></i></button>
-            `;
-            funcList.appendChild(li);
-        });
-    }
-
-    /* ── Zoom ── */
-    function zoom(factor, centerX, centerY) {
-        if (centerX === undefined) centerX = (view.xMin + view.xMax) / 2;
-        if (centerY === undefined) centerY = (view.yMin + view.yMax) / 2;
-
-        const xRange = view.xMax - view.xMin;
-        const yRange = view.yMax - view.yMin;
-        const newXRange = xRange * factor;
-        const newYRange = yRange * factor;
-
-        const xRatio = (centerX - view.xMin) / xRange;
-        const yRatio = (centerY - view.yMin) / yRange;
-
-        view.xMin = centerX - newXRange * xRatio;
-        view.xMax = centerX + newXRange * (1 - xRatio);
-        view.yMin = centerY - newYRange * yRatio;
-        view.yMax = centerY + newYRange * (1 - yRatio);
-
-        syncRangeInputs();
-        draw();
-        saveState();
-    }
-
-    function syncRangeInputs() {
-        xMinEl.value = parseFloat(view.xMin.toPrecision(6));
-        xMaxEl.value = parseFloat(view.xMax.toPrecision(6));
-        yMinEl.value = parseFloat(view.yMin.toPrecision(6));
-        yMaxEl.value = parseFloat(view.yMax.toPrecision(6));
-    }
-
-    function resetView() {
-        view = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
-        syncRangeInputs();
-        draw();
-        saveState();
-    }
-
-    /* ── Pan ── */
-    function startPan(e) {
-        isPanning = true;
-        canvas.style.cursor = 'grabbing';
-        const rect = canvas.getBoundingClientRect();
-        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-        panStart = { x: cx, y: cy };
-        panViewStart = { ...view };
-    }
-
-    function doPan(e) {
-        if (!isPanning) return;
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-        const dx = cx - panStart.x;
-        const dy = cy - panStart.y;
-
-        const xRange = panViewStart.xMax - panViewStart.xMin;
-        const yRange = panViewStart.yMax - panViewStart.yMin;
-
-        const xShift = -dx / canvas.width * xRange;
-        const yShift = dy / canvas.height * yRange;
-
-        view.xMin = panViewStart.xMin + xShift;
-        view.xMax = panViewStart.xMax + xShift;
-        view.yMin = panViewStart.yMin + yShift;
-        view.yMax = panViewStart.yMax + yShift;
-
-        syncRangeInputs();
-        draw();
-    }
-
-    function endPan() {
-        if (isPanning) {
-            isPanning = false;
-            canvas.style.cursor = 'crosshair';
-            saveState();
-        }
-    }
-
-    /* ── Mouse Coordinates ── */
-    function showCoords(e) {
-        if (isPanning) return;
-        const rect = canvas.getBoundingClientRect();
-        const cx = e.clientX - rect.left;
-        const cy = e.clientY - rect.top;
-        const x = canvasToX(cx);
-        const y = canvasToY(cy);
-        coordsDisplay.textContent = `x: ${x.toFixed(4)} , y: ${y.toFixed(4)}`;
-    }
-
-    /* ── State Persistence ── */
-    function saveState() {
-        const state = {
-            functions: functions.map(f => ({ expr: f.expr, color: f.color, implicit: f.implicit })),
-            view,
-            colorIndex
-        };
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-    }
-
-    function loadState() {
-        try {
-            const data = localStorage.getItem(STORAGE_KEY);
-            if (!data) return;
-            const state = JSON.parse(data);
-            if (state.view) {
-                view = state.view;
-                syncRangeInputs();
-            }
-            if (state.colorIndex !== undefined) colorIndex = state.colorIndex;
-            if (state.functions) {
-                state.functions.forEach(f => {
-                    try {
-                        const implicit = f.implicit !== undefined ? f.implicit : isImplicit(f.expr);
-                        const compiled = implicit ? null : buildFunction(f.expr);
-                        const compiled2 = implicit ? buildRelation(f.expr) : null;
-                        functions.push({ expr: f.expr, compiled, compiled2, implicit, color: f.color });
-                    } catch {}
-                });
-                updateFuncList();
-            }
-        } catch {}
-    }
-
-    /* ── Event Listeners ── */
-
-    // Add function
-    addBtn.addEventListener('click', () => addFunction(funcInput.value));
-    funcInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') addFunction(funcInput.value);
+    const calculator = Desmos.GraphingCalculator(elt, {
+        keypad: true,
+        expressions: true,
+        settingsMenu: true,
+        zoomButtons: true,
+        expressionsTopbar: true,
+        invertedColors: true,          // dark graph paper to match the hub theme
+        border: false,
+        autosize: true
     });
 
-    // Presets
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.addEventListener('click', () => addFunction(btn.dataset.func));
+    // Restore previous session, otherwise seed with a couple of examples.
+    let restored = false;
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) { calculator.setState(JSON.parse(saved)); restored = true; }
+    } catch (e) { /* ignore corrupt state */ }
+
+    if (!restored) {
+        calculator.setExpression({ id: 'demo1', latex: 'y=\\sin(x)' });
+    }
+
+    // Persist on every change.
+    calculator.observeEvent('change', function() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(calculator.getState())); } catch (e) {}
     });
 
-    // Delete function
-    funcList.addEventListener('click', e => {
-        const btn = e.target.closest('.func-delete-btn');
-        if (btn) removeFunction(parseInt(btn.dataset.index));
+    // Preset buttons add a new expression (Desmos manages colors/ids).
+    let presetCount = 0;
+    document.querySelectorAll('.preset-btn[data-latex]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            presetCount++;
+            calculator.setExpression({ id: 'preset_' + presetCount, latex: btn.dataset.latex });
+        });
     });
 
-    // Clear
-    document.getElementById('clearAll').addEventListener('click', clearAllFunctions);
-
-    // Zoom buttons
-    document.getElementById('zoomIn').addEventListener('click', () => zoom(0.7));
-    document.getElementById('zoomOut').addEventListener('click', () => zoom(1.4));
-    document.getElementById('resetView').addEventListener('click', resetView);
-
-    // Mouse wheel zoom
-    canvas.addEventListener('wheel', e => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const cx = e.clientX - rect.left;
-        const cy = e.clientY - rect.top;
-        const mx = canvasToX(cx);
-        const my = canvasToY(cy);
-        const factor = e.deltaY > 0 ? 1.15 : 0.87;
-        zoom(factor, mx, my);
-    }, { passive: false });
-
-    // Pan
-    canvas.addEventListener('mousedown', startPan);
-    canvas.addEventListener('mousemove', e => { doPan(e); showCoords(e); });
-    canvas.addEventListener('mouseup', endPan);
-    canvas.addEventListener('mouseleave', endPan);
-    canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) startPan(e); }, { passive: false });
-    canvas.addEventListener('touchmove', e => { if (e.touches.length === 1) doPan(e); }, { passive: false });
-    canvas.addEventListener('touchend', endPan);
-
-    // Range inputs
-    document.getElementById('applyRange').addEventListener('click', () => {
-        const xMin = parseFloat(xMinEl.value);
-        const xMax = parseFloat(xMaxEl.value);
-        const yMin = parseFloat(yMinEl.value);
-        const yMax = parseFloat(yMaxEl.value);
-        if (isNaN(xMin) || isNaN(xMax) || isNaN(yMin) || isNaN(yMax)) {
-            statusMsg.textContent = 'Invalid range values.';
-            return;
-        }
-        if (xMin >= xMax || yMin >= yMax) {
-            statusMsg.textContent = 'Min must be less than Max.';
-            return;
-        }
-        view = { xMin, xMax, yMin, yMax };
-        draw();
-        saveState();
-        statusMsg.textContent = 'View range updated.';
+    // Reset just the viewport (keeps expressions).
+    document.getElementById('resetView').addEventListener('click', function() {
+        calculator.setMathBounds({ left: -10, right: 10, bottom: -10, top: 10 });
     });
 
-    // Resize
-    window.addEventListener('resize', resizeCanvas);
-
-    /* ── Init ── */
-    loadState();
-    resizeCanvas();
-    funcInput.focus();
-
+    // Clear everything.
+    document.getElementById('clearAll').addEventListener('click', function() {
+        calculator.setBlank();
+    });
 })();
 </script>
 

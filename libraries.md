@@ -55,6 +55,7 @@ All Google Fonts below are licensed under **SIL Open Font License 1.1** — full
 | Wiktionary API | CC BY-SA 3.0 / GFDL | YES | Must attribute authors. Share-alike applies to redistributed content |
 | Lingva Translate TTS | AGPL-3.0 (server) | YES | Open-source TTS API with CORS support. Replaced Sound of Text API for MP3 download |
 | OpenStreetMap Tiles | ODbL (data), CC BY-SA 2.0 (tiles) | YES for data, **NO for public tile servers** | Must show "© OpenStreetMap contributors". Public tile servers are not for commercial use — use a paid tile provider |
+| Desmos Graphing Calculator API (v1.11) | Proprietary (free for non-commercial use) | **NO** without agreement | Used in graph-plotter.html. Free on public **non-commercial** sites with attribution. Currently using Desmos's public **demo** API key (testing only). Commercial use requires a partnership/license from Desmos — see https://www.desmos.com/api. Requires internet |
 
 ---
 
@@ -66,6 +67,7 @@ All Google Fonts below are licensed under **SIL Open Font License 1.1** — full
 | jsDelivr | Three.js, QRCode, OpenType.js, ExcelJS, Tesseract.js, Currency API |
 | unpkg | Leaflet, Leaflet Routing Machine |
 | Google APIs | Google Fonts |
+| desmos.com | Desmos Graphing Calculator API |
 
 ---
 
@@ -81,6 +83,9 @@ All Google Fonts below are licensed under **SIL Open Font License 1.1** — full
 - **OpenStreetMap data** (Nominatim, Overpass, Photon, tiles) — must display "© OpenStreetMap contributors"
 - **Wikipedia / Wiktionary content** — must attribute authors, share-alike on redistributed content
 - **PDF.js & Tesseract.js** — must include Apache 2.0 license/NOTICE
+
+### NOT Free for Commercial Use
+- **Desmos Graphing Calculator API** (graph-plotter.html) — free only for public **non-commercial** sites. Currently uses Desmos's public demo API key (testing only). Any commercial use requires a license/partnership from Desmos. Either get an agreement + your own API key, or swap back to the previous self-built canvas plotter (in git history) for a fully MIT-clean commercial build.
 
 ### OK but Public APIs Not for Heavy Commercial Traffic
 - **Nominatim** — max 1 req/sec, no SLA, run your own for production
@@ -100,4 +105,5 @@ All Google Fonts below are licensed under **SIL Open Font License 1.1** — full
 - **Total unique libraries**: 16
 - **No package.json** — all dependencies loaded via CDN
 - **14 out of 16 libraries** are fully clear for commercial use
-- **All issues resolved** — Sound of Text API removed, OSM tiles were already using commercial-friendly providers
+- **One commercial-use blocker**: the Desmos Graphing Calculator API (graph-plotter.html) is free for non-commercial use only and currently uses Desmos's demo key. Get a Desmos license or revert to the self-built plotter before any commercial release.
+- Sound of Text API removed, OSM tiles were already using commercial-friendly providers
