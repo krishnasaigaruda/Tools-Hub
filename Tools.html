@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +28,7 @@
                 radial-gradient(ellipse 60% 35% at 10% 90%, rgba(52, 211, 153, 0.06) 0%, transparent 50%),
                 linear-gradient(180deg, #08081a 0%, #0c0c24 40%, #0a0a1a 100%);
             background-attachment: fixed;
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
             color: #fff;
             overflow-x: hidden;
         }
@@ -86,6 +93,7 @@
             margin-bottom: 16px;
             letter-spacing: 0.06em;
             text-transform: uppercase;
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
         }
 
@@ -152,6 +160,7 @@
             color: #fff;
             outline: none;
             transition: all 0.3s ease;
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
         }
 
@@ -184,11 +193,31 @@
         .search-box:focus ~ .search-shortcut { opacity: 0; }
 
 
-        /* ======== CATEGORIES GRID (masonry) ======== */
+        /* ======== CATEGORIES GRID (masonry) ========
+           Flex columns filled by script, not CSS `columns`. Multicol combined
+           with break-inside + backdrop-filter + entrance animations makes
+           browsers intermittently fail to paint a card (short ones like
+           Developer went missing); a plain CSS grid paints reliably but leaves
+           ragged gaps because rows align to the tallest card. Real columns
+           give the tight masonry packing with neither problem. */
         .categories-grid {
-            columns: 3;
-            column-gap: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
             margin-top: 8px;
+        }
+
+        .cat-col {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Fallback before the script runs / with JS disabled. */
+        .categories-grid > .cat-card {
+            flex: 1 1 300px;
         }
 
         /* ======== CATEGORY CARD ======== */
@@ -197,11 +226,10 @@
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 20px;
             padding: 20px 16px 16px;
-            break-inside: avoid;
-            margin-bottom: 14px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
         }
 
@@ -430,14 +458,15 @@
         .no-results.visible { display: block; }
 
         /* ======== RESPONSIVE ======== */
+        /* Column count is driven by layoutCategories() in script, matching
+           these same breakpoints; the wrap fallback keeps it sane without JS. */
         @media (max-width: 1100px) {
-            .categories-grid { columns: 2; }
+            .categories-grid { flex-wrap: wrap; }
         }
 
         @media (max-width: 700px) {
             .header { padding: 24px 0 20px; }
             h1 { font-size: 2.4rem; }
-            .categories-grid { columns: 1; }
             .tool-grid { grid-template-columns: repeat(4, 1fr); }
             .t-icon { width: 44px; height: 44px; font-size: 1.1rem; }
         }
@@ -446,6 +475,7 @@
             .tool-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
+    <link rel="stylesheet" href="assets/compat.css">
 </head>
 <body>
     <div class="page-wrap">
@@ -754,6 +784,61 @@
             'random-word': 'tools/random-word.html',
             'font-preview': 'tools/font-preview.html'
         };
+
+        /* ======== MASONRY ========
+           Distributes the category cards into flex columns, always adding the
+           next card to whichever column is currently shortest. Same packing
+           CSS `columns` gave us, without the dropped-card rendering bug. */
+        (function () {
+            const grid = document.getElementById('categoriesGrid');
+            const cards = Array.from(grid.children);
+            let currentCols = 0;
+
+            function columnCount() {
+                const w = window.innerWidth;
+                if (w <= 700) return 1;
+                if (w <= 1100) return 2;
+                return 3;
+            }
+
+            function layoutCategories() {
+                const n = columnCount();
+                if (n === currentCols) return;
+                currentCols = n;
+
+                const columns = [];
+                grid.textContent = '';
+                for (let i = 0; i < n; i++) {
+                    const col = document.createElement('div');
+                    col.className = 'cat-col';
+                    grid.appendChild(col);
+                    columns.push(col);
+                }
+
+                cards.forEach(card => {
+                    let shortest = columns[0];
+                    for (const col of columns) {
+                        if (col.offsetHeight < shortest.offsetHeight) shortest = col;
+                    }
+                    shortest.appendChild(card);
+                });
+            }
+
+            layoutCategories();
+
+            // Icon and web fonts land after first paint and change card
+            // heights, so re-pack once everything has actually loaded.
+            window.addEventListener('load', () => {
+                currentCols = 0;
+                layoutCategories();
+            });
+
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(layoutCategories, 150);
+            });
+        })();
 
         function openTool(toolName) {
             if (availableTools[toolName]) {

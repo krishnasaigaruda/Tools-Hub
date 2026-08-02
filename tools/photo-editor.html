@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Photo Editor - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -15,7 +22,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a1a;
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
             overflow: hidden;
         }
 
@@ -78,7 +85,7 @@
         /* Main Layout */
         .main-layout {
             display: flex;
-            height: calc(100vh - 52px);
+            height: calc(calc(var(--app-vh) * 100) - 52px);
         }
 
         /* Left Toolbar */
@@ -157,7 +164,7 @@
 
         #canvas {
             max-width: 100%;
-            max-height: calc(100vh - 52px - 100px);
+            max-height: calc(calc(var(--app-vh) * 100) - 52px - 100px);
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
@@ -467,6 +474,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
     <div class="header">

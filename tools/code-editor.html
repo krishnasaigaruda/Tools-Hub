@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Code Editor - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -750,7 +757,25 @@
         .code-textarea::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
         .code-textarea::-webkit-scrollbar-corner { background: transparent; }
         .highlight-layer::-webkit-scrollbar { width: 0; height: 0; }
+    
+        /* ── Responsive: collapse the file tree on small screens ── */
+        @media (max-width: 900px) {
+            .sidebar { width: 190px; min-width: 120px; }
+        }
+        @media (max-width: 700px) {
+            .main-wrapper { grid-template-columns: 1fr; }
+            .sidebar {
+                width: 100%;
+                min-width: 0;
+                max-height: 38vh;
+                border-right: none;
+                border-bottom: 1px solid #334155;
+            }
+            .sidebar-resize { display: none; }
+            .header-right { flex-wrap: wrap; }
+        }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

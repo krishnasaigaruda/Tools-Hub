@@ -1,0 +1,369 @@
+/* ===========================================================================
+   Tools Hub — cross-device / cross-OS compatibility layer
+   Loaded LAST in every page so it can correct per-page styles.
+
+   Targets: iOS/iPadOS Safari, Android Chrome/Samsung Internet, Firefox,
+            Chrome/Edge, macOS Safari, Windows, Linux, foldables, TVs.
+   Rules here are deliberately surgical — they normalise platform behaviour
+   without repainting any tool's visual design.
+   =========================================================================== */
+
+/* --- 1. Viewport height ---------------------------------------------------
+   iOS Safari / Android Chrome shrink-and-grow their URL bar, so 100vh is
+   taller than the visible area and content gets cut off. Prefer the dynamic
+   viewport unit where supported, and fall back to a JS-measured --app-vh. */
+:root {
+    --app-vh: 1vh;
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --app-vh: 1dvh;
+    }
+}
+
+/* Deliberately NOT setting overflow-x/max-width on <html>. Once <html> has a
+   non-visible overflow it stops propagating the body's overflow to the
+   viewport and becomes the scroll container itself, which breaks normal page
+   scrolling and position: sticky. Pages that need it already set
+   `overflow-x: hidden` on their own body. */
+body {
+    min-height: calc(var(--app-vh) * 100);
+}
+
+/* --- 2. Notches, punch-holes and rounded corners ---------------------------
+   Deliberately NOT using viewport-fit=cover + env() insets here. Every tool
+   styles its own full-height shell (`height: 100vh; overflow: hidden`), so
+   inset padding on html/body pushes those shells past the viewport and clips
+   their bottom edge, and inset padding on .header/.toolbar would overwrite
+   each tool's own padding since this file loads last.
+
+   Without viewport-fit=cover the browser insets the viewport itself, which is
+   correct everywhere and costs only an edge-to-edge background these dark
+   pages don't need. Insets are exposed below for any tool that wants them. */
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* --- 3. Text sizing -------------------------------------------------------
+   iOS auto-zooms into any form control whose text is under 16px, which then
+   leaves the layout scrolled sideways. Only lift it on touch devices so the
+   desktop typography is untouched. */
+@media (hover: none) and (pointer: coarse) {
+
+    input,
+    select,
+    textarea,
+    button,
+    [contenteditable] {
+        font-size: max(16px, 1em);
+    }
+}
+
+/* Stop iOS/Android from silently re-scaling text in landscape. */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* --- 4. Touch behaviour ---------------------------------------------------- */
+* {
+    /* Kill the grey flash Android/iOS paint over every tapped element. */
+    -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"],
+a,
+label,
+summary,
+input[type="button"],
+input[type="submit"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+    /* Removes the 300ms click delay and stops double-tap-to-zoom on controls. */
+    touch-action: manipulation;
+}
+
+/* Comfortable hit targets on touch screens, for the controls the browser
+   draws natively small. <button> is deliberately left alone: every tool sizes
+   its own buttons, and forcing a minimum here inflates dense editor toolbars
+   (html-fiddle, code-editor) far beyond what the layout budgets for. */
+@media (hover: none) and (pointer: coarse) {
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        min-height: 22px;
+        min-width: 22px;
+    }
+
+    select {
+        min-height: 36px;
+    }
+
+    /* Range sliders are near-unusable at their default touch height. */
+    input[type="range"] {
+        min-height: 40px;
+    }
+}
+
+/* Canvases and drawing surfaces: let the tool own the gesture, and never
+   let the browser pan/zoom the page from a stroke. */
+canvas {
+    touch-action: none;
+    max-width: 100%;
+}
+
+/* --- 5. Scrolling ---------------------------------------------------------- */
+body,
+.scroll,
+[class*="scroll"],
+[class*="list"],
+[class*="panel"],
+pre,
+textarea {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+body {
+    /* Stop the whole page rubber-banding / pull-to-refreshing behind a tool. */
+    overscroll-behavior-y: contain;
+}
+
+/* --- 6. Vendor prefixes still required in shipping browsers ---------------- */
+   iOS Safari paints its own rounded, inset-shadowed chrome on text fields and
+   buttons unless the appearance is reset. Text-entry controls only — selects,
+   checkboxes, radios, ranges, colour and file pickers keep their native look
+   so they stay recognisable and operable on every platform. */
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+textarea,
+button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Safari refuses to shrink flex/grid children containing text fields. */
+input,
+textarea,
+select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+}
+
+/* Date/time pickers render invisibly in dark themes on iOS without this. */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"] {
+    min-height: 2.4em;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+}
+
+/* --- 7. Selection & dragging ---------------------------------------------- */
+button,
+.btn,
+[role="button"],
+nav,
+.toolbar,
+.tabs {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input,
+textarea,
+[contenteditable],
+pre,
+code {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+img,
+svg,
+canvas {
+    -webkit-user-drag: none;
+}
+
+/* --- 8. Media & embedded content ------------------------------------------ */
+img,
+video,
+iframe,
+table,
+svg {
+    max-width: 100%;
+}
+
+img,
+video {
+    height: auto;
+}
+
+/* Wide content must scroll inside itself, never widen the page.
+   Tables keep `display: table` on purpose — forcing them to blocks would
+   destroy column alignment in the spreadsheet and stats tools. */
+.table-scroll,
+.table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+pre {
+    overflow-x: auto;
+}
+
+/* --- 9. Long words / URLs on narrow screens -------------------------------
+   overflow-wrap only — `word-break: break-word` also splits inside code and
+   spreadsheet cells, which the editors need left intact. */
+body {
+    overflow-wrap: break-word;
+}
+
+/* --- 10. Hover on touch devices -------------------------------------------
+   Touch browsers emulate :hover and leave elements stuck in the hovered
+   state after a tap. Neutralise the transform-based lifts. */
+@media (hover: none) {
+
+    a:hover,
+    button:hover,
+    .card:hover,
+    .tool-card:hover,
+    [class*="card"]:hover,
+    [class*="btn"]:hover {
+        transform: none;
+    }
+
+    /* Give touch users the feedback they lose with hover disabled. */
+    a:active,
+    button:active,
+    [role="button"]:active,
+    [class*="card"]:active,
+    [class*="btn"]:active {
+        opacity: 0.75;
+    }
+}
+
+/* --- 11. Small phones ------------------------------------------------------
+   Anything laid out at a fixed pixel width has to give way below 420px. */
+@media (max-width: 420px) {
+
+    [style*="width:"],
+    .container,
+    .wrap,
+    .page-wrap,
+    .card,
+    .panel,
+    .box,
+    .tool,
+    main,
+    section {
+        max-width: 100%;
+    }
+}
+
+/* --- 12. Landscape phones / short viewports -------------------------------- */
+@media (max-height: 480px) and (orientation: landscape) {
+    body {
+        min-height: auto;
+    }
+}
+
+/* --- 14. Accessibility & OS preferences ------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+
+    button,
+    input,
+    select,
+    textarea,
+    a {
+        outline: 1px solid currentColor;
+    }
+}
+
+/* Keyboard users (Windows/Linux especially) need a visible focus ring;
+   pointer users should not see it. */
+:focus-visible {
+    outline: 2px solid #8b5cf6;
+    outline-offset: 2px;
+}
+
+/* --- 15. Windows / Linux scrollbars ---------------------------------------- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.5);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.75);
+}
+
+/* --- 16. Fonts -------------------------------------------------------------
+   Intentionally empty. Each tool picks its own face (Outfit, DM Sans,
+   JetBrains Mono …) and this file loads last, so any font-family rule here
+   would silently repaint all 66 tools in one font. The per-page stacks
+   already end in a generic family, which resolves on every OS. */
+
+/* --- 17. Print ------------------------------------------------------------- */
+@media print {
+
+    .back-btn,
+    .back-button,
+    .toolbar,
+    .navbar,
+    nav,
+    button {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+}

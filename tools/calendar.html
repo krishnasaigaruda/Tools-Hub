@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Calendar - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -15,7 +22,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
         }
 
         /* Header */
@@ -84,7 +91,7 @@
         /* Main Layout */
         .main-container {
             display: flex;
-            height: calc(100vh - 56px);
+            height: calc(calc(var(--app-vh) * 100) - 56px);
         }
 
         /* Sidebar */
@@ -750,7 +757,7 @@
                 position: absolute;
                 left: 0;
                 top: 56px;
-                height: calc(100vh - 56px);
+                height: calc(calc(var(--app-vh) * 100) - 56px);
                 z-index: 100;
                 transform: translateX(-100%);
                 transition: transform 0.3s;
@@ -784,6 +791,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
     <!-- Header -->

@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Clock - Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -12,7 +19,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #111;
             color: #fff;
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
             display: flex;
             flex-direction: column;
         }
@@ -710,6 +717,7 @@
             .alarm-add-row { flex-direction: column; }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
     <div class="header">

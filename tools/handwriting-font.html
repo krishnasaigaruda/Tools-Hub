@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Handwriting to Font | Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -10,7 +17,7 @@
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
         :root{--bg:#0f172a;--surface:#1e293b;--s2:#334155;--s3:#3b4963;--border:#334155;--bh:#475569;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--or:#db2777;--ord:rgba(219,39,119,.12);--org:rgba(219,39,119,.25);--gr:#10b981;--grd:rgba(16,185,129,.12);--rd:#ef4444;--r:10px;--rl:16px}
         html{font-size:15px}
-        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:calc(var(--app-vh) * 100);overflow-x:hidden}
         body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(219,39,119,.04),transparent);pointer-events:none}
         header{display:flex;align-items:center;gap:1rem;padding:1.5rem 2rem;background:linear-gradient(135deg,#be185d,#db2777,#f472b6);box-shadow:0 4px 20px rgba(219,39,119,.3);position:sticky;top:0;z-index:50}
         .back-btn{display:flex;align-items:center;gap:.5rem;color:white;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);transition:background .2s;font-size:.9rem}
@@ -51,7 +58,7 @@
         .ub{margin-top:14px;display:flex;justify-content:flex-end;gap:10px}
 
         /* Step 2 */
-        #v2.active{padding:0;height:100vh;display:flex;flex-direction:column}
+        #v2.active{padding:0;height:calc(var(--app-vh) * 100);display:flex;flex-direction:column}
         .toolbar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
         .toolbar .cc{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text);display:flex;align-items:center;gap:6px}
         .toolbar .badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;background:var(--or);color:#000;font-weight:700;font-size:1rem;border-radius:6px}
@@ -122,6 +129,7 @@
         .help-tip-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--or);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem}
         .help-tip p{font-size:.8rem;color:var(--t2);line-height:1.5;margin:0}
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 <header>

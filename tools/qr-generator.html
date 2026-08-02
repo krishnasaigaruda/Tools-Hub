@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
 <title>QR Code Generator | Tools Hub</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -10,7 +17,7 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f172a;--panel:#1e293b;--s2:#334155;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--sky:#0284c7;--sky2:#38bdf8;--r:10px}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:calc(var(--app-vh) * 100)}
 
 .header{background:linear-gradient(135deg,#0369a1,#0284c7,#38bdf8);padding:1.5rem 2rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(2,132,199,.3)}
 .back-btn{display:flex;align-items:center;gap:.5rem;color:#fff;text-decoration:none;font-weight:500;padding:.5rem 1rem;border-radius:8px;background:rgba(255,255,255,.15);font-size:.9rem;transition:background .2s}
@@ -93,6 +100,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-
 .preview-col{position:static}
 }
 </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

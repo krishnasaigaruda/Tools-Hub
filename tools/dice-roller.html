@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
   <title>Dice Roller | Tools Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,7 +20,7 @@
 
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+    body{font-family:'Outfit',sans-serif;background:#0f172a;color:#e2e8f0;min-height:calc(var(--app-vh) * 100)}
 
     .header{background:linear-gradient(135deg,#92400e,#b45309,#ca8a04);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 4px 20px rgba(0,0,0,.4)}
     .back-btn{display:flex;align-items:center;gap:.4rem;color:#fff;text-decoration:none;font-size:.9rem;font-weight:500;background:rgba(255,255,255,.15);padding:.4rem .8rem;border-radius:8px;transition:background .2s}
@@ -88,6 +95,7 @@
     .clr-btn{background:transparent;border:1px solid #334155;border-radius:7px;color:#64748b;font-family:'Outfit',sans-serif;font-size:.75rem;padding:.35rem .75rem;cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .15s}
     .clr-btn:hover{border-color:#ef4444;color:#ef4444}
   </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

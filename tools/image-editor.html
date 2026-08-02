@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Image Editor - Projects</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -15,7 +22,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
             padding-bottom: 100px;
         }
 
@@ -162,6 +169,7 @@
             top: 10px;
             right: 10px;
             background: rgba(0, 0, 0, 0.6);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             color: #fff;
             padding: 5px 12px;
@@ -253,6 +261,7 @@
             left: 0;
             right: 0;
             background: rgba(0, 0, 0, 0.8);
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             padding: 20px;
@@ -301,6 +310,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.7);
+            -webkit-backdrop-filter: blur(5px);
             backdrop-filter: blur(5px);
             z-index: 2000;
             align-items: center;
@@ -469,6 +479,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
     <div class="header">

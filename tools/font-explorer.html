@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Font Explorer | Tools Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -32,7 +39,7 @@
             font-family: 'Outfit', sans-serif;
             background: var(--bg);
             color: var(--text);
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
         }
 
         .header {
@@ -42,6 +49,7 @@
             align-items: center;
             gap: 1rem;
             box-shadow: 0 4px 20px rgba(219, 39, 119, 0.3);
+            position: -webkit-sticky;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -394,6 +402,7 @@
             z-index: 200;
             align-items: center;
             justify-content: center;
+            -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
             padding: 2rem;
         }
@@ -637,6 +646,7 @@
             .size-wrap { display: none; }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

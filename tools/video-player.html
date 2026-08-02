@@ -3,13 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
 <title>Video Player | Tools Hub</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a12;--panel:#141422;--s2:#1e1e32;--s3:#2a2a42;--border:#1e1e32;--text:#e2e8f0;--t2:#94a3b8;--t3:#555;--accent:#8b5cf6;--accent2:#a78bfa;--accent-d:rgba(139,92,246,.15);--r:8px}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:calc(var(--app-vh) * 100);overflow:hidden;display:flex;flex-direction:column}
 
 /* Header */
 .hdr{background:linear-gradient(135deg,#5b21b6,#7c3aed,#a78bfa);padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:100;flex-shrink:0}
@@ -176,6 +183,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .sidebar.mobile-open{display:flex}
 }
 </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

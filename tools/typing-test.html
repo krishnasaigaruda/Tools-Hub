@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
     <title>Typing Test - Terminal Mode</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         @keyframes scanline {
             0% { transform: translateY(-100%); }
-            100% { transform: translateY(100vh); }
+            100% { transform: translateY(calc(var(--app-vh) * 100)); }
         }
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 8px rgba(20,184,166,0.3); }
@@ -56,7 +63,7 @@
             font-family: 'IBM Plex Mono', monospace;
             background: #0a0f1a;
             color: #c8d6e5;
-            min-height: 100vh;
+            min-height: calc(var(--app-vh) * 100);
             overflow-x: hidden;
             position: relative;
         }
@@ -153,7 +160,7 @@
         .app-layout {
             display: grid;
             grid-template-columns: 220px 1fr;
-            min-height: calc(100vh - 53px);
+            min-height: calc(calc(var(--app-vh) * 100) - 53px);
         }
 
         /* ─── SIDEBAR ─── */
@@ -456,6 +463,7 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(5,8,15,0.85);
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
             z-index: 100;
             align-items: center;
@@ -643,6 +651,7 @@
             .kb-key { height: 34px; min-width: 32px; font-size: 0.6rem; }
         }
     </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 

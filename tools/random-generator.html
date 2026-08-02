@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
   <title>Random Number Generator – Tools Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,7 +22,7 @@
       font-family: 'Outfit', sans-serif;
       background: #0f172a;
       color: #e2e8f0;
-      min-height: 100vh;
+      min-height: calc(var(--app-vh) * 100);
     }
 
     /* ── Header ── */
@@ -391,6 +398,7 @@
     }
     .error-msg.visible { display: block; }
   </style>
+    <link rel="stylesheet" href="../assets/compat.css">
 </head>
 <body>
 
