@@ -1,4 +1,4 @@
-# Tools Hub
+# Tools Hub (1.4)
 
 Your all-in-one productivity toolkit — 60+ tools that run entirely in the browser. No accounts, no servers, no data collection. Everything stays on your device.
 
