@@ -154,6 +154,21 @@ Your all-in-one productivity toolkit — 60+ tools that run entirely in the brow
 2. Open `Tools.html` in your browser
 3. That's it — no server needed
 
+## Images
+<img width="735" height="707" alt="image" src="https://github.com/user-attachments/assets/3346ef3a-3476-4d3d-a080-328352cce87b" />
+<img width="1468" height="765" alt="image" src="https://github.com/user-attachments/assets/a274b65a-9ea4-4cd7-a27b-c00f42e78a85" />
+<img width="1462" height="755" alt="image" src="https://github.com/user-attachments/assets/a1154485-c978-41b1-8db6-bbe9d446d434" />
+<img width="1470" height="761" alt="image" src="https://github.com/user-attachments/assets/9e25cdee-f382-4c5a-a5cc-0c3220730932" />
+<img width="1469" height="769" alt="image" src="https://github.com/user-attachments/assets/9c3c6a20-f192-4a15-85f0-b0ae5432c215" />
+<img width="1470" height="762" alt="image" src="https://github.com/user-attachments/assets/94ca3bfa-b134-463e-8913-cf185d576ab1" />
+
+
+
+
+
+
+
+
 ## License
 
 Open source. Use freely.
