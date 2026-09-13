@@ -4,892 +4,794 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="assets/compat.js"></script>
-    <meta name="theme-color" content="#08081a">
-    <meta name="color-scheme" content="dark light">
+    <title>Tools Hub — Free Online Tools: Converters, Calculators, Editors &amp; More</title>
+    <meta name="description" content="68 free browser-based tools: unit and currency converters, scientific calculator, document and spreadsheet editors, QR code and password generators, translator, timers and more. No sign-up, works offline, your data stays on your device.">
+    <meta name="keywords" content="online tools, free tools, unit converter, currency converter, scientific calculator, password generator, qr code generator, word counter, spreadsheet, text to speech, translator, browser tools">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0a0c10">
+    <meta name="color-scheme" content="dark">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="format-detection" content="telephone=no">
-    <title>Tools Hub</title>
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Tools Hub">
+    <meta property="og:title" content="Tools Hub — Free Online Tools">
+    <meta property="og:description" content="Converters, calculators, editors, generators and more. Free, private, and right in your browser.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Tools Hub — Free Online Tools">
+    <meta name="twitter:description" content="Converters, calculators, editors, generators and more. Free, private, and right in your browser.">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Tools Hub",
+        "description": "Free browser-based tools: converters, calculators, editors, generators and more.",
+        "inLanguage": "en"
+    }
+    </script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        [hidden] { display: none !important; }
+
+        :root {
+            --bg: #0a0c10;
+            --surface: #11141a;
+            --surface-2: #161a22;
+            --border: rgba(255,255,255,0.07);
+            --border-strong: rgba(255,255,255,0.14);
+            --text: #e6e9ef;
+            --text-2: #9aa3b2;
+            --text-3: #677084;
+        }
+
+        html { scroll-padding-top: 72px; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #08081a;
-            background-image:
-                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(99, 102, 241, 0.18) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 40% at 80% 10%, rgba(168, 85, 247, 0.14) 0%, transparent 50%),
-                radial-gradient(ellipse 70% 50% at 50% 60%, rgba(236, 72, 153, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse 50% 40% at 90% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse 60% 35% at 10% 90%, rgba(52, 211, 153, 0.06) 0%, transparent 50%),
-                linear-gradient(180deg, #08081a 0%, #0c0c24 40%, #0a0a1a 100%);
-            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: calc(var(--app-vh) * 100);
-            color: #fff;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
-        .page-wrap {
-            max-width: 1400px;
+        a { color: inherit; text-decoration: none; }
+
+        .wrap {
+            max-width: 1440px;
             margin: 0 auto;
-            padding: 0 24px;
-            position: relative;
-            z-index: 1;
+            padding: 0 clamp(20px, 4vw, 56px);
         }
 
-        /* ======== HEADER ======== */
-        .header {
-            padding: 36px 0 28px;
-            text-align: center;
-            position: relative;
+        /* ======== TOP BAR ======== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(10,12,16,0.72);
+            -webkit-backdrop-filter: saturate(160%) blur(14px);
+            backdrop-filter: saturate(160%) blur(14px);
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s, background 0.2s;
         }
 
-        .try-webos-btn {
-            position: absolute;
-            top: 36px;
-            right: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #6366f1, #ec4899);
-            border: 1px solid rgba(139,92,246,0.4);
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            box-shadow: 0 4px 20px rgba(139,92,246,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .try-webos-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 28px rgba(236,72,153,0.45);
-        }
-        @media (max-width: 720px) {
-            .try-webos-btn {
-                position: static;
-                margin-bottom: 16px;
-            }
+        .topbar.scrolled {
+            background: rgba(10,12,16,0.9);
+            border-bottom-color: var(--border);
         }
 
-        .header-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 20px;
-            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(236,72,153,0.2));
-            border: 1px solid rgba(139,92,246,0.3);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #d4bfff;
-            margin-bottom: 16px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-        }
-
-        h1 {
-            font-size: 3.8rem;
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            line-height: 1;
-            background: linear-gradient(135deg, #fff 10%, #c084fc 50%, #fb7185 90%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            position: relative;
-        }
-        /* Title glow */
-        h1::after {
-            content: 'Tools Hub';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, #c084fc 30%, #fb7185 70%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: blur(30px);
-            opacity: 0.4;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .subtitle {
-            color: #8b95b3;
-            font-size: 1.05rem;
-            margin-bottom: 24px;
-            font-weight: 400;
-        }
-
-        /* ======== SEARCH ======== */
-        .search-wrap {
-            max-width: 540px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .search-wrap > i {
-            position: absolute;
-            left: 20px; top: 50%;
-            transform: translateY(-50%);
-            color: #7c3aed;
-            font-size: 0.95rem;
-            pointer-events: none;
-            transition: color 0.2s;
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 16px 60px 16px 50px;
-            font-size: 1rem;
-            font-family: inherit;
-            font-weight: 500;
-            border: 1px solid rgba(139,92,246,0.2);
-            border-radius: 16px;
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-            outline: none;
-            transition: all 0.3s ease;
-            -webkit-backdrop-filter: blur(8px);
-            backdrop-filter: blur(8px);
-        }
-
-        .search-box::placeholder { color: #4a5070; }
-
-        .search-box:focus {
-            border-color: rgba(139,92,246,0.5);
-            box-shadow: 0 0 0 4px rgba(139,92,246,0.1), 0 8px 32px rgba(139,92,246,0.12);
-            background: rgba(255,255,255,0.06);
-        }
-
-        .search-box:focus ~ i { color: #a78bfa; }
-
-        .search-shortcut {
-            position: absolute;
-            right: 16px; top: 50%;
-            transform: translateY(-50%);
-            padding: 4px 10px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: #4a5070;
-            font-size: 0.7rem;
-            font-family: inherit;
-            font-weight: 600;
-            pointer-events: none;
-            transition: opacity 0.2s;
-        }
-
-        .search-box:focus ~ .search-shortcut { opacity: 0; }
-
-
-        /* ======== CATEGORIES GRID (masonry) ========
-           Flex columns filled by script, not CSS `columns`. Multicol combined
-           with break-inside + backdrop-filter + entrance animations makes
-           browsers intermittently fail to paint a card (short ones like
-           Developer went missing); a plain CSS grid paints reliably but leaves
-           ragged gaps because rows align to the tallest card. Real columns
-           give the tight masonry packing with neither problem. */
-        .categories-grid {
+        .topbar .wrap {
             display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            margin-top: 8px;
+            align-items: center;
+            gap: 16px;
+            height: 60px;
         }
 
-        .cat-col {
-            flex: 1 1 0;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        /* Fallback before the script runs / with JS disabled. */
-        .categories-grid > .cat-card {
-            flex: 1 1 300px;
-        }
-
-        /* ======== CATEGORY CARD ======== */
-        .cat-card {
-            background: rgba(255,255,255,0.025);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            padding: 20px 16px 16px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
-        }
-
-        /* Subtle inner glow on hover */
-        .cat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 80px;
-            border-radius: 20px 20px 0 0;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-
-        .cat-card:hover {
-            border-color: rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.04);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            transform: translateY(-2px);
-        }
-
-        .cat-card:hover::before { opacity: 1; }
-
-        /* Category card top glows per theme */
-        .cat-math::before        { background: linear-gradient(180deg, rgba(99,102,241,0.08), transparent); }
-        .cat-converters::before   { background: linear-gradient(180deg, rgba(249,115,22,0.08), transparent); }
-        .cat-utilities::before    { background: linear-gradient(180deg, rgba(14,165,233,0.08), transparent); }
-        .cat-time::before         { background: linear-gradient(180deg, rgba(245,158,11,0.08), transparent); }
-        .cat-textcode::before     { background: linear-gradient(180deg, rgba(148,163,184,0.08), transparent); }
-        .cat-productivity::before { background: linear-gradient(180deg, rgba(59,130,246,0.08), transparent); }
-        .cat-language::before     { background: linear-gradient(180deg, rgba(20,184,166,0.08), transparent); }
-        .cat-fun::before          { background: linear-gradient(180deg, rgba(234,179,8,0.08), transparent); }
-        .cat-dev::before          { background: linear-gradient(180deg, rgba(6,182,212,0.08), transparent); }
-        .cat-creative::before     { background: linear-gradient(180deg, rgba(139,92,246,0.08), transparent); }
-        .cat-media::before        { background: linear-gradient(180deg, rgba(192,38,211,0.08), transparent); }
-        .cat-education::before    { background: linear-gradient(180deg, rgba(16,185,129,0.08), transparent); }
-        .cat-fonts::before        { background: linear-gradient(180deg, rgba(236,72,153,0.08), transparent); }
-
-        .cat-header {
+        .brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 14px;
-            position: relative;
-            z-index: 1;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
         }
 
-        .cat-icon {
-            width: 32px; height: 32px;
-            border-radius: 9px;
+        .brand-mark {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #8b9bff, #5b4fe0);
+            box-shadow: 0 4px 14px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .top-actions {
+            margin-left: auto;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            flex-shrink: 0;
+            gap: 12px;
+            min-width: 0;
         }
 
-        .cat-label {
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #cbd5e1;
-        }
-
-        .cat-count {
-            margin-left: auto;
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: #64748b;
-            background: rgba(255,255,255,0.05);
-            padding: 2px 9px;
-            border-radius: 100px;
-        }
-
-        /* ======== TOOL GRID (4-col inside cards) ======== */
-        .tool-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 4px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .tool-btn {
-            display: flex;
-            flex-direction: column;
+        .top-link {
+            display: inline-flex;
             align-items: center;
             gap: 7px;
-            padding: 12px 4px 10px;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
+            height: 34px;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            white-space: nowrap;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .top-link:hover { color: var(--text); border-color: var(--border-strong); }
+
+        /* Compact search in the bar, shown once the hero search scrolls away */
+        .topbar .search {
+            width: 340px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-4px);
+            transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+        }
+        .topbar.scrolled .search { opacity: 1; visibility: visible; transform: none; }
+
+        /* ======== SEARCH ======== */
+        .search { position: relative; }
+
+        .search > i {
+            position: absolute;
+            left: 13px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3);
+            font-size: 13px;
+            pointer-events: none;
+        }
+
+        .search input {
+            width: 100%;
+            height: 36px;
+            padding: 0 40px 0 36px;
+            font: inherit;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .search input::placeholder { color: var(--text-3); }
+
+        .search input:focus {
+            border-color: rgba(124,140,255,0.6);
+            box-shadow: 0 0 0 4px rgba(124,140,255,0.15);
+        }
+
+        .search kbd {
+            position: absolute;
+            right: 10px; top: 50%;
+            transform: translateY(-50%);
             font-family: inherit;
-            font-size: 0.68rem;
+            font-size: 11px;
             font-weight: 600;
-            color: #b0b8d0;
-            background: transparent;
-            transition: all 0.25s ease;
-            text-decoration: none;
+            line-height: 1;
+            color: var(--text-3);
+            padding: 4px 7px;
+            border: 1px solid var(--border-strong);
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        .search input:focus ~ kbd { display: none; }
+
+        /* ======== WORDMARK ======== */
+        .wordmark {
+            font-size: clamp(44px, 7.5vw, 88px);
+            font-weight: 700;
+            letter-spacing: -0.045em;
+            line-height: 1;
+            margin: 0 auto 28px;
+            padding-bottom: 0.08em; /* keeps descender-free glyphs from clipping */
+            background: linear-gradient(100deg, #ffffff 0%, #c7ceff 30%, #a78bfa 55%, #f472b6 80%, #fb923c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 8px 40px rgba(139,92,246,0.35));
+        }
+
+        /* ======== HERO ======== */
+        .hero {
             position: relative;
+            margin-top: -60px;
+            padding: 104px 0 36px;
+            text-align: center;
+            overflow: hidden;
+            isolation: isolate;
         }
 
-        .tool-btn:hover {
-            background: rgba(255,255,255,0.07);
-            color: #fff;
-            transform: translateY(-3px);
+        /* Soft glow + faint grid, fading out toward the content */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 50% 60% at 50% 0%, rgba(99,102,241,0.22), transparent 70%),
+                radial-gradient(ellipse 30% 40% at 80% 20%, rgba(236,72,153,0.08), transparent 70%),
+                radial-gradient(ellipse 30% 40% at 20% 30%, rgba(34,211,238,0.07), transparent 70%);
         }
 
-        .tool-btn:active { transform: translateY(0); }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 44px 44px;
+            -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 20%, #000 20%, transparent 75%);
+            mask-image: radial-gradient(ellipse 60% 70% at 50% 20%, #000 20%, transparent 75%);
+        }
 
-        .t-icon {
-            width: 50px; height: 50px;
-            border-radius: 14px;
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px 5px 6px;
+            margin-bottom: 18px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-2);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-strong);
+            border-radius: 999px;
+        }
+
+        .eyebrow b {
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #c7ceff;
+            background: rgba(124,140,255,0.18);
+            border-radius: 999px;
+        }
+
+        h1 {
+            font-size: clamp(30px, 4.6vw, 54px);
+            font-weight: 700;
+            letter-spacing: -0.035em;
+            line-height: 1.08;
+            max-width: 980px;
+            margin: 0 auto 14px;
+            text-wrap: balance;
+            color: #f5f7fb;
+        }
+
+        h1 .accent {
+            background: linear-gradient(90deg, #8b9bff 0%, #c084fc 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lede {
+            color: var(--text-2);
+            font-size: clamp(15px, 1.4vw, 17px);
+            line-height: 1.55;
+            max-width: 600px;
+            margin: 0 auto 26px;
+        }
+
+        .hero .search {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero .search > i { left: 18px; font-size: 16px; }
+
+        .hero .search input {
+            height: 52px;
+            padding: 0 52px 0 48px;
+            font-size: 16px;
+            border-radius: 12px;
+            background: rgba(17,20,26,0.9);
+            border-color: var(--border-strong);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+        }
+
+        .hero .search input:focus {
+            box-shadow: 0 0 0 4px rgba(124,140,255,0.15), 0 10px 40px rgba(0,0,0,0.35);
+        }
+
+        .hero .search kbd { right: 14px; }
+
+        /* ======== SECTIONS ======== */
+        .section { padding: 10px 0 8px; }
+
+        .section-head {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
-        .tool-btn:hover .t-icon { transform: scale(1.12); }
+        h2 {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--text);
+        }
 
-        .t-name {
-            text-align: center;
-            line-height: 1.2;
-            max-width: 80px;
+        .section-head .count {
+            font-size: 12px;
+            color: var(--text-3);
+        }
+
+        .section-head::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 8px;
+            list-style: none;
+        }
+
+        /* ======== TILE ======== */
+        .tile {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            height: 100%;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+
+        .tile:hover {
+            background: var(--surface-2);
+            border-color: rgba(var(--accent), 0.45);
+            transform: translateY(-1px);
+        }
+
+        .tile:hover .tile-icon {
+            transform: scale(1.06);
+            box-shadow: 0 6px 20px rgba(var(--accent), 0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .tile-icon {
+            flex-shrink: 0;
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            color: #fff;
+            background: linear-gradient(135deg, rgb(var(--accent)) 0%, rgb(var(--accent-2)) 100%);
+            box-shadow: 0 4px 14px rgba(var(--accent), 0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .tile-body { min-width: 0; }
+
+        .tile-name {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* ============ COLOR THEMES ============ */
-        .cat-productivity .cat-icon { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; }
-        .cat-productivity .t-icon  { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; box-shadow: 0 4px 14px rgba(59,130,246,0.3); }
-        .cat-productivity .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(59,130,246,0.5); }
+        .tile-desc {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 12.5px;
+            color: var(--text-2);
+            margin-top: 1px;
+        }
 
-        .cat-creative .cat-icon { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; }
-        .cat-creative .t-icon  { background: linear-gradient(135deg, #a78bfa, #6d28d9); color: #fff; box-shadow: 0 4px 14px rgba(139,92,246,0.3); }
-        .cat-creative .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(139,92,246,0.5); }
+        /* Category accents (RGB triplets) */
+        /* --accent: light end (glyph tints, glows); --accent-2: deep end of the icon gradient */
+        .c-productivity { --accent: 96,165,250;  --accent-2: 37,99,235; }
+        .c-converters   { --accent: 251,146,60;  --accent-2: 234,88,12; }
+        .c-math         { --accent: 129,140,248; --accent-2: 79,70,229; }
+        .c-text         { --accent: 148,163,184; --accent-2: 71,85,105; }
+        .c-dev          { --accent: 34,211,238;  --accent-2: 8,145,178; }
+        .c-language     { --accent: 45,212,191;  --accent-2: 13,148,136; }
+        .c-time         { --accent: 251,191,36;  --accent-2: 217,119,6; }
+        .c-creative     { --accent: 167,139,250; --accent-2: 124,58,237; }
+        .c-media        { --accent: 232,121,249; --accent-2: 192,38,211; }
+        .c-utilities    { --accent: 56,189,248;  --accent-2: 2,132,199; }
+        .c-education    { --accent: 52,211,153;  --accent-2: 5,150,105; }
+        .c-fonts        { --accent: 244,114,182; --accent-2: 219,39,119; }
+        .c-fun          { --accent: 251,113,133; --accent-2: 225,29,72; }
 
-        .cat-time .cat-icon { background: linear-gradient(135deg, #fbbf24, #d97706); color: #422006; }
-        .cat-time .t-icon  { background: linear-gradient(135deg, #fbbf24, #d97706); color: #422006; box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
-        .cat-time .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(245,158,11,0.5); }
+        /* ======== ENTRANCE ANIMATION ========
+           Runs once on page load. The hero builds in first, then each section
+           and its tiles cascade in. Animations sit on the <li>, not the .tile,
+           so they never fight the tile's hover transform. compat.css already
+           collapses these for prefers-reduced-motion. */
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: none; }
+        }
 
-        .cat-education .cat-icon { background: linear-gradient(135deg, #34d399, #059669); color: #fff; }
-        .cat-education .t-icon  { background: linear-gradient(135deg, #34d399, #059669); color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
-        .cat-education .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(16,185,129,0.5); }
+        @keyframes wordmarkIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.97); filter: blur(10px) drop-shadow(0 8px 40px rgba(139,92,246,0)); }
+            to   { opacity: 1; transform: none; filter: blur(0) drop-shadow(0 8px 40px rgba(139,92,246,0.35)); }
+        }
 
-        .cat-math .cat-icon { background: linear-gradient(135deg, #818cf8, #4f46e5); color: #fff; }
-        .cat-math .t-icon  { background: linear-gradient(135deg, #818cf8, #4f46e5); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
-        .cat-math .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(99,102,241,0.5); }
+        @keyframes glowIn {
+            from { opacity: 0; transform: scale(1.08); }
+            to   { opacity: 1; transform: none; }
+        }
 
-        .cat-converters .cat-icon { background: linear-gradient(135deg, #fb923c, #ea580c); color: #fff; }
-        .cat-converters .t-icon  { background: linear-gradient(135deg, #fb923c, #ea580c); color: #fff; box-shadow: 0 4px 14px rgba(249,115,22,0.3); }
-        .cat-converters .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(249,115,22,0.5); }
+        .hero::before { animation: glowIn 1.4s ease-out both; }
+        .hero::after  { animation: glowIn 1.8s ease-out both; }
 
-        .cat-textcode .cat-icon { background: linear-gradient(135deg, #94a3b8, #475569); color: #fff; }
-        .cat-textcode .t-icon  { background: linear-gradient(135deg, #94a3b8, #475569); color: #fff; box-shadow: 0 4px 14px rgba(100,116,139,0.3); }
-        .cat-textcode .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(100,116,139,0.5); }
+        .eyebrow        { animation: rise 0.6s cubic-bezier(.2,.7,.2,1) 0.1s both; }
+        .wordmark       { animation: wordmarkIn 0.9s cubic-bezier(.2,.7,.2,1) 0.2s both; }
+        .hero .search   { animation: rise 0.6s cubic-bezier(.2,.7,.2,1) 0.45s both; }
 
-        .cat-dev .cat-icon { background: linear-gradient(135deg, #22d3ee, #0891b2); color: #083344; }
-        .cat-dev .t-icon  { background: linear-gradient(135deg, #22d3ee, #0891b2); color: #083344; box-shadow: 0 4px 14px rgba(6,182,212,0.3); }
-        .cat-dev .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(6,182,212,0.5); }
+        .section-head   { animation: rise 0.5s ease-out both; }
+        .grid > li      { animation: rise 0.5s cubic-bezier(.2,.7,.2,1) both; }
 
-        .cat-language .cat-icon { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: #042f2e; }
-        .cat-language .t-icon  { background: linear-gradient(135deg, #2dd4bf, #0d9488); color: #042f2e; box-shadow: 0 4px 14px rgba(20,184,166,0.3); }
-        .cat-language .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(20,184,166,0.5); }
+        /* Section order sets the base delay; tiles add a small per-item step. */
+        .section:nth-of-type(1)  { --d: 0.55s; }
+        .section:nth-of-type(2)  { --d: 0.7s; }
+        .section:nth-of-type(3)  { --d: 0.85s; }
+        .section:nth-of-type(n+4) { --d: 0.95s; }
 
-        .cat-fonts .cat-icon { background: linear-gradient(135deg, #f472b6, #db2777); color: #fff; }
-        .cat-fonts .t-icon  { background: linear-gradient(135deg, #f472b6, #db2777); color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,0.3); }
-        .cat-fonts .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(236,72,153,0.5); }
+        .section-head { animation-delay: var(--d); }
+        .grid > li:nth-child(1)  { animation-delay: calc(var(--d) + 0.03s); }
+        .grid > li:nth-child(2)  { animation-delay: calc(var(--d) + 0.06s); }
+        .grid > li:nth-child(3)  { animation-delay: calc(var(--d) + 0.09s); }
+        .grid > li:nth-child(4)  { animation-delay: calc(var(--d) + 0.12s); }
+        .grid > li:nth-child(5)  { animation-delay: calc(var(--d) + 0.15s); }
+        .grid > li:nth-child(6)  { animation-delay: calc(var(--d) + 0.18s); }
+        .grid > li:nth-child(n+7) { animation-delay: calc(var(--d) + 0.21s); }
 
-        .cat-media .cat-icon { background: linear-gradient(135deg, #e879f9, #c026d3); color: #fff; }
-        .cat-media .t-icon  { background: linear-gradient(135deg, #e879f9, #c026d3); color: #fff; box-shadow: 0 4px 14px rgba(192,38,211,0.3); }
-        .cat-media .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(192,38,211,0.5); }
+        /* Once the intro has played, drop it: toggling [hidden] during search
+           would otherwise restart each tile's delayed animation. */
+        .intro-done .section-head,
+        .intro-done .grid > li { animation: none; }
 
-        .cat-utilities .cat-icon { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; }
-        .cat-utilities .t-icon  { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; box-shadow: 0 4px 14px rgba(14,165,233,0.3); }
-        .cat-utilities .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(14,165,233,0.5); }
-
-        .cat-fun .cat-icon { background: linear-gradient(135deg, #facc15, #ca8a04); color: #422006; }
-        .cat-fun .t-icon  { background: linear-gradient(135deg, #facc15, #ca8a04); color: #422006; box-shadow: 0 4px 14px rgba(234,179,8,0.3); }
-        .cat-fun .tool-btn:hover .t-icon { box-shadow: 0 6px 24px rgba(234,179,8,0.5); }
+        /* ======== EMPTY STATE ======== */
+        .empty {
+            padding: 48px 0;
+            text-align: center;
+            color: var(--text-3);
+        }
+        .empty i { font-size: 22px; display: block; margin-bottom: 10px; }
 
         /* ======== FOOTER ======== */
         .footer {
-            text-align: center;
-            padding: 40px 0 28px;
-            color: #1e2540;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            margin-top: 20px;
+            border-top: 1px solid var(--border);
+            padding: 16px 0 24px;
+            color: var(--text-3);
+            font-size: 12.5px;
         }
 
-        /* ======== ANIMATIONS ======== */
-        .cat-card {
-            animation: fadeUp 0.45s ease both;
-        }
-        .cat-card:nth-child(1)  { animation-delay: 0s; }
-        .cat-card:nth-child(2)  { animation-delay: 0.04s; }
-        .cat-card:nth-child(3)  { animation-delay: 0.06s; }
-        .cat-card:nth-child(4)  { animation-delay: 0.1s; }
-        .cat-card:nth-child(5)  { animation-delay: 0.14s; }
-        .cat-card:nth-child(6)  { animation-delay: 0.18s; }
-        .cat-card:nth-child(7)  { animation-delay: 0.22s; }
-        .cat-card:nth-child(8)  { animation-delay: 0.26s; }
-        .cat-card:nth-child(9)  { animation-delay: 0.3s; }
-        .cat-card:nth-child(10) { animation-delay: 0.34s; }
-        .cat-card:nth-child(11) { animation-delay: 0.38s; }
-        .cat-card:nth-child(12) { animation-delay: 0.42s; }
-        .cat-card:nth-child(13) { animation-delay: 0.46s; }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .footer .wrap {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px;
         }
 
-        /* ======== NO RESULTS ======== */
-        .no-results {
-            display: none;
-            text-align: center;
-            padding: 80px 20px;
-            color: #4a5070;
-        }
-        .no-results i { font-size: 2.5rem; margin-bottom: 14px; display: block; color: #333a55; }
-        .no-results.visible { display: block; }
+        .footer a:hover { color: var(--text); }
 
         /* ======== RESPONSIVE ======== */
-        /* Column count is driven by layoutCategories() in script, matching
-           these same breakpoints; the wrap fallback keeps it sane without JS. */
-        @media (max-width: 1100px) {
-            .categories-grid { flex-wrap: wrap; }
+        @media (max-width: 860px) {
+            .topbar .search { width: 240px; }
         }
 
-        @media (max-width: 700px) {
-            .header { padding: 24px 0 20px; }
-            h1 { font-size: 2.4rem; }
-            .tool-grid { grid-template-columns: repeat(4, 1fr); }
-            .t-icon { width: 44px; height: 44px; font-size: 1.1rem; }
-        }
-
-        @media (max-width: 400px) {
-            .tool-grid { grid-template-columns: repeat(3, 1fr); }
+        @media (max-width: 600px) {
+            .top-link span { display: none; }
+            .topbar .search { width: auto; flex: 1; }
+            .top-actions { flex: 1; }
+            .top-actions .top-link { margin-left: auto; }
+            .search kbd { display: none; }
+            .hero { padding: 88px 0 24px; }
+            .hero .search input { height: 48px; font-size: 16px; }
+            .grid { grid-template-columns: 1fr; gap: 6px; }
+            .tile { padding: 9px 10px; }
         }
     </style>
     <link rel="stylesheet" href="assets/compat.css">
 </head>
 <body>
-    <div class="page-wrap">
-        <div class="header">
-            <a href="https://github.com/krishnasaigaruda/webOS" target="_blank" rel="noopener" class="try-webos-btn"><i class="fas fa-desktop"></i> Try WebOS</a>
-            <div class="header-badge"><i class="fas fa-bolt"></i> 60+ Tools</div>
-            <h1>Tools Hub</h1>
-            <p class="subtitle">Your all-in-one productivity toolkit</p>
-            <div class="search-wrap">
-                <input type="text" class="search-box" id="searchBox" placeholder="Search tools..." oninput="filterTools()">
-                <i class="fas fa-search"></i>
-                <span class="search-shortcut">/</span>
+    <header class="topbar" id="topbar">
+        <div class="wrap">
+            <a class="brand" href="Tools.html" aria-label="Tools Hub home">
+                <span class="brand-mark"><i class="fas fa-toolbox" aria-hidden="true"></i></span>
+                <span class="brand-name">Tools Hub</span>
+            </a>
+            <div class="top-actions">
+                <div class="search" role="search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" class="js-search" placeholder="Search tools" aria-label="Search tools" autocomplete="off" tabindex="-1">
+                    <kbd>/</kbd>
+                </div>
+                <a class="top-link" href="https://github.com/krishnasaigaruda/Tools-Hub" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></a>
             </div>
         </div>
+    </header>
 
-        <div class="categories-grid" id="categoriesGrid">
-
-            <!-- 1. Math & Science -->
-            <div class="cat-card cat-math">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-square-root-alt"></i></div>
-                    <span class="cat-label">Math & Science</span>
-                    <span class="cat-count">6</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('calculator')"><div class="t-icon"><i class="fas fa-calculator"></i></div><span class="t-name">Calculator</span></button>
-                    <button class="tool-btn" onclick="openTool('scientific-calc')"><div class="t-icon"><i class="fas fa-square-root-alt"></i></div><span class="t-name">Scientific</span></button>
-                    <button class="tool-btn" onclick="openTool('percentage-calc')"><div class="t-icon"><i class="fas fa-percent"></i></div><span class="t-name">Percentage</span></button>
-                    <button class="tool-btn" onclick="openTool('graph-plotter')"><div class="t-icon"><i class="fas fa-chart-line"></i></div><span class="t-name">Graphs</span></button>
-                    <button class="tool-btn" onclick="openTool('matrix-calc')"><div class="t-icon"><i class="fas fa-border-all"></i></div><span class="t-name">Matrix</span></button>
-                    <button class="tool-btn" onclick="openTool('stats-calculator')"><div class="t-icon"><i class="fas fa-chart-bar"></i></div><span class="t-name">Statistics</span></button>
-                </div>
-            </div>
-
-            <!-- 2. Converters -->
-            <div class="cat-card cat-converters">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-arrows-rotate"></i></div>
-                    <span class="cat-label">Converters</span>
-                    <span class="cat-count">12</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('currency-converter')"><div class="t-icon"><i class="fas fa-money-bill-wave"></i></div><span class="t-name">Currency</span></button>
-                    <button class="tool-btn" onclick="openTool('temp-converter')"><div class="t-icon"><i class="fas fa-thermometer-half"></i></div><span class="t-name">Temp</span></button>
-                    <button class="tool-btn" onclick="openTool('length-converter')"><div class="t-icon"><i class="fas fa-ruler"></i></div><span class="t-name">Length</span></button>
-                    <button class="tool-btn" onclick="openTool('weight-converter')"><div class="t-icon"><i class="fas fa-balance-scale"></i></div><span class="t-name">Weight</span></button>
-                    <button class="tool-btn" onclick="openTool('area-converter')"><div class="t-icon"><i class="fas fa-vector-square"></i></div><span class="t-name">Area</span></button>
-                    <button class="tool-btn" onclick="openTool('speed-converter')"><div class="t-icon"><i class="fas fa-tachometer-alt"></i></div><span class="t-name">Speed</span></button>
-                    <button class="tool-btn" onclick="openTool('data-converter')"><div class="t-icon"><i class="fas fa-database"></i></div><span class="t-name">Data</span></button>
-                    <button class="tool-btn" onclick="openTool('volume-converter')"><div class="t-icon"><i class="fas fa-cube"></i></div><span class="t-name">Volume</span></button>
-                    <button class="tool-btn" onclick="openTool('time-converter')"><div class="t-icon"><i class="fas fa-hourglass-half"></i></div><span class="t-name">Time</span></button>
-                    <button class="tool-btn" onclick="openTool('angle-converter')"><div class="t-icon"><i class="fas fa-compass-drafting"></i></div><span class="t-name">Angle</span></button>
-                    <button class="tool-btn" onclick="openTool('number-converter')"><div class="t-icon"><i class="fas fa-hashtag"></i></div><span class="t-name">Number</span></button>
-                    <button class="tool-btn" onclick="openTool('roman-numerals')"><div class="t-icon"><i class="fas fa-landmark"></i></div><span class="t-name">Roman</span></button>
-                </div>
-            </div>
-
-            <!-- 3. Utilities -->
-            <div class="cat-card cat-utilities">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-wrench"></i></div>
-                    <span class="cat-label">Utilities</span>
-                    <span class="cat-count">3</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('password-gen')"><div class="t-icon"><i class="fas fa-key"></i></div><span class="t-name">Password</span></button>
-                    <button class="tool-btn" onclick="openTool('qr-generator')"><div class="t-icon"><i class="fas fa-qrcode"></i></div><span class="t-name">QR Code</span></button>
-                    <button class="tool-btn" onclick="openTool('map')"><div class="t-icon"><i class="fas fa-map-marked-alt"></i></div><span class="t-name">Map</span></button>
-                </div>
-            </div>
-
-            <!-- 4. Time -->
-            <div class="cat-card cat-time">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-clock"></i></div>
-                    <span class="cat-label">Time</span>
-                    <span class="cat-count">6</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('clock')"><div class="t-icon"><i class="fas fa-clock"></i></div><span class="t-name">Clock</span></button>
-                    <button class="tool-btn" onclick="openTool('timer')"><div class="t-icon"><i class="fas fa-hourglass-half"></i></div><span class="t-name">Timer</span></button>
-                    <button class="tool-btn" onclick="openTool('stopwatch')"><div class="t-icon"><i class="fas fa-stopwatch"></i></div><span class="t-name">Stopwatch</span></button>
-                    <button class="tool-btn" onclick="openTool('alarm')"><div class="t-icon"><i class="fas fa-bell"></i></div><span class="t-name">Alarm</span></button>
-                    <button class="tool-btn" onclick="openTool('world-clock')"><div class="t-icon"><i class="fas fa-globe"></i></div><span class="t-name">World Clock</span></button>
-                    <button class="tool-btn" onclick="openTool('timezone')"><div class="t-icon"><i class="fas fa-globe-americas"></i></div><span class="t-name">Timezone</span></button>
-                </div>
-            </div>
-
-            <!-- 5. Text & Code -->
-            <div class="cat-card cat-textcode">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-code"></i></div>
-                    <span class="cat-label">Text & Code</span>
-                    <span class="cat-count">5</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('text-editor')"><div class="t-icon"><i class="fas fa-edit"></i></div><span class="t-name">Text Edit</span></button>
-                    <button class="tool-btn" onclick="openTool('code-editor')"><div class="t-icon"><i class="fas fa-code"></i></div><span class="t-name">Code Edit</span></button>
-                    <button class="tool-btn" onclick="openTool('html-fiddle')"><div class="t-icon"><i class="fas fa-play-circle"></i></div><span class="t-name">HTML Fiddle</span></button>
-                    <button class="tool-btn" onclick="openTool('word-counter')"><div class="t-icon"><i class="fas fa-spell-check"></i></div><span class="t-name">Words</span></button>
-                    <button class="tool-btn" onclick="openTool('character-counter')"><div class="t-icon"><i class="fas fa-text-width"></i></div><span class="t-name">Chars</span></button>
-                </div>
-            </div>
-
-            <!-- 6. Productivity -->
-            <div class="cat-card cat-productivity">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-briefcase"></i></div>
-                    <span class="cat-label">Productivity</span>
-                    <span class="cat-count">8</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('document')"><div class="t-icon"><i class="fas fa-file-alt"></i></div><span class="t-name">Document</span></button>
-                    <button class="tool-btn" onclick="openTool('spreadsheet')"><div class="t-icon"><i class="fas fa-table"></i></div><span class="t-name">Spreadsheet</span></button>
-                    <button class="tool-btn" onclick="openTool('presentation')"><div class="t-icon"><i class="fas fa-desktop"></i></div><span class="t-name">Slides</span></button>
-                    <button class="tool-btn" onclick="openTool('notes')"><div class="t-icon"><i class="fas fa-sticky-note"></i></div><span class="t-name">Notes</span></button>
-                    <button class="tool-btn" onclick="openTool('onenote')"><div class="t-icon"><i class="fas fa-book"></i></div><span class="t-name">Notebook</span></button>
-                    <button class="tool-btn" onclick="openTool('todo')"><div class="t-icon"><i class="fas fa-check-square"></i></div><span class="t-name">To-Do</span></button>
-                    <button class="tool-btn" onclick="openTool('calendar')"><div class="t-icon"><i class="fas fa-calendar-alt"></i></div><span class="t-name">Calendar</span></button>
-                    <button class="tool-btn" onclick="openTool('forms')"><div class="t-icon"><i class="fas fa-clipboard-list"></i></div><span class="t-name">Forms</span></button>
-                </div>
-            </div>
-
-            <!-- 7. Language -->
-            <div class="cat-card cat-language">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-language"></i></div>
-                    <span class="cat-label">Language</span>
-                    <span class="cat-count">5</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('translator')"><div class="t-icon"><i class="fas fa-language"></i></div><span class="t-name">Translate</span></button>
-                    <button class="tool-btn" onclick="openTool('dictionary')"><div class="t-icon"><i class="fas fa-book"></i></div><span class="t-name">Dictionary</span></button>
-                    <button class="tool-btn" onclick="openTool('thesaurus')"><div class="t-icon"><i class="fas fa-scroll"></i></div><span class="t-name">Thesaurus</span></button>
-                    <button class="tool-btn" onclick="openTool('text-to-speech')"><div class="t-icon"><i class="fas fa-volume-up"></i></div><span class="t-name">TTS</span></button>
-                    <button class="tool-btn" onclick="openTool('speech-to-text')"><div class="t-icon"><i class="fas fa-microphone"></i></div><span class="t-name">STT</span></button>
-                </div>
-            </div>
-
-            <!-- 8. Random & Fun -->
-            <div class="cat-card cat-fun">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-dice"></i></div>
-                    <span class="cat-label">Random & Fun</span>
-                    <span class="cat-count">6</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('random-tool')"><div class="t-icon"><i class="fas fa-shuffle"></i></div><span class="t-name">Random</span></button>
-                    <button class="tool-btn" onclick="openTool('random-generator')"><div class="t-icon"><i class="fas fa-hashtag"></i></div><span class="t-name">Number</span></button>
-                    <button class="tool-btn" onclick="openTool('dice-roller')"><div class="t-icon"><i class="fas fa-dice"></i></div><span class="t-name">Dice</span></button>
-                    <button class="tool-btn" onclick="openTool('coin-flip')"><div class="t-icon"><i class="fas fa-coins"></i></div><span class="t-name">Coin Flip</span></button>
-                    <button class="tool-btn" onclick="openTool('random-word')"><div class="t-icon"><i class="fas fa-font"></i></div><span class="t-name">Word</span></button>
-                    <button class="tool-btn" onclick="openTool('random-picker')"><div class="t-icon"><i class="fas fa-list-check"></i></div><span class="t-name">Picker</span></button>
-                </div>
-            </div>
-
-            <!-- 9. Developer -->
-            <div class="cat-card cat-dev">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-terminal"></i></div>
-                    <span class="cat-label">Developer</span>
-                    <span class="cat-count">2</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('binary-calculator')"><div class="t-icon"><i class="fas fa-microchip"></i></div><span class="t-name">Binary Calc</span></button>
-                    <button class="tool-btn" onclick="openTool('binary-converter')"><div class="t-icon"><i class="fas fa-exchange-alt"></i></div><span class="t-name">Binary Conv</span></button>
-                </div>
-            </div>
-
-            <!-- 10. Creative -->
-            <div class="cat-card cat-creative">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
-                    <span class="cat-label">Creative</span>
-                    <span class="cat-count">4</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('whiteboard')"><div class="t-icon"><i class="fas fa-chalkboard"></i></div><span class="t-name">Whiteboard</span></button>
-                    <button class="tool-btn" onclick="openTool('image-editor')"><div class="t-icon"><i class="fas fa-image"></i></div><span class="t-name">Image Edit</span></button>
-                    <button class="tool-btn" onclick="openTool('drawing-pad')"><div class="t-icon"><i class="fas fa-paint-brush"></i></div><span class="t-name">Drawing</span></button>
-                    <button class="tool-btn" onclick="openTool('color-picker')"><div class="t-icon"><i class="fas fa-palette"></i></div><span class="t-name">Colors</span></button>
-                </div>
-            </div>
-
-            <!-- 11. Media -->
-            <div class="cat-card cat-media">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-headphones"></i></div>
-                    <span class="cat-label">Media & Audio</span>
-                    <span class="cat-count">5</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('voice-recorder')"><div class="t-icon"><i class="fas fa-microphone-alt"></i></div><span class="t-name">Recorder</span></button>
-                    <button class="tool-btn" onclick="openTool('music-player')"><div class="t-icon"><i class="fas fa-music"></i></div><span class="t-name">Music</span></button>
-                    <button class="tool-btn" onclick="openTool('video-player')"><div class="t-icon"><i class="fas fa-play-circle"></i></div><span class="t-name">Video</span></button>
-                    <button class="tool-btn" onclick="openTool('metronome')"><div class="t-icon"><i class="fas fa-drum"></i></div><span class="t-name">Metronome</span></button>
-                    <button class="tool-btn" onclick="openTool('tuner')"><div class="t-icon"><i class="fas fa-guitar"></i></div><span class="t-name">Tuner</span></button>
-                </div>
-            </div>
-
-            <!-- 12. Education -->
-            <div class="cat-card cat-education">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-graduation-cap"></i></div>
-                    <span class="cat-label">Education</span>
-                    <span class="cat-count">3</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('quiz')"><div class="t-icon"><i class="fas fa-question-circle"></i></div><span class="t-name">Quiz</span></button>
-                    <button class="tool-btn" onclick="openTool('periodic-table')"><div class="t-icon"><i class="fas fa-atom"></i></div><span class="t-name">Periodic Table</span></button>
-                    <button class="tool-btn" onclick="openTool('typing-test')"><div class="t-icon"><i class="fas fa-keyboard"></i></div><span class="t-name">Typing</span></button>
-                </div>
-            </div>
-
-            <!-- 13. Fonts -->
-            <div class="cat-card cat-fonts">
-                <div class="cat-header">
-                    <div class="cat-icon"><i class="fas fa-font"></i></div>
-                    <span class="cat-label">Fonts</span>
-                    <span class="cat-count">3</span>
-                </div>
-                <div class="tool-grid">
-                    <button class="tool-btn" onclick="openTool('font-explorer')"><div class="t-icon"><i class="fas fa-font"></i></div><span class="t-name">Explorer</span></button>
-                    <button class="tool-btn" onclick="openTool('handwriting-font')"><div class="t-icon"><i class="fas fa-pen-fancy"></i></div><span class="t-name">Handwriting</span></button>
-                    <button class="tool-btn" onclick="openTool('font-preview')"><div class="t-icon"><i class="fas fa-eye"></i></div><span class="t-name">Preview</span></button>
-                </div>
-            </div>
-
-            <div class="no-results" id="noResults">
-                <i class="fas fa-search"></i>
-                <p>No tools found. Try a different search.</p>
+    <div class="hero" id="hero">
+        <div class="wrap">
+            <div class="eyebrow"><b>68 tools</b> Free forever · No sign-up</div>
+            <h1 class="wordmark">Tools Hub</h1>
+            <div class="search" role="search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" id="searchBox" class="js-search" placeholder="Search tools — e.g. currency, pdf, timer" aria-label="Search tools" autocomplete="off">
+                <kbd>/</kbd>
             </div>
         </div>
-
-        <div class="footer">Tools Hub</div>
     </div>
 
+    <main class="wrap">
+        <section class="section c-productivity" id="productivity" aria-labelledby="h-productivity">
+            <div class="section-head"><h2 id="h-productivity">Productivity</h2><span class="count">8</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/document.html"><span class="tile-icon"><i class="fas fa-file-lines" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Document Editor</span><span class="tile-desc">Write and format documents, export to PDF</span></span></a></li>
+                <li><a class="tile" href="tools/spreadsheet.html"><span class="tile-icon"><i class="fas fa-table" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Spreadsheet</span><span class="tile-desc">Grid with 20+ formulas like SUM, AVG and IF</span></span></a></li>
+                <li><a class="tile" href="tools/presentation.html"><span class="tile-icon"><i class="fas fa-display" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Presentation</span><span class="tile-desc">Build slide decks with themes and transitions</span></span></a></li>
+                <li><a class="tile" href="tools/notes.html"><span class="tile-icon"><i class="fas fa-note-sticky" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Notes</span><span class="tile-desc">Quick notes with rich text formatting</span></span></a></li>
+                <li><a class="tile" href="tools/onenote.html"><span class="tile-icon"><i class="fas fa-book" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Notebook</span><span class="tile-desc">Organise notes into sections and pages</span></span></a></li>
+                <li><a class="tile" href="tools/todo.html"><span class="tile-icon"><i class="fas fa-square-check" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">To-Do List</span><span class="tile-desc">Track tasks with categories and priorities</span></span></a></li>
+                <li><a class="tile" href="tools/calendar.html"><span class="tile-icon"><i class="fas fa-calendar-days" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Calendar</span><span class="tile-desc">Month, week and day views with events</span></span></a></li>
+                <li><a class="tile" href="tools/forms.html"><span class="tile-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Form Builder</span><span class="tile-desc">Create forms with 15+ field types, export PDF</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-converters" id="converters" aria-labelledby="h-converters">
+            <div class="section-head"><h2 id="h-converters">Converters</h2><span class="count">12</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/currency-converter.html"><span class="tile-icon"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Currency Converter</span><span class="tile-desc">Convert currencies with live exchange rates</span></span></a></li>
+                <li><a class="tile" href="tools/temp-converter.html"><span class="tile-icon"><i class="fas fa-temperature-half" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Temperature Converter</span><span class="tile-desc">Celsius, Fahrenheit and Kelvin</span></span></a></li>
+                <li><a class="tile" href="tools/length-converter.html"><span class="tile-icon"><i class="fas fa-ruler" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Length Converter</span><span class="tile-desc">Meters, feet, inches, miles and more</span></span></a></li>
+                <li><a class="tile" href="tools/weight-converter.html"><span class="tile-icon"><i class="fas fa-scale-balanced" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Weight Converter</span><span class="tile-desc">Kilograms, pounds, ounces and tons</span></span></a></li>
+                <li><a class="tile" href="tools/area-converter.html"><span class="tile-icon"><i class="fas fa-vector-square" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Area Converter</span><span class="tile-desc">Square meters, acres, hectares and more</span></span></a></li>
+                <li><a class="tile" href="tools/speed-converter.html"><span class="tile-icon"><i class="fas fa-gauge-high" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Speed Converter</span><span class="tile-desc">km/h, mph, knots and m/s</span></span></a></li>
+                <li><a class="tile" href="tools/data-converter.html"><span class="tile-icon"><i class="fas fa-database" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Data Size Converter</span><span class="tile-desc">Bytes, KB, MB, GB and TB</span></span></a></li>
+                <li><a class="tile" href="tools/volume-converter.html"><span class="tile-icon"><i class="fas fa-cube" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Volume Converter</span><span class="tile-desc">Liters, gallons, cups and more</span></span></a></li>
+                <li><a class="tile" href="tools/time-converter.html"><span class="tile-icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Time Converter</span><span class="tile-desc">Seconds, minutes, hours and days</span></span></a></li>
+                <li><a class="tile" href="tools/angle-converter.html"><span class="tile-icon"><i class="fas fa-compass-drafting" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Angle Converter</span><span class="tile-desc">Degrees, radians and gradians</span></span></a></li>
+                <li><a class="tile" href="tools/number-converter.html"><span class="tile-icon"><i class="fas fa-hashtag" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Number Base Converter</span><span class="tile-desc">Binary, octal, decimal and hex</span></span></a></li>
+                <li><a class="tile" href="tools/roman-numerals.html"><span class="tile-icon"><i class="fas fa-landmark" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Roman Numerals</span><span class="tile-desc">Convert to and from Roman numerals</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-math" id="math" aria-labelledby="h-math">
+            <div class="section-head"><h2 id="h-math">Math &amp; Science</h2><span class="count">6</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/calculator.html"><span class="tile-icon"><i class="fas fa-calculator" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Calculator</span><span class="tile-desc">Fast everyday arithmetic</span></span></a></li>
+                <li><a class="tile" href="tools/scientific-calc.html"><span class="tile-icon"><i class="fas fa-square-root-variable" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Scientific Calculator</span><span class="tile-desc">Trig, logs, powers and advanced functions</span></span></a></li>
+                <li><a class="tile" href="tools/percentage-calc.html"><span class="tile-icon"><i class="fas fa-percent" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Percentage Calculator</span><span class="tile-desc">Percent of, change and difference</span></span></a></li>
+                <li><a class="tile" href="tools/graph-plotter.html"><span class="tile-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Graph Plotter</span><span class="tile-desc">Plot mathematical functions</span></span></a></li>
+                <li><a class="tile" href="tools/matrix-calc.html"><span class="tile-icon"><i class="fas fa-border-all" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Matrix Calculator</span><span class="tile-desc">Multiply, determinant and inverse</span></span></a></li>
+                <li><a class="tile" href="tools/stats-calculator.html"><span class="tile-icon"><i class="fas fa-chart-column" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Statistics Calculator</span><span class="tile-desc">Mean, median, standard deviation and more</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-text" id="text-code" aria-labelledby="h-text">
+            <div class="section-head"><h2 id="h-text">Text &amp; Code</h2><span class="count">5</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/text-editor.html"><span class="tile-icon"><i class="fas fa-pen-to-square" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Text Editor</span><span class="tile-desc">Rich text editing with formatting</span></span></a></li>
+                <li><a class="tile" href="tools/code-editor.html"><span class="tile-icon"><i class="fas fa-code" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Code Editor</span><span class="tile-desc">Syntax highlighting for many languages</span></span></a></li>
+                <li><a class="tile" href="tools/html-fiddle.html"><span class="tile-icon"><i class="fas fa-circle-play" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">HTML Fiddle</span><span class="tile-desc">Live HTML, CSS and JS playground</span></span></a></li>
+                <li><a class="tile" href="tools/word-counter.html"><span class="tile-icon"><i class="fas fa-spell-check" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Word Counter</span><span class="tile-desc">Count words, sentences and paragraphs</span></span></a></li>
+                <li><a class="tile" href="tools/character-counter.html"><span class="tile-icon"><i class="fas fa-text-width" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Character Counter</span><span class="tile-desc">Detailed character and length analysis</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-language" id="language" aria-labelledby="h-language">
+            <div class="section-head"><h2 id="h-language">Language</h2><span class="count">5</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/translator.html"><span class="tile-icon"><i class="fas fa-language" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Translator</span><span class="tile-desc">Translate text between many languages</span></span></a></li>
+                <li><a class="tile" href="tools/dictionary.html"><span class="tile-icon"><i class="fas fa-book-open" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Dictionary</span><span class="tile-desc">Definitions, with Wiktionary for all languages</span></span></a></li>
+                <li><a class="tile" href="tools/thesaurus.html"><span class="tile-icon"><i class="fas fa-scroll" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Thesaurus</span><span class="tile-desc">Synonyms, antonyms and rhymes</span></span></a></li>
+                <li><a class="tile" href="tools/text-to-speech.html"><span class="tile-icon"><i class="fas fa-volume-high" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Text to Speech</span><span class="tile-desc">Read text aloud in multiple voices</span></span></a></li>
+                <li><a class="tile" href="tools/speech-to-text.html"><span class="tile-icon"><i class="fas fa-microphone" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Speech to Text</span><span class="tile-desc">Live dictation in 28 languages</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-time" id="time" aria-labelledby="h-time">
+            <div class="section-head"><h2 id="h-time">Time</h2><span class="count">6</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/clock.html#clock"><span class="tile-icon"><i class="fas fa-clock" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Clock</span><span class="tile-desc">Digital and analog clock display</span></span></a></li>
+                <li><a class="tile" href="tools/clock.html#timer"><span class="tile-icon"><i class="fas fa-hourglass-start" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Countdown Timer</span><span class="tile-desc">Timer with quick presets</span></span></a></li>
+                <li><a class="tile" href="tools/clock.html#stopwatch"><span class="tile-icon"><i class="fas fa-stopwatch" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Stopwatch</span><span class="tile-desc">Precise timing with lap tracking</span></span></a></li>
+                <li><a class="tile" href="tools/clock.html#alarm"><span class="tile-icon"><i class="fas fa-bell" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Alarm Clock</span><span class="tile-desc">Set alarms with custom sounds</span></span></a></li>
+                <li><a class="tile" href="tools/clock.html#world-clock"><span class="tile-icon"><i class="fas fa-globe" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">World Clock</span><span class="tile-desc">See the time in cities worldwide</span></span></a></li>
+                <li><a class="tile" href="tools/clock.html#timezone"><span class="tile-icon"><i class="fas fa-earth-americas" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Time Zone Converter</span><span class="tile-desc">Convert times between time zones</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-creative" id="creative" aria-labelledby="h-creative">
+            <div class="section-head"><h2 id="h-creative">Creative</h2><span class="count">4</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/whiteboard.html"><span class="tile-icon"><i class="fas fa-chalkboard" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Whiteboard</span><span class="tile-desc">Infinite canvas with shapes and text</span></span></a></li>
+                <li><a class="tile" href="tools/image-editor.html"><span class="tile-icon"><i class="fas fa-image" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Image Editor</span><span class="tile-desc">Crop, resize, filters and adjustments</span></span></a></li>
+                <li><a class="tile" href="tools/drawing-pad.html"><span class="tile-icon"><i class="fas fa-paintbrush" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Drawing Pad</span><span class="tile-desc">Freehand drawing with brushes and layers</span></span></a></li>
+                <li><a class="tile" href="tools/color-picker.html"><span class="tile-icon"><i class="fas fa-palette" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Color Picker</span><span class="tile-desc">Palettes, harmonies and HEX/RGB/HSL</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-media" id="media" aria-labelledby="h-media">
+            <div class="section-head"><h2 id="h-media">Media &amp; Audio</h2><span class="count">5</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/voice-recorder.html"><span class="tile-icon"><i class="fas fa-microphone-lines" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Voice Recorder</span><span class="tile-desc">Record, trim and edit audio</span></span></a></li>
+                <li><a class="tile" href="tools/music-player.html"><span class="tile-icon"><i class="fas fa-music" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Music Player</span><span class="tile-desc">Play audio with waveform and queue</span></span></a></li>
+                <li><a class="tile" href="tools/video-player.html"><span class="tile-icon"><i class="fas fa-film" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Video Player</span><span class="tile-desc">Playlists, bookmarks and picture-in-picture</span></span></a></li>
+                <li><a class="tile" href="tools/metronome.html"><span class="tile-icon"><i class="fas fa-drum" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Metronome</span><span class="tile-desc">Tap tempo, time signatures, subdivisions</span></span></a></li>
+                <li><a class="tile" href="tools/tuner.html"><span class="tile-icon"><i class="fas fa-guitar" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Instrument Tuner</span><span class="tile-desc">Chromatic tuner for guitar, bass, ukulele</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-utilities" id="utilities" aria-labelledby="h-utilities">
+            <div class="section-head"><h2 id="h-utilities">Utilities</h2><span class="count">3</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/password-gen.html"><span class="tile-icon"><i class="fas fa-key" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Password Generator</span><span class="tile-desc">Secure passwords with a strength meter</span></span></a></li>
+                <li><a class="tile" href="tools/qr-generator.html"><span class="tile-icon"><i class="fas fa-qrcode" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">QR Code Generator</span><span class="tile-desc">QR codes for URLs, text, Wi-Fi and vCards</span></span></a></li>
+                <li><a class="tile" href="tools/map.html"><span class="tile-icon"><i class="fas fa-map-location-dot" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Map</span><span class="tile-desc">Search places, get routes and directions</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-dev" id="developer" aria-labelledby="h-dev">
+            <div class="section-head"><h2 id="h-dev">Developer</h2><span class="count">2</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/binary-calculator.html"><span class="tile-icon"><i class="fas fa-microchip" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Binary Calculator</span><span class="tile-desc">Arithmetic on binary numbers</span></span></a></li>
+                <li><a class="tile" href="tools/binary-converter.html"><span class="tile-icon"><i class="fas fa-right-left" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Binary Converter</span><span class="tile-desc">Convert text and numbers to binary</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-education" id="education" aria-labelledby="h-education">
+            <div class="section-head"><h2 id="h-education">Education</h2><span class="count">3</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/quiz.html"><span class="tile-icon"><i class="fas fa-circle-question" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Quiz Maker</span><span class="tile-desc">Create and take custom quizzes</span></span></a></li>
+                <li><a class="tile" href="tools/periodic-table.html"><span class="tile-icon"><i class="fas fa-atom" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Periodic Table</span><span class="tile-desc">Interactive table with element details</span></span></a></li>
+                <li><a class="tile" href="tools/typing-test.html"><span class="tile-icon"><i class="fas fa-keyboard" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Typing Speed Test</span><span class="tile-desc">Measure your WPM and accuracy</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-fonts" id="fonts" aria-labelledby="h-fonts">
+            <div class="section-head"><h2 id="h-fonts">Fonts</h2><span class="count">3</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/font-explorer.html"><span class="tile-icon"><i class="fas fa-font" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Font Explorer</span><span class="tile-desc">Browse and download 150+ Google Fonts</span></span></a></li>
+                <li><a class="tile" href="tools/handwriting-font.html"><span class="tile-icon"><i class="fas fa-pen-fancy" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Handwriting to Font</span><span class="tile-desc">Turn your handwriting into a font file</span></span></a></li>
+                <li><a class="tile" href="tools/font-preview.html"><span class="tile-icon"><i class="fas fa-eye" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Font Preview</span><span class="tile-desc">Upload and test your own font files</span></span></a></li>
+            </ul>
+        </section>
+
+        <section class="section c-fun" id="random" aria-labelledby="h-random">
+            <div class="section-head"><h2 id="h-random">Random &amp; Fun</h2><span class="count">6</span></div>
+            <ul class="grid">
+                <li><a class="tile" href="tools/random-tool.html"><span class="tile-icon"><i class="fas fa-shuffle" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Randomizer</span><span class="tile-desc">All-in-one random generation toolkit</span></span></a></li>
+                <li><a class="tile" href="tools/random-generator.html"><span class="tile-icon"><i class="fas fa-hashtag" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Random Number</span><span class="tile-desc">Generate numbers in any range</span></span></a></li>
+                <li><a class="tile" href="tools/dice-roller.html"><span class="tile-icon"><i class="fas fa-dice" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Dice Roller</span><span class="tile-desc">Roll virtual dice of any type</span></span></a></li>
+                <li><a class="tile" href="tools/coin-flip.html"><span class="tile-icon"><i class="fas fa-coins" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Coin Flip</span><span class="tile-desc">Heads or tails, instantly</span></span></a></li>
+                <li><a class="tile" href="tools/random-word.html"><span class="tile-icon"><i class="fas fa-font" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Random Word</span><span class="tile-desc">Words by category: nouns, verbs, animals</span></span></a></li>
+                <li><a class="tile" href="tools/random-picker.html"><span class="tile-icon"><i class="fas fa-list-check" aria-hidden="true"></i></span><span class="tile-body"><span class="tile-name">Random Picker</span><span class="tile-desc">Pick a random item from your list</span></span></a></li>
+            </ul>
+        </section>
+
+        <div class="empty" id="empty" hidden>
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+            No tools match your search.
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="wrap">
+            <span>&copy; Tools Hub · Free, private, browser-based tools</span>
+            <a href="https://github.com/krishnasaigaruda/Tools-Hub" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i> Source on GitHub</a>
+        </div>
+    </footer>
+
     <script>
-        const availableTools = {
-            'document': 'tools/document.html',
-            'spreadsheet': 'tools/spreadsheet.html',
-            'presentation': 'tools/presentation.html',
-            'notes': 'tools/notes.html',
-            'onenote': 'tools/onenote.html',
-            'todo': 'tools/todo.html',
-            'calendar': 'tools/calendar.html',
-            'whiteboard': 'tools/whiteboard.html',
-            'forms': 'tools/forms.html',
-            'image-editor': 'tools/image-editor.html',
-            'drawing-pad': 'tools/drawing-pad.html',
-            'color-picker': 'tools/color-picker.html',
-            'clock': 'tools/clock.html#clock',
-            'timer': 'tools/clock.html#timer',
-            'stopwatch': 'tools/clock.html#stopwatch',
-            'alarm': 'tools/clock.html#alarm',
-            'world-clock': 'tools/clock.html#world-clock',
-            'timezone': 'tools/clock.html#timezone',
-            'quiz': 'tools/quiz.html',
-            'periodic-table': 'tools/periodic-table.html',
-            'typing-test': 'tools/typing-test.html',
-            'calculator': 'tools/calculator.html',
-            'scientific-calc': 'tools/scientific-calc.html',
-            'percentage-calc': 'tools/percentage-calc.html',
-            'graph-plotter': 'tools/graph-plotter.html',
-            'matrix-calc': 'tools/matrix-calc.html',
-            'stats-calculator': 'tools/stats-calculator.html',
-            'temp-converter': 'tools/temp-converter.html',
-            'length-converter': 'tools/length-converter.html',
-            'weight-converter': 'tools/weight-converter.html',
-            'area-converter': 'tools/area-converter.html',
-            'speed-converter': 'tools/speed-converter.html',
-            'data-converter': 'tools/data-converter.html',
-            'volume-converter': 'tools/volume-converter.html',
-            'time-converter': 'tools/time-converter.html',
-            'angle-converter': 'tools/angle-converter.html',
-            'number-converter': 'tools/number-converter.html',
-            'currency-converter': 'tools/currency-converter.html',
-            'roman-numerals': 'tools/roman-numerals.html',
-            'text-editor': 'tools/text-editor.html',
-            'code-editor': 'tools/code-editor.html',
-            'word-counter': 'tools/word-counter.html',
-            'character-counter': 'tools/character-counter.html',
-            'binary-calculator': 'tools/binary-calculator.html',
-            'binary-converter': 'tools/binary-converter.html',
-            'translator': 'tools/translator.html',
-            'dictionary': 'tools/dictionary.html',
-            'thesaurus': 'tools/thesaurus.html',
-            'text-to-speech': 'tools/text-to-speech.html',
-            'speech-to-text': 'tools/speech-to-text.html',
-            'font-explorer': 'tools/font-explorer.html',
-            'handwriting-font': 'tools/handwriting-font.html',
-            'random-tool': 'tools/random-tool.html',
-            'random-generator': 'tools/random-generator.html',
-            'dice-roller': 'tools/dice-roller.html',
-            'coin-flip': 'tools/coin-flip.html',
-            'random-picker': 'tools/random-picker.html',
-            'voice-recorder': 'tools/voice-recorder.html',
-            'music-player': 'tools/music-player.html',
-            'video-player': 'tools/video-player.html',
-            'metronome': 'tools/metronome.html',
-            'tuner': 'tools/tuner.html',
-            'password-gen': 'tools/password-gen.html',
-            'qr-generator': 'tools/qr-generator.html',
-            'map': 'tools/map.html',
-            'html-fiddle': 'tools/html-fiddle.html',
-            'random-word': 'tools/random-word.html',
-            'font-preview': 'tools/font-preview.html'
-        };
-
-        /* ======== MASONRY ========
-           Distributes the category cards into flex columns, always adding the
-           next card to whichever column is currently shortest. Same packing
-           CSS `columns` gave us, without the dropped-card rendering bug. */
         (function () {
-            const grid = document.getElementById('categoriesGrid');
-            const cards = Array.from(grid.children);
-            let currentCols = 0;
+            const heroBox = document.getElementById('searchBox');
+            const boxes = Array.from(document.querySelectorAll('.js-search'));
+            const topbar = document.getElementById('topbar');
+            const topBox = topbar.querySelector('.js-search');
+            let box = heroBox;
+            const empty = document.getElementById('empty');
+            const sections = Array.from(document.querySelectorAll('.section'));
 
-            function columnCount() {
-                const w = window.innerWidth;
-                if (w <= 700) return 1;
-                if (w <= 1100) return 2;
-                return 3;
-            }
+            // Pre-index each tile once: name + description + category title.
+            const index = sections.map(section => ({
+                section,
+                items: Array.from(section.querySelectorAll('li')).map(li => ({
+                    li,
+                    text: (li.textContent + ' ' + section.querySelector('h2').textContent).toLowerCase()
+                }))
+            }));
 
-            function layoutCategories() {
-                const n = columnCount();
-                if (n === currentCols) return;
-                currentCols = n;
+            function filter() {
+                const terms = box.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+                let any = false;
 
-                const columns = [];
-                grid.textContent = '';
-                for (let i = 0; i < n; i++) {
-                    const col = document.createElement('div');
-                    col.className = 'cat-col';
-                    grid.appendChild(col);
-                    columns.push(col);
-                }
-
-                cards.forEach(card => {
-                    let shortest = columns[0];
-                    for (const col of columns) {
-                        if (col.offsetHeight < shortest.offsetHeight) shortest = col;
-                    }
-                    shortest.appendChild(card);
+                index.forEach(({ section, items }) => {
+                    let shown = 0;
+                    items.forEach(({ li, text }) => {
+                        const match = terms.every(t => text.includes(t));
+                        li.hidden = !match;
+                        if (match) shown++;
+                    });
+                    section.hidden = shown === 0;
+                    if (shown) any = true;
                 });
+
+                empty.hidden = any;
             }
 
-            layoutCategories();
+            // Retire the entrance animation after it finishes (see .intro-done).
+            setTimeout(() => document.documentElement.classList.add('intro-done'), 2000);
 
-            // Icon and web fonts land after first paint and change card
-            // heights, so re-pack once everything has actually loaded.
-            window.addEventListener('load', () => {
-                currentCols = 0;
-                layoutCategories();
-            });
+            // Two search fields (hero + sticky bar) share one query.
+            boxes.forEach(b => b.addEventListener('input', () => {
+                box = b;
+                boxes.forEach(other => { if (other !== b) other.value = b.value; });
+                filter();
+            }));
 
-            let resizeTimer = null;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(layoutCategories, 150);
+            // Reveal the bar's search once the hero search has scrolled out of view.
+            let heroVisible = true;
+            new IntersectionObserver(([entry]) => {
+                heroVisible = entry.isIntersecting;
+                topbar.classList.toggle('scrolled', !heroVisible);
+                topBox.tabIndex = heroVisible ? -1 : 0;
+            }, { rootMargin: '-60px 0px 0px 0px' }).observe(heroBox);
+
+            document.addEventListener('keydown', e => {
+                const inBox = boxes.includes(document.activeElement);
+                if (e.key === '/' && !inBox) {
+                    e.preventDefault();
+                    (heroVisible ? heroBox : topBox).focus();
+                } else if (e.key === 'Escape' && inBox) {
+                    boxes.forEach(b => { b.value = ''; });
+                    filter();
+                    document.activeElement.blur();
+                } else if (e.key === 'Enter' && inBox) {
+                    const first = document.querySelector('.section:not([hidden]) li:not([hidden]) a');
+                    if (first) first.click();
+                }
             });
         })();
-
-        function openTool(toolName) {
-            if (availableTools[toolName]) {
-                window.location.href = availableTools[toolName];
-            } else {
-                alert(`${toolName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} - Coming soon!`);
-            }
-        }
-
-        function filterTools() {
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.cat-card');
-            const noResults = document.getElementById('noResults');
-            let anyVisible = false;
-
-            if (!searchTerm) {
-                cards.forEach(card => {
-                    card.style.display = '';
-                    card.querySelectorAll('.tool-btn').forEach(btn => btn.style.display = '');
-                });
-                noResults.classList.remove('visible');
-                return;
-            }
-
-            cards.forEach(card => {
-                const buttons = card.querySelectorAll('.tool-btn');
-                let hasVisible = false;
-
-                buttons.forEach(btn => {
-                    const name = btn.querySelector('.t-name').textContent.toLowerCase();
-                    const match = name.includes(searchTerm);
-                    btn.style.display = match ? '' : 'none';
-                    if (match) hasVisible = true;
-                });
-
-                card.style.display = hasVisible ? '' : 'none';
-                if (hasVisible) anyVisible = true;
-            });
-
-            noResults.classList.toggle('visible', !anyVisible);
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === '/' && document.activeElement !== document.getElementById('searchBox')) {
-                e.preventDefault();
-                document.getElementById('searchBox').focus();
-            }
-            if (e.key === 'Escape') {
-                document.getElementById('searchBox').blur();
-            }
-        });
     </script>
 </body>
 </html>
