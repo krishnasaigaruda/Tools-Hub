@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#08081a">
+    <meta name="color-scheme" content="dark light">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>Graph Plotter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Official Desmos Graphing Calculator API -->
+    <script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-btn:hover { background: #334155; color: #e2e8f0; }
+        .header h1 { font-size: 1.3rem; color: #818cf8; font-weight: 700; }
+        .header h1 i { margin-right: 8px; }
+        .header .spacer { flex: 1; }
+        .powered {
+            font-size: 0.72rem;
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .powered a { color: #818cf8; text-decoration: none; }
+
+        /* Preset / action toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            overflow-x: auto;
+        }
+        .toolbar .label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .preset-btn {
+            padding: 5px 11px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover {
+            border-color: #818cf8;
+            color: #818cf8;
+            background: rgba(79, 70, 229, 0.1);
+        }
+        .preset-btn.danger { color: #f87171; }
+        .preset-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+        .toolbar .divider { width: 1px; height: 22px; background: #334155; margin: 0 4px; flex-shrink: 0; }
+
+        /* Calculator surface */
+        #calculator {
+            flex: 1;
+            width: 100%;
+        }
+        .fallback {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #94a3b8;
+            text-align: center;
+            padding: 24px;
+        }
+        .fallback i { font-size: 2rem; color: #f87171; }
+
+        /* Scrollbar for toolbar */
+        .toolbar::-webkit-scrollbar { height: 6px; }
+        .toolbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    
+        /* ── Responsive: tighten chrome so the plot keeps its room ── */
+        @media (max-width: 700px) {
+            .header { padding: 10px 14px; gap: 10px; }
+            .header h1 { font-size: 1.05rem; }
+            .powered { display: none; }
+            .toolbar { padding: 8px 14px; }
+        }
+    </style>
+    <link rel="stylesheet" href="../assets/compat.css">
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <h1><i class="fas fa-chart-line"></i> Graph Plotter</h1>
+    <span class="spacer"></span>
+    <span class="powered">powered by <a href="https://www.desmos.com/" target="_blank" rel="noopener">Desmos</a></span>
+</div>
+
+<div class="toolbar" id="toolbar">
+    <span class="label">Presets</span>
+    <button class="preset-btn" data-latex="y=\sin(x)">sin(x)</button>
+    <button class="preset-btn" data-latex="y=\cos(x)">cos(x)</button>
+    <button class="preset-btn" data-latex="y=\tan(x)">tan(x)</button>
+    <button class="preset-btn" data-latex="y=x^2">x&sup2;</button>
+    <button class="preset-btn" data-latex="y=x^3">x&sup3;</button>
+    <button class="preset-btn" data-latex="y=\sqrt{x}">&radic;x</button>
+    <button class="preset-btn" data-latex="y=\left|x\right|">|x|</button>
+    <button class="preset-btn" data-latex="y=\ln(x)">ln(x)</button>
+    <button class="preset-btn" data-latex="y=\frac{1}{x}">1/x</button>
+    <button class="preset-btn" data-latex="x^2+y^2=25">circle</button>
+    <button class="preset-btn" data-latex="\frac{x^2}{9}+\frac{y^2}{4}=1">ellipse</button>
+    <button class="preset-btn" data-latex="y=a\sin(x)">slider</button>
+    <span class="divider"></span>
+    <button class="preset-btn" id="resetView"><i class="fas fa-home"></i> Reset view</button>
+    <button class="preset-btn danger" id="clearAll"><i class="fas fa-trash"></i> Clear all</button>
+</div>
+
+<div id="calculator"></div>
+<div class="fallback" id="fallback">
+    <i class="fas fa-wifi"></i>
+    <div><strong>Desmos failed to load.</strong></div>
+    <div>This graphing calculator needs an internet connection. Check your network and reload.</div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    const STORAGE_KEY = 'graphPlotterDesmosState';
+    const elt = document.getElementById('calculator');
+
+    // Guard: Desmos script must be available (needs internet).
+    if (typeof Desmos === 'undefined') {
+        elt.style.display = 'none';
+        document.getElementById('fallback').style.display = 'flex';
+        return;
+    }
+
+    const calculator = Desmos.GraphingCalculator(elt, {
+        keypad: true,
+        expressions: true,
+        settingsMenu: true,
+        zoomButtons: true,
+        expressionsTopbar: true,
+        invertedColors: true,          // dark graph paper to match the hub theme
+        border: false,
+        autosize: true
+    });
+
+    // Restore previous session, otherwise seed with a couple of examples.
+    let restored = false;
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) { calculator.setState(JSON.parse(saved)); restored = true; }
+    } catch (e) { /* ignore corrupt state */ }
+
+    if (!restored) {
+        calculator.setExpression({ id: 'demo1', latex: 'y=\\sin(x)' });
+    }
+
+    // Persist on every change.
+    calculator.observeEvent('change', function() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(calculator.getState())); } catch (e) {}
+    });
+
+    // Preset buttons add a new expression (Desmos manages colors/ids).
+    let presetCount = 0;
+    document.querySelectorAll('.preset-btn[data-latex]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            presetCount++;
+            calculator.setExpression({ id: 'preset_' + presetCount, latex: btn.dataset.latex });
+        });
+    });
+
+    // Reset just the viewport (keeps expressions).
+    document.getElementById('resetView').addEventListener('click', function() {
+        calculator.setMathBounds({ left: -10, right: 10, bottom: -10, top: 10 });
+    });
+
+    // Clear everything.
+    document.getElementById('clearAll').addEventListener('click', function() {
+        calculator.setBlank();
+    });
+})();
+</script>
+
+</body>
+</html>
