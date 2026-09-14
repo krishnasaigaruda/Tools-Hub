@@ -2010,6 +2010,18 @@
             // Retire the entrance animation after it finishes (see .intro-done).
             setTimeout(() => document.documentElement.classList.add('intro-done'), 2000);
 
+            // Analytics: record which tool tile was clicked, and from where.
+            document.querySelectorAll('.tile').forEach(tile => {
+                tile.addEventListener('click', () => {
+                    if (typeof gtag !== 'function') return;
+                    gtag('event', 'tool_click', {
+                        tool_name: tile.querySelector('.tile-name').textContent,
+                        tool_category: tile.closest('.section').querySelector('h2').textContent,
+                        search_query: heroBox.value || topBox.value || '(none)'
+                    });
+                });
+            });
+
             // Two search fields (hero + sticky bar) share one query.
             boxes.forEach(b => b.addEventListener('input', () => {
                 box = b;
