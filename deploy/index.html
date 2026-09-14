@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DMS4L21ZT6"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNM3H8BQW5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-DMS4L21ZT6');
+      gtag('config', 'G-QNM3H8BQW5');
     </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="assets/compat.js"></script>
     <title>Tools Hub — Free Online Tools: Converters, Calculators, Editors &amp; More</title>
     <meta name="description" content="68 free browser-based tools: unit and currency converters, scientific calculator, document and spreadsheet editors, QR code and password generators, translator, timers and more. No sign-up, works offline, your data stays on your device.">
@@ -1464,17 +1464,37 @@
                 radial-gradient(ellipse 30% 40% at 20% 30%, rgba(34,211,238,0.07), transparent 70%);
         }
 
-        .hero::after {
+        /* ======== PAGE BACKGROUND ========
+           Two fixed layers behind everything: a soft colour wash, and a
+           blueprint grid (fine lines + a brighter major line every 4 cells)
+           that is strongest near the top and fades toward the bottom. */
+        body::before,
+        body::after {
             content: '';
-            position: absolute;
+            position: fixed;
             inset: 0;
             z-index: -1;
+            pointer-events: none;
+        }
+
+        body::before {
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.16), transparent 60%),
+                radial-gradient(ellipse 40% 35% at 100% 0%, rgba(168,85,247,0.08), transparent 70%),
+                radial-gradient(ellipse 40% 35% at 0% 10%, rgba(34,211,238,0.06), transparent 70%),
+                radial-gradient(ellipse 60% 40% at 50% 110%, rgba(99,102,241,0.07), transparent 70%);
+        }
+
+        body::after {
             background-image:
-                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-            background-size: 44px 44px;
-            -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 20%, #000 20%, transparent 75%);
-            mask-image: radial-gradient(ellipse 60% 70% at 50% 20%, #000 20%, transparent 75%);
+                linear-gradient(rgba(255,255,255,0.085) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.085) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
+            background-position: -1px -1px;
+            -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.75) 35%, rgba(0,0,0,0.35) 75%, rgba(0,0,0,0.2) 100%);
+            mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,0.75) 35%, rgba(0,0,0,0.35) 75%, rgba(0,0,0,0.2) 100%);
         }
 
         .eyebrow {
@@ -1683,7 +1703,6 @@
         }
 
         .hero::before { animation: glowIn 1.4s ease-out both; }
-        .hero::after  { animation: glowIn 1.8s ease-out both; }
 
         .eyebrow        { animation: rise 0.6s cubic-bezier(.2,.7,.2,1) 0.1s both; }
         .wordmark       { animation: wordmarkIn 0.9s cubic-bezier(.2,.7,.2,1) 0.2s both; }
