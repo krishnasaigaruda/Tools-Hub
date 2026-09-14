@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/compat.js"></script>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="color-scheme" content="dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <title>Graph Plotter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- function-plot (MIT, open source, no API key): https://github.com/mauriciopoppe/function-plot -->
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.25.4/dist/function-plot.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ---------- Header ---------- */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .back-btn {
+            background: none;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-btn:hover { background: #334155; color: #e2e8f0; }
+        .header h1 { font-size: 1.3rem; color: #818cf8; font-weight: 700; }
+        .header h1 i { margin-right: 8px; }
+        .header .spacer { flex: 1; }
+        .powered { font-size: 0.72rem; color: #64748b; font-family: 'JetBrains Mono', monospace; }
+        .powered a { color: #818cf8; text-decoration: none; }
+
+        /* ---------- Toolbar ---------- */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            overflow-x: auto;
+        }
+        .toolbar .label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .preset-btn {
+            padding: 5px 11px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover { border-color: #818cf8; color: #818cf8; background: rgba(79, 70, 229, 0.1); }
+        .preset-btn.danger { color: #f87171; }
+        .preset-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+        .toolbar .divider { width: 1px; height: 22px; background: #334155; margin: 0 4px; flex-shrink: 0; }
+        .toolbar::-webkit-scrollbar { height: 6px; }
+        .toolbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* ---------- Layout ---------- */
+        .app { flex: 1; display: grid; grid-template-columns: 330px minmax(0, 1fr); min-height: 0; }
+
+        .panel {
+            background: #111a2e;
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .rows { display: flex; flex-direction: column; }
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid #1f2a40;
+        }
+        .row:focus-within { background: #16213a; }
+        .swatch {
+            width: 14px; height: 14px; border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid #0f172a;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+            cursor: pointer;
+        }
+        .row.hidden-curve .swatch { background: transparent !important; box-shadow: inset 0 0 0 2px #475569; }
+        .row input {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: 0;
+            outline: none;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.92rem;
+            padding: 4px 0;
+        }
+        .row input::placeholder { color: #475569; }
+        .row .err { color: #f87171; font-size: 0.85rem; display: none; }
+        .row.has-error .err { display: inline; }
+        .row.has-error input { color: #fca5a5; }
+        .icon-btn {
+            background: none; border: 0; color: #64748b; cursor: pointer;
+            width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+        }
+        .icon-btn:hover { color: #e2e8f0; background: #1e293b; }
+
+        .add-row {
+            margin: 10px 14px;
+            padding: 9px;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            background: none;
+            color: #94a3b8;
+            font: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .add-row:hover { border-color: #818cf8; color: #818cf8; }
+
+        .sliders { padding: 4px 14px 10px; display: grid; gap: 10px; }
+        .sliders:empty { display: none; }
+        .sliders h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600; }
+        .slider { display: grid; grid-template-columns: 22px 1fr 58px; align-items: center; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        .slider input[type="range"] { width: 100%; accent-color: #818cf8; min-height: 0; }
+        .slider input[type="number"] {
+            width: 58px; background: #0f172a; border: 1px solid #334155; border-radius: 6px;
+            color: #e2e8f0; font: inherit; font-size: 0.8rem; padding: 3px 6px;
+        }
+
+        .help { margin-top: auto; padding: 12px 14px 16px; border-top: 1px solid #1f2a40; color: #64748b; font-size: 0.78rem; line-height: 1.6; }
+        .help code { font-family: 'JetBrains Mono', monospace; color: #94a3b8; font-size: 0.75rem; }
+
+        .plot-wrap { position: relative; min-width: 0; min-height: 0; background: #0b1224; }
+        #plot { position: absolute; inset: 0; }
+        .coords {
+            position: absolute; right: 12px; bottom: 10px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8;
+            background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 6px; padding: 4px 8px;
+            pointer-events: none;
+        }
+        .coords:empty { display: none; }
+        .fallback {
+            position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; color: #94a3b8; text-align: center; padding: 24px;
+        }
+        .fallback i { font-size: 2rem; color: #f87171; }
+        #probe { position: absolute; left: -9999px; top: 0; width: 120px; height: 120px; visibility: hidden; }
+
+        /* ---------- function-plot dark theme ---------- */
+        .function-plot { font-family: 'JetBrains Mono', monospace; }
+        .function-plot .canvas { fill: #0b1224; }
+        .function-plot .x.axis path, .function-plot .y.axis path,
+        .function-plot .x.axis line, .function-plot .y.axis line { stroke: #475569; }
+        .function-plot .tick text { fill: #94a3b8; font-size: 11px; }
+        .function-plot .x.grid .tick line, .function-plot .y.grid .tick line { stroke: #1e293b; }
+        .function-plot .x.grid path, .function-plot .y.grid path { stroke: none; }
+        .function-plot .origin { stroke: #64748b; opacity: 1; }
+        .function-plot .tip .inner-tip text { fill: #e2e8f0; font-size: 12px; }
+        .function-plot .tip line { stroke: #64748b; stroke-dasharray: 3 3; }
+        .function-plot .tip circle { stroke: #0b1224; stroke-width: 2px; }
+        .function-plot .graph path.line { stroke-width: 2.5px; }
+
+        @media (max-width: 760px) {
+            .header { padding: 10px 14px; gap: 10px; }
+            .header h1 { font-size: 1.05rem; }
+            .powered { display: none; }
+            .toolbar { padding: 8px 14px; }
+            .app { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+            .panel { border-right: 0; border-bottom: 1px solid #334155; max-height: 38vh; }
+            .help { display: none; }
+        }
+    </style>
+    <link rel="stylesheet" href="../assets/compat.css">
+</head>
+<body>
+
+<div class="header">
+    <a href="../Tools.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+    <h1><i class="fas fa-chart-line"></i> Graph Plotter</h1>
+    <span class="spacer"></span>
+    <span class="powered">powered by <a href="https://github.com/mauriciopoppe/function-plot" target="_blank" rel="noopener">function-plot</a> (MIT)</span>
+</div>
+
+<div class="toolbar">
+    <span class="label">Presets</span>
+    <button class="preset-btn" data-expr="y = sin(x)">sin(x)</button>
+    <button class="preset-btn" data-expr="y = cos(x)">cos(x)</button>
+    <button class="preset-btn" data-expr="y = tan(x)">tan(x)</button>
+    <button class="preset-btn" data-expr="y = x^2">x&sup2;</button>
+    <button class="preset-btn" data-expr="y = x^3">x&sup3;</button>
+    <button class="preset-btn" data-expr="y = sqrt(x)">&radic;x</button>
+    <button class="preset-btn" data-expr="y = |x|">|x|</button>
+    <button class="preset-btn" data-expr="y = ln(x)">ln(x)</button>
+    <button class="preset-btn" data-expr="y = 1/x">1/x</button>
+    <button class="preset-btn" data-expr="x^2 + y^2 = 25">circle</button>
+    <button class="preset-btn" data-expr="x^2/9 + y^2/4 = 1">ellipse</button>
+    <button class="preset-btn" data-expr="r = 3sin(4θ)">rose</button>
+    <button class="preset-btn" data-expr="(4cos(3t), 4sin(2t))">parametric</button>
+    <button class="preset-btn" data-expr="y = a*sin(b*x)">slider</button>
+    <span class="divider"></span>
+    <button class="preset-btn" id="resetView"><i class="fas fa-home"></i> Reset view</button>
+    <button class="preset-btn danger" id="clearAll"><i class="fas fa-trash"></i> Clear all</button>
+</div>
+
+<div class="app">
+    <aside class="panel" aria-label="Expressions">
+        <div class="rows" id="rows"></div>
+        <button class="add-row" id="addRow" type="button"><i class="fas fa-plus"></i> Add expression</button>
+        <div class="sliders" id="sliders"></div>
+        <div class="help">
+            <div><code>y = 2x + 1</code> function &nbsp;·&nbsp; <code>x^2 + y^2 = 9</code> equation</div>
+            <div><code>r = 1 + cos(θ)</code> polar &nbsp;·&nbsp; <code>(cos(t), sin(t))</code> parametric</div>
+            <div>Letters like <code>a</code>, <code>b</code> become sliders. Drag to pan, scroll to zoom.</div>
+        </div>
+    </aside>
+    <main class="plot-wrap">
+        <div id="plot"></div>
+        <div class="coords" id="coords"></div>
+        <div class="fallback" id="fallback">
+            <i class="fas fa-wifi"></i>
+            <div><strong>The graphing library failed to load.</strong></div>
+            <div>Check your internet connection and reload the page.</div>
+        </div>
+    </main>
+</div>
+<div id="probe" aria-hidden="true"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    const STORAGE_KEY = 'graphPlotterState.v2';
+    const PALETTE = ['#818cf8', '#f472b6', '#34d399', '#fbbf24', '#60a5fa', '#f87171', '#a78bfa', '#2dd4bf'];
+    const DEFAULT_VIEW = { x: [-10, 10], y: [-7, 7] };
+    // Names the expression language understands; anything else is a slider (single letter) or an error.
+    const FUNCTIONS = new Set(['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh',
+        'sqrt', 'cbrt', 'log', 'exp', 'abs', 'floor', 'ceil', 'round', 'min', 'max', 'sign', 'pow']);
+    const CONSTANTS = new Set(['PI', 'E']);
+
+    const plotEl = document.getElementById('plot');
+    const probeEl = document.getElementById('probe');
+    const rowsEl = document.getElementById('rows');
+    const slidersEl = document.getElementById('sliders');
+    const coordsEl = document.getElementById('coords');
+
+    if (typeof functionPlot === 'undefined') {
+        document.getElementById('fallback').style.display = 'flex';
+        return;
+    }
+
+    // ------------------------------------------------------------ state
+    let state = load() || {
+        rows: [{ src: 'y = sin(x)', color: PALETTE[0], hidden: false }],
+        params: {},
+        view: { ...DEFAULT_VIEW }
+    };
+
+    function load() {
+        try {
+            const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            return s && Array.isArray(s.rows) ? s : null;
+        } catch { return null; }
+    }
+    function save() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* storage full or blocked */ }
+    }
+    function nextColor() {
+        const used = new Set(state.rows.map(r => r.color));
+        return PALETTE.find(c => !used.has(c)) || PALETTE[state.rows.length % PALETTE.length];
+    }
+
+    // ------------------------------------------------------------ parsing
+    // Turns what people type (graphing-calculator style) into function-plot's syntax.
+    function normalize(src) {
+        let s = src.trim()
+            .replace(/\s+/g, '')
+            .replace(/\*\*/g, '^')
+            .replace(/θ/g, 'theta')
+            .replace(/π/g, 'PI')
+            .replace(/(^|[^A-Za-z])pi(?![A-Za-z])/g, '$1PI')
+            .replace(/(^|[^A-Za-z])e(?![A-Za-z(])/g, '$1E')
+            .replace(/(^|[^A-Za-z])ln\(/g, '$1log(')
+            .replace(/√\(/g, 'sqrt(')
+            .replace(/\|([^|]+)\|/g, 'abs($1)');
+        // Implicit multiplication: 2x -> 2*x, 3sin(x) -> 3*sin(x), )( -> )*(, )x -> )*x
+        s = s.replace(/(\d)(?=[A-Za-z(])/g, '$1*')
+             .replace(/\)(?=[A-Za-z0-9(])/g, ')*');
+        return s;
+    }
+
+    function splitTopLevelComma(s) {
+        let depth = 0;
+        for (let i = 0; i < s.length; i++) {
+            if (s[i] === '(') depth++;
+            else if (s[i] === ')') depth--;
+            else if (s[i] === ',' && depth === 0) return [s.slice(0, i), s.slice(i + 1)];
+        }
+        return null;
+    }
+
+    function classify(norm) {
+        let m;
+        if ((m = norm.match(/^y=(.+)$/)) && !/(^|[^A-Za-z])y(?![A-Za-z])/.test(m[1])) {
+            return { type: 'linear', parts: { fn: m[1] }, vars: ['x'] };
+        }
+        if ((m = norm.match(/^r=(.+)$/))) {
+            return { type: 'polar', parts: { r: m[1] }, vars: ['theta'] };
+        }
+        if ((m = norm.match(/^\((.+)\)$/))) {
+            const xy = splitTopLevelComma(m[1]);
+            if (xy) return { type: 'parametric', parts: { x: xy[0], y: xy[1] }, vars: ['t'] };
+        }
+        if (norm.includes('=')) {
+            const sides = norm.split('=');
+            if (sides.length !== 2 || !sides[0] || !sides[1]) throw new Error('Use exactly one "="');
+            return { type: 'implicit', parts: { fn: `(${sides[0]})-(${sides[1]})` }, vars: ['x', 'y'] };
+        }
+        return { type: 'linear', parts: { fn: norm }, vars: ['x'] };
+    }
+
+    // Collects slider names and rejects unknown words.
+    function findParams(parsed) {
+        const params = new Set();
+        const allowed = new Set(parsed.vars);
+        for (const expr of Object.values(parsed.parts)) {
+            const re = /[A-Za-z_]+/g;
+            let m;
+            while ((m = re.exec(expr))) {
+                const name = m[0];
+                const isCall = expr[re.lastIndex] === '(';
+                if (isCall) {
+                    if (!FUNCTIONS.has(name)) throw new Error(`Unknown function "${name}"`);
+                } else if (!allowed.has(name) && !CONSTANTS.has(name)) {
+                    if (/^[a-df-wzA-DF-Z]$/.test(name)) params.add(name);
+                    else throw new Error(`Unknown name "${name}"`);
+                }
+            }
+        }
+        return params;
+    }
+
+    function toDatum(parsed, color, scope) {
+        const base = { color, scope: { ...scope, PI: Math.PI, E: Math.E } };
+        switch (parsed.type) {
+            case 'linear':     return { ...base, fn: parsed.parts.fn, graphType: 'polyline', nSamples: 1200 };
+            case 'implicit':   return { ...base, fn: parsed.parts.fn, fnType: 'implicit' };
+            case 'polar':      return { ...base, r: parsed.parts.r, fnType: 'polar', graphType: 'polyline', range: [0, 2 * Math.PI], nSamples: 1200 };
+            case 'parametric': return { ...base, x: parsed.parts.x, y: parsed.parts.y, fnType: 'parametric', graphType: 'polyline', range: [0, 2 * Math.PI], nSamples: 1200 };
+        }
+    }
+
+    // ------------------------------------------------------------ rendering
+    let plot = null;
+
+    function tryPlot(target, options) {
+        target.replaceChildren();
+        return functionPlot({ target, ...options });
+    }
+
+    function render() {
+        const usedParams = new Set();
+        const entries = [];
+
+        state.rows.forEach((row, i) => {
+            const rowEl = rowsEl.children[i];
+            setRowError(rowEl, null);
+            if (!row.src.trim()) return;
+            try {
+                const parsed = classify(normalize(row.src));
+                findParams(parsed).forEach(p => usedParams.add(p));
+                entries.push({ row, rowEl, parsed });
+            } catch (err) {
+                setRowError(rowEl, err.message);
+            }
+        });
+
+        // Keep slider values for names still in use, default new ones to 1.
+        usedParams.forEach(p => { if (!(p in state.params)) state.params[p] = 1; });
+        Object.keys(state.params).forEach(p => { if (!usedParams.has(p)) delete state.params[p]; });
+        renderSliders();
+
+        const visible = entries.filter(e => !e.row.hidden);
+        const options = {
+            width: plotEl.clientWidth,
+            height: plotEl.clientHeight,
+            grid: true,
+            xAxis: { domain: state.view.x },
+            yAxis: { domain: state.view.y },
+            tip: { xLine: true, yLine: true, renderer: () => '' },
+            data: visible.map(e => toDatum(e.parsed, e.row.color, state.params))
+        };
+
+        try {
+            plot = tryPlot(plotEl, options);
+        } catch {
+            // Find which expressions the library rejects, flag them, draw the rest.
+            const good = [];
+            visible.forEach(e => {
+                const datum = toDatum(e.parsed, e.row.color, state.params);
+                try {
+                    tryPlot(probeEl, { width: 120, height: 120, xAxis: { domain: state.view.x }, yAxis: { domain: state.view.y }, data: [datum] });
+                    good.push(datum);
+                } catch (err) {
+                    setRowError(e.rowEl, 'Can’t plot this expression');
+                }
+            });
+            probeEl.replaceChildren();
+            try { plot = tryPlot(plotEl, { ...options, data: good }); } catch { plot = null; }
+        }
+
+        if (plot) {
+            plot.on('all:zoom', () => {
+                state.view = { x: plot.meta.xScale.domain(), y: plot.meta.yScale.domain() };
+                save();
+            });
+            plot.on('mousemove', (coords) => {
+                coordsEl.textContent = `(${fmt(coords.x)}, ${fmt(coords.y)})`;
+            });
+            plot.on('mouseout', () => { coordsEl.textContent = ''; });
+        }
+        save();
+    }
+
+    function fmt(n) {
+        return Math.abs(n) >= 1000 || (Math.abs(n) < 0.01 && n !== 0) ? n.toExponential(2) : n.toFixed(2);
+    }
+
+    function setRowError(rowEl, message) {
+        if (!rowEl) return;
+        rowEl.classList.toggle('has-error', !!message);
+        const err = rowEl.querySelector('.err');
+        err.title = message || '';
+    }
+
+    // ------------------------------------------------------------ UI
+    function buildRows() {
+        rowsEl.replaceChildren(...state.rows.map((row, i) => {
+            const el = document.createElement('div');
+            el.className = 'row' + (row.hidden ? ' hidden-curve' : '');
+
+            const swatch = document.createElement('button');
+            swatch.type = 'button';
+            swatch.className = 'swatch';
+            swatch.style.background = row.color;
+            swatch.title = row.hidden ? 'Show curve' : 'Hide curve';
+            swatch.setAttribute('aria-label', swatch.title);
+            swatch.addEventListener('click', () => {
+                row.hidden = !row.hidden;
+                buildRows();
+                render();
+            });
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = row.src;
+            input.placeholder = 'y = sin(x)';
+            input.spellcheck = false;
+            input.autocomplete = 'off';
+            input.setAttribute('aria-label', `Expression ${i + 1}`);
+            input.addEventListener('input', () => { row.src = input.value; scheduleRender(); });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); addRow('', i + 1); }
+                if (e.key === 'Backspace' && !input.value && state.rows.length > 1) { e.preventDefault(); removeRow(i, true); }
+            });
+
+            const err = document.createElement('i');
+            err.className = 'err fas fa-triangle-exclamation';
+
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'icon-btn';
+            del.title = 'Remove';
+            del.setAttribute('aria-label', 'Remove expression');
+            del.innerHTML = '<i class="fas fa-xmark"></i>';
+            del.addEventListener('click', () => removeRow(i));
+
+            el.append(swatch, input, err, del);
+            return el;
+        }));
+    }
+
+    function renderSliders() {
+        const names = Object.keys(state.params).sort();
+        if (!names.length) { slidersEl.replaceChildren(); return; }
+        const title = document.createElement('h2');
+        title.textContent = 'Sliders';
+        slidersEl.replaceChildren(title, ...names.map(name => {
+            const wrap = document.createElement('label');
+            wrap.className = 'slider';
+            const label = document.createElement('span');
+            label.textContent = name;
+            const range = document.createElement('input');
+            range.type = 'range'; range.min = -10; range.max = 10; range.step = 0.1;
+            range.value = state.params[name];
+            const num = document.createElement('input');
+            num.type = 'number'; num.step = 0.1;
+            num.value = state.params[name];
+            const update = (v) => {
+                const value = Number(v);
+                if (!Number.isFinite(value)) return;
+                state.params[name] = value;
+                range.value = value; num.value = value;
+                scheduleRender();
+            };
+            range.addEventListener('input', () => update(range.value));
+            num.addEventListener('change', () => update(num.value));
+            wrap.append(label, range, num);
+            return wrap;
+        }));
+    }
+
+    function addRow(src, index = state.rows.length) {
+        state.rows.splice(index, 0, { src, color: nextColor(), hidden: false });
+        buildRows();
+        render();
+        const input = rowsEl.children[index]?.querySelector('input');
+        if (input && !src) input.focus();
+    }
+
+    function removeRow(i, focusPrevious) {
+        state.rows.splice(i, 1);
+        if (!state.rows.length) state.rows.push({ src: '', color: PALETTE[0], hidden: false });
+        buildRows();
+        render();
+        if (focusPrevious) rowsEl.children[Math.max(0, i - 1)]?.querySelector('input')?.focus();
+    }
+
+    let renderTimer = null;
+    function scheduleRender() {
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(render, 150);
+    }
+
+    document.querySelectorAll('.preset-btn[data-expr]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const empty = state.rows.findIndex(r => !r.src.trim());
+            if (empty >= 0) { state.rows[empty].src = btn.dataset.expr; buildRows(); render(); }
+            else addRow(btn.dataset.expr);
+        });
+    });
+
+    document.getElementById('addRow').addEventListener('click', () => addRow(''));
+
+    document.getElementById('resetView').addEventListener('click', () => {
+        state.view = { x: [...DEFAULT_VIEW.x], y: [...DEFAULT_VIEW.y] };
+        render();
+    });
+
+    document.getElementById('clearAll').addEventListener('click', () => {
+        state = { rows: [{ src: '', color: PALETTE[0], hidden: false }], params: {}, view: { ...DEFAULT_VIEW } };
+        buildRows();
+        render();
+    });
+
+    let resizeTimer = null;
+    new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 100);
+    }).observe(plotEl);
+
+    buildRows();
+    render();
+})();
+</script>
+
+</body>
+</html>

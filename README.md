@@ -55,7 +55,6 @@ Your all-in-one productivity toolkit — 60+ tools that run entirely in the brow
 | Calculator | Standard calculator |
 | Scientific Calculator | Advanced scientific functions |
 | Percentage Calculator | Percentage calculations |
-| Graph Plotter | Plot mathematical functions |
 | Matrix Calculator | Matrix operations (add, multiply, determinant, inverse) |
 | Statistics Calculator | Statistical analysis (mean, median, std dev, etc.) |
 
@@ -125,7 +124,6 @@ Your all-in-one productivity toolkit — 60+ tools that run entirely in the brow
 |------|-------------|
 | Password Generator | Cryptographically secure passwords with strength meter |
 | QR Code Generator | Generate QR codes for URLs, text, WiFi, vCards with custom styles |
-| Map | Interactive map with search, routing, POI, layers, bookmarks |
 
 ### Random & Fun
 | Tool | Description |
@@ -142,8 +140,6 @@ Your all-in-one productivity toolkit — 60+ tools that run entirely in the brow
   - [PDF.js](https://mozilla.github.io/pdf.js/) — PDF rendering
   - [pdf-lib](https://pdf-lib.js.org/) — PDF editing
   - [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/) — HTML to PDF export
-  - [Leaflet](https://leafletjs.com/) — Interactive maps
-  - [Leaflet Routing Machine](https://www.liedman.net/leaflet-routing-machine/) — Route directions
   - [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) — QR code generation
   - [Font Awesome](https://fontawesome.com/) — Icons
   - [Google Fonts](https://fonts.google.com/) — Typography

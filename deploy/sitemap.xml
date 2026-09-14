@@ -106,11 +106,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://toolshub.orbixstudio.dev/tools/graph-plotter.html</loc>
-    <lastmod>2026-09-13</lastmod>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://toolshub.orbixstudio.dev/tools/handwriting-font.html</loc>
     <lastmod>2026-09-13</lastmod>
     <priority>0.8</priority>
@@ -127,11 +122,6 @@
   </url>
   <url>
     <loc>https://toolshub.orbixstudio.dev/tools/length-converter.html</loc>
-    <lastmod>2026-09-13</lastmod>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://toolshub.orbixstudio.dev/tools/map.html</loc>
     <lastmod>2026-09-13</lastmod>
     <priority>0.8</priority>
   </url>
