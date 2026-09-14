@@ -1,4 +1,0 @@
-# Private Google key — never commit this
-service-account.json
-*.key.json
-node_modules/
