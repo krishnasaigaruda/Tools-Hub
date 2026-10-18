@@ -714,7 +714,26 @@
             .timer-ring svg { width: 130px; height: 130px; }
             .alarm-card-time { font-size: 1.5rem; }
             .wc-time { font-size: 1.4rem; }
-            .alarm-add-row { flex-direction: column; }
+            .alarm-add-row { flex-direction: column; align-items: stretch; }
+            .alarm-add-row > * { width: 100%; }
+            .header { padding: 10px 12px; }
+            .header-left { gap: 10px; min-width: 0; }
+            .header h1 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+            .back-btn { min-height: 40px; flex-shrink: 0; }
+            .view { padding: 20px 16px; }
+            .clock-display { margin-top: 48px; letter-spacing: 2px; }
+            .tz-search-wrapper { width: 100% !important; max-width: 300px; }
+            .clock-toggle button { min-height: 40px; }
+            .alarm-card, .wc-card { flex-wrap: wrap; gap: 10px; }
+        }
+        @media (max-width: 360px) {
+            .clock-display { font-size: 2.6rem; }
+            .time-input { width: 60px; }
+        }
+        @media (max-height: 500px) and (max-width: 1024px) {
+            .view { padding: 16px 20px; }
+            .clock-display { margin-top: 8px; }
+            .clock-toggle { margin-top: 16px; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

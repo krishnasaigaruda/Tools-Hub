@@ -554,6 +554,93 @@
             top: calc(50% - 60px);
         }
 
+        /* Mobile navigator (desktop: wrapper is layout-transparent) */
+        .nav-drawer { display: contents; }
+        .nav-toggle-btn { display: none; }
+        .nav-backdrop { display: none; }
+
+        /* Tablet & phone: the three sidebars become one off-canvas drawer */
+        @media (max-width: 900px) {
+            body { display: flex; flex-direction: column; }
+            .header { padding: 10px 14px; gap: 10px; flex-shrink: 0; }
+            .header-left { gap: 10px; min-width: 0; }
+            .header h1 { font-size: 1.15rem; white-space: nowrap; }
+            .header-right { gap: 6px; }
+            .header-btn { min-height: 40px; padding: 8px 12px; }
+            .header .nav-toggle-btn { display: flex; }
+
+            .main-layout { flex: 1; height: auto; min-height: 0; }
+            .status-bar { flex-shrink: 0; padding: 6px 14px; }
+
+            .nav-drawer {
+                display: flex;
+                flex-direction: column;
+                position: fixed;
+                top: 0; bottom: 0; left: 0;
+                width: min(320px, 88vw);
+                background: #2d2d2d;
+                z-index: 1100;
+                overflow-y: auto;
+                transform: translateX(-105%);
+                transition: transform 0.25s ease;
+            }
+            .nav-drawer.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.35); }
+            .nav-backdrop.show {
+                display: block;
+                position: fixed; inset: 0;
+                background: rgba(0,0,0,0.45);
+                z-index: 1099;
+            }
+            .nav-drawer .notebooks-sidebar,
+            .nav-drawer .sections-sidebar,
+            .nav-drawer .pages-sidebar,
+            .nav-drawer .collapsed {
+                width: 100%;
+                min-width: 0;
+                border-right: none;
+                overflow: visible;
+                flex-shrink: 0;
+            }
+            .nav-drawer .pages-sidebar { flex: 1 0 auto; min-height: 200px; }
+            .notebooks-header, .sections-header, .pages-header { padding: 10px 15px; }
+            .add-notebook-btn, .add-section-btn, .add-page-btn { min-width: 40px; min-height: 40px; }
+            .notebooks-list, .sections-list { flex: none; max-height: 30vh; padding: 8px 10px; }
+            .pages-list { padding: 8px 10px; }
+            .page-item { min-height: 44px; }
+            .notebook-actions, .page-delete-btn { opacity: 1; }
+            .notebook-action-btn, .page-delete-btn { min-width: 32px; min-height: 32px; }
+            .toggle-btn { display: none; }
+
+            .editor-area { min-width: 0; }
+            .page-title-input { font-size: 22px; padding: 16px 16px 6px; width: 100%; }
+            .page-date { padding: 0 16px 12px; }
+            .toolbar {
+                padding: 8px 10px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                flex-shrink: 0;
+            }
+            .toolbar-btn { min-width: 40px; min-height: 40px; flex-shrink: 0; }
+            .editor { padding: 16px; }
+            .empty-state { padding: 20px; text-align: center; }
+        }
+
+        @media (max-width: 600px) {
+            .header-btn { font-size: 0; gap: 0; padding: 8px 11px; min-width: 40px; justify-content: center; }
+            .header-btn i { font-size: 15px; }
+            .back-btn { padding: 8px 10px; }
+        }
+
+        @media (max-width: 400px) {
+            .header { padding: 8px 10px; }
+            .header-left, .header-right { gap: 6px; }
+            .back-btn { font-size: 0; gap: 0; min-width: 40px; min-height: 40px; justify-content: center; }
+            .back-btn i { font-size: 15px; }
+            .header h1 { font-size: 1.05rem; }
+            .status-bar { font-size: 11px; }
+        }
+
         /* Print Styles */
         @media print {
             .header, .notebooks-sidebar, .sections-sidebar, .pages-sidebar, .toolbar, .status-bar, .toggle-btn {
@@ -579,6 +666,9 @@
             <h1>Notebook</h1>
         </div>
         <div class="header-right">
+            <button class="header-btn nav-toggle-btn" onclick="toggleNavDrawer()" title="Notebooks, sections &amp; pages">
+                <i class="fas fa-bars"></i> Pages
+            </button>
             <button class="header-btn" onclick="printPage()">
                 <i class="fas fa-print"></i> Print
             </button>
@@ -593,6 +683,8 @@
 
     <!-- Main Layout -->
     <div class="main-layout">
+        <div class="nav-backdrop" id="navBackdrop" onclick="toggleNavDrawer(false)"></div>
+        <div class="nav-drawer" id="navDrawer">
         <!-- Notebooks Sidebar -->
         <div class="notebooks-sidebar" id="notebooksSidebar">
             <div class="notebooks-header">
@@ -633,6 +725,7 @@
             <button class="toggle-btn" onclick="toggleSidebar('pages')">
                 <i class="fas fa-chevron-left" id="pagesToggleIcon"></i>
             </button>
+        </div>
         </div>
 
         <!-- Editor Area -->
@@ -902,6 +995,7 @@
             saveData();
             renderPages();
             showEditor();
+            toggleNavDrawer(false);
         }
 
         // Select page
@@ -914,6 +1008,7 @@
             currentPageId = id;
             renderPages();
             showEditor();
+            toggleNavDrawer(false);
         }
 
         // Save current page
@@ -1222,6 +1317,13 @@
             } else {
                 icon.className = 'fas fa-chevron-left';
             }
+        }
+
+        // Mobile: open/close the notebooks/sections/pages drawer
+        function toggleNavDrawer(force) {
+            const drawer = document.getElementById('navDrawer');
+            const open = drawer.classList.toggle('open', force);
+            document.getElementById('navBackdrop').classList.toggle('show', open);
         }
 
         // Initialize on load

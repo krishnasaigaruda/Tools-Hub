@@ -613,28 +613,76 @@
         }
     
         /* ── Responsive: fold the editor chrome on small screens ── */
+        @media (max-width: 1024px) {
+            /* Header: fixed 48px, title truncates, actions become an icon-only scrollable row */
+            .header { height: 48px; padding: 0 12px; gap: 10px; }
+            .header-left { min-width: 0; flex-shrink: 1; gap: 10px; }
+            #projectTitle {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .header-right {
+                min-width: 0;
+                overflow-x: auto;
+                scrollbar-width: none;
+                gap: 6px;
+            }
+            .header-right::-webkit-scrollbar { display: none; }
+            .header-btn {
+                flex-shrink: 0;
+                font-size: 0;
+                gap: 0;
+                min-width: 38px;
+                height: 36px;
+                justify-content: center;
+            }
+            .header-btn i { font-size: 15px; }
+            .canvas-container { min-width: 0; min-height: 0; }
+            #mainCanvas { max-width: 100%; max-height: 100%; height: auto; }
+            .modal-content { max-height: calc(var(--app-vh) * 100 - 32px); overflow-y: auto; }
+        }
         @media (max-width: 900px) {
             .right-panels { width: 220px; }
+            .brush-gallery-container { grid-template-columns: 1fr; }
         }
         @media (max-width: 720px) {
+            /* Stack: tool row / canvas / settings drawer, all inside the viewport */
             .main-container {
                 flex-direction: column;
-                height: auto;
-                min-height: calc(calc(var(--app-vh) * 100) - 48px);
+                height: calc(calc(var(--app-vh) * 100) - 48px - 30px);
             }
             .left-toolbar {
                 width: 100%;
                 flex-direction: row;
+                flex-shrink: 0;
                 overflow-x: auto;
                 overflow-y: hidden;
-                padding: 8px 12px;
+                padding: 6px 10px;
+                gap: 6px;
+                scrollbar-width: none;
             }
+            .left-toolbar::-webkit-scrollbar { display: none; }
+            .tool-btn { flex-shrink: 0; }
+            .canvas-container { flex: 1 1 auto; padding: 8px; }
             .right-panels {
                 width: 100%;
-                max-height: 45vh;
+                flex-shrink: 0;
+                max-height: 42%;
                 border-top: 1px solid #3a3a3a;
             }
-            #mainCanvas { max-width: 100%; height: auto; }
+            .status-bar { height: 30px; padding: 0 12px; font-size: 11px; }
+            .modal-content { width: calc(100% - 32px); padding: 18px; }
+            .brush-gallery-container { grid-template-columns: repeat(2, 1fr); }
+            .header-left { flex-shrink: 0; }
+            #projectTitle { max-width: 32vw; font-size: 15px !important; }
+        }
+        @media (max-height: 500px) and (min-width: 721px) and (max-width: 1024px) {
+            /* Landscape phones: slimmer rails so the canvas keeps its space */
+            .left-toolbar { padding: 6px; gap: 4px; }
+            .tool-btn { flex-shrink: 0; width: 40px; height: 40px; font-size: 17px; }
+            .left-toolbar { width: 52px; }
+            .panel { padding: 12px; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

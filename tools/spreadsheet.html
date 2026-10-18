@@ -565,6 +565,131 @@
             .spreadsheet td {
                 min-width: 80px;
             }
+            /* Header: icon-only buttons in one scrollable row */
+            .header {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            .header-left {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .back-btn {
+                padding: 10px 12px;
+            }
+            .back-btn span {
+                display: none;
+            }
+            .header-right {
+                gap: 6px;
+                min-width: 0;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .header-right::-webkit-scrollbar {
+                display: none;
+            }
+            .header-btn {
+                font-size: 0;
+                gap: 0;
+                padding: 10px 12px;
+                flex-shrink: 0;
+            }
+            .header-btn i {
+                font-size: 15px;
+            }
+            .spreadsheets-menu {
+                top: 56px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                max-height: calc(calc(var(--app-vh) * 100) - 76px);
+            }
+            .sheet-action-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .close-menu-btn {
+                padding: 8px 10px;
+            }
+            /* Toolbar: single horizontally scrollable row */
+            .toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scrollbar-width: thin;
+            }
+            .toolbar-group {
+                flex-shrink: 0;
+                align-items: center;
+            }
+            .toolbar-btn {
+                min-width: 38px;
+                min-height: 38px;
+                white-space: nowrap;
+            }
+            .formula-bar {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            .cell-reference {
+                min-width: 48px;
+                padding: 6px 8px;
+            }
+            .formula-input {
+                min-width: 0;
+            }
+            .spreadsheet-container {
+                margin: 10px;
+                max-height: calc(calc(var(--app-vh) * 100) - 200px);
+                min-height: 150px;
+            }
+            .status-bar {
+                padding: 6px 10px;
+            }
+            .status-item {
+                gap: 10px;
+                min-width: 0;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 0;
+            }
+            .header h1 i {
+                font-size: 1.2rem;
+            }
+            .header-btn {
+                padding: 9px 10px;
+            }
+            .spreadsheet th,
+            .spreadsheet td {
+                min-width: 72px;
+            }
+            .spreadsheet th.row-header,
+            .spreadsheet th.corner {
+                min-width: 36px;
+                width: 36px;
+            }
+        }
+
+        /* Short landscape phones: give the grid more of the height */
+        @media (max-height: 500px) and (max-width: 1024px) {
+            .toolbar {
+                padding-top: 4px;
+                padding-bottom: 4px;
+            }
+            .formula-bar {
+                padding-top: 4px;
+                padding-bottom: 4px;
+            }
+            .spreadsheet-container {
+                margin: 8px 10px;
+                max-height: calc(calc(var(--app-vh) * 100) - 180px);
+                min-height: 140px;
+            }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

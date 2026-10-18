@@ -589,6 +589,14 @@
             .two-col, .result-extra-row { grid-template-columns: 1fr; }
             .result-binary { font-size: 1.1rem; }
             .bit-square { width: 22px; height: 22px; font-size: 0.65rem; }
+            .bit-width-selector { align-items: center; flex-wrap: wrap; }
+            .bit-width-selector > span { white-space: nowrap; }
+            .bit-width-btn { white-space: nowrap; min-height: 40px; }
+        }
+        @media (max-width: 480px) {
+            .bit-width-selector > span { flex-basis: 100%; }
+            .bit-width-btn { flex: 1; padding: 6px 8px; }
+            .op-btn { min-height: 40px; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

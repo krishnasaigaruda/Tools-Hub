@@ -393,6 +393,15 @@
             .input-panel { width: 100%; min-width: 0; }
             .stats-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
         }
+        @media (max-width: 600px) {
+            .main-content { padding: 16px; gap: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .btn { min-height: 40px; }
+            .sample-btn { min-height: 36px; }
+            .freq-table th, .freq-table td { padding: 8px 8px; }
+            .freq-table th { font-size: 0.66rem; letter-spacing: 0; }
+            .status-bar { padding: 8px 16px; }
+        }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
 </head>

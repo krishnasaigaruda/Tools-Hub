@@ -417,6 +417,105 @@
             .control-group {
                 padding: 0 10px;
             }
+            /* Compact header: fixed 52px so .main-layout height stays correct */
+            .header {
+                height: 52px;
+                padding: 0 12px;
+                gap: 8px;
+            }
+            .header-left { gap: 8px; min-width: 0; }
+            .header h1 {
+                font-size: 1.05rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .header-right { gap: 6px; flex-shrink: 0; }
+            .header-btn {
+                font-size: 0;
+                gap: 0;
+                width: 40px;
+                height: 36px;
+                padding: 0;
+                justify-content: center;
+            }
+            .header-btn i { font-size: 15px; }
+            .back-btn { height: 36px; padding: 0 12px; }
+            /* Top controls: one horizontally scrollable row (keeps the ~60px the canvas sizing expects) */
+            .top-controls {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 8px 10px;
+                gap: 0;
+            }
+            .top-controls::-webkit-scrollbar { display: none; }
+            .control-group { flex-shrink: 0; }
+            .canvas-container { min-width: 0; }
+            .color-swatch, .stroke-width-btn, .action-btn { flex-shrink: 0; }
+            .action-btn { height: 36px; }
+        }
+
+        @media (max-width: 600px) {
+            /* Tool rail moves to a scrollable bar under the canvas */
+            .main-layout { flex-direction: column; }
+            .toolbar {
+                order: 2;
+                width: 100%;
+                flex-direction: row;
+                padding: 6px 8px;
+                gap: 4px;
+                border-right: none;
+                border-top: 1px solid #e0e0e0;
+                box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+                overflow-x: auto;
+                scrollbar-width: none;
+                flex-shrink: 0;
+            }
+            .toolbar::-webkit-scrollbar { display: none; }
+            .tool-btn {
+                flex-shrink: 0;
+                width: 52px;
+                height: 46px;
+                font-size: 17px;
+            }
+            .tool-separator {
+                width: 1px;
+                height: 34px;
+                margin: 0 4px;
+                flex-shrink: 0;
+            }
+            .canvas-container { min-height: 0; }
+            .zoom-controls {
+                bottom: 12px;
+                right: 12px;
+                padding: 6px 8px;
+                gap: 6px;
+            }
+            .zoom-btn { width: 36px; height: 36px; }
+            .zoom-slider { width: 80px; }
+            .zoom-label { min-width: 40px; font-size: 12px; }
+        }
+
+        /* Landscape phones: short viewport, let the vertical tool rail scroll */
+        @media (max-height: 500px) and (min-width: 601px) and (max-width: 1024px) {
+            .toolbar {
+                overflow-y: auto;
+                scrollbar-width: none;
+                padding: 6px 5px;
+                gap: 4px;
+            }
+            .toolbar::-webkit-scrollbar { display: none; }
+            .tool-btn { flex-shrink: 0; height: 44px; }
+            .tool-separator { flex-shrink: 0; }
+            .zoom-controls { bottom: 10px; right: 10px; padding: 6px 10px; }
+        }
+
+        @media (max-width: 380px) {
+            .header h1 { font-size: 0.95rem; }
+            .back-btn span { display: none; }
+            .zoom-slider { display: none; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

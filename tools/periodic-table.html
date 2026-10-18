@@ -381,11 +381,52 @@
             font-size: 0.78rem;
             color: #94a3b8;
         }
+        @media (max-width: 1024px) {
+            .header { flex-wrap: wrap; }
+            .periodic-grid {
+                grid-template-columns: repeat(18, minmax(37px, 1fr));
+                gap: 3px;
+                min-width: 720px;
+            }
+            .element-cell, .pointer-cell { min-height: 0; padding: 2px; border-radius: 5px; }
+            .element-cell .symbol { font-size: clamp(0.85rem, 1.6vw, 1.1rem); }
+            .pointer-cell .ptr-symbol { font-size: clamp(0.65rem, 1.2vw, 0.85rem); }
+        }
+        @media (max-width: 900px) {
+            .element-cell .mass { display: none; }
+        }
         @media (max-width: 768px) {
-            .header .legend { display: none; }
-            .detail-overlay { width: 95vw; }
+            .header { padding: 12px 16px; gap: 10px 12px; }
+            .header h1 { font-size: 1.2rem; white-space: nowrap; }
+            .back-btn { min-height: 40px; }
+            .search-wrap { flex: 1 1 180px; }
+            .search-wrap input { width: 100%; min-height: 40px; }
+            .header .legend {
+                order: 10;
+                flex: 1 1 100%;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                margin-left: 0;
+                padding-bottom: 2px;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+            .legend-item { flex-shrink: 0; }
+            .table-container { padding: 12px; }
+            .element-cell .name, .pointer-cell .ptr-label { display: none; }
+            .lanthanide-label, .actinide-label { font-size: 0.6rem; text-align: center; }
+            .detail-overlay { width: min(600px, calc(100% - 24px)); max-height: 88vh; max-height: 88dvh; }
+            .detail-header { padding: 14px 16px; }
+            .detail-body { padding: 16px; }
+            .detail-close { min-width: 40px; min-height: 40px; }
             .detail-top { flex-direction: column; align-items: center; }
             .detail-img-wrap { width: 100%; max-width: 250px; height: 180px; }
+            .detail-symbol-block { width: 100%; }
+            .detail-row { gap: 12px; }
+        }
+        @media (max-width: 480px) {
+            .search-wrap { flex-basis: 100%; }
+            .detail-symbol-block .big-symbol { font-size: 3rem; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

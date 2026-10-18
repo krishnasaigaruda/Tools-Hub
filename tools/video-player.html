@@ -178,9 +178,32 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel);border:1px solid var(--accent);color:var(--text);padding:8px 16px;border-radius:10px;font-size:.85rem;z-index:1000;transition:transform .3s;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+@media(max-width:900px){
+.player-area{min-width:0}
+.ctrl-row{flex-wrap:wrap;justify-content:center;row-gap:2px}
+.ctrl-row .spacer{flex-basis:100%;height:0}
+}
 @media(max-width:700px){
 .sidebar{width:100%;position:absolute;bottom:0;left:0;right:0;height:50vh;z-index:50;border-left:none;border-top:1px solid var(--border);display:none}
 .sidebar.mobile-open{display:flex}
+.hdr-title{min-width:0}
+.hdr-title h1{white-space:nowrap}
+.hdr-title .fname{flex:1 1 auto;min-width:0;max-width:none}
+.hdr-btn{min-width:36px;min-height:32px;justify-content:center}
+.upload{padding:16px;overflow-y:auto}
+.dz{padding:2rem 1rem}
+.cb{width:38px;height:38px}
+.cb.playbtn{width:44px;height:44px}
+.sb-tab{padding:12px 8px}
+.modal{width:calc(100% - 32px);max-height:calc(var(--app-vh) * 80)}
+}
+@media(max-height:500px) and (orientation:landscape){
+.hdr{padding:6px 12px}
+.upload-inner i.big{font-size:2.5rem;margin-bottom:.5rem}
+.upload-inner p{margin-bottom:.75rem}
+.dz{padding:1.25rem}
+.upload{overflow-y:auto}
+.upload:not(.hidden) ~ .app{display:none}
 }
 </style>
     <link rel="stylesheet" href="../assets/compat.css">

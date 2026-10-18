@@ -637,7 +637,8 @@
         .modal-btn-link:hover { background: rgba(219,39,119,0.25); }
 
         @media (max-width: 700px) {
-            .modal { border-radius: 16px; }
+            .modal-overlay { padding: 12px; }
+            .modal { border-radius: 16px; max-height: calc(var(--app-vh) * 100 - 24px); }
             .modal-top { padding: 1.25rem 1.25rem 0.75rem; }
             .modal-title { font-size: 1.3rem; }
             .modal-badges, .modal-preview-area, .modal-sizes, .modal-chars-section, .modal-info, .modal-actions { padding-left: 1.25rem; padding-right: 1.25rem; }
@@ -651,8 +652,10 @@
             .header { padding: 1rem; }
             .header-title h1 { font-size: 1.2rem; }
             .header-stat { display: none; }
-            .preview-input { display: none; }
-            .size-wrap { display: none; }
+            .preview-input { flex: 1 1 140px; min-width: 0; }
+            .size-wrap label { display: none; }
+            .size-slider { width: 80px; height: 6px; }
+            .size-slider::-webkit-slider-thumb { width: 22px; height: 22px; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

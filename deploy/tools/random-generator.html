@@ -406,6 +406,18 @@
       margin-top: 14px;
     }
     .error-msg.visible { display: block; }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .header { padding: 14px 16px; gap: 12px; }
+      .header-icon { width: 40px; height: 40px; font-size: 18px; border-radius: 10px; }
+      .header-text h1 { font-size: 18px; }
+      .header-text p { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      .header-icon { display: none; }
+      .back-btn { padding: 8px 12px; }
+    }
   </style>
     <link rel="stylesheet" href="../assets/compat.css">
 </head>

@@ -387,18 +387,168 @@
             }
         }
 
+        @media (max-width: 768px), (max-height: 500px) and (max-width: 1024px) {
+            /* App shell fits the real viewport: header, editor, status bar */
+            body {
+                height: calc(var(--app-vh) * 100);
+                min-height: 0;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .header,
+            .status-bar {
+                flex-shrink: 0;
+            }
+            .main-container {
+                flex: 1;
+                min-height: 0;
+                height: auto;
+                position: relative;
+            }
+            .editor-area {
+                min-width: 0;
+                min-height: 0;
+            }
+            #noteEditor {
+                min-height: 0;
+            }
+            .header {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .header-left {
+                gap: 10px;
+                min-width: 0;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+                white-space: nowrap;
+            }
+            .header-right {
+                gap: 6px;
+                flex-shrink: 0;
+            }
+            .header-btn,
+            .back-btn {
+                min-height: 40px;
+                padding: 0 12px;
+                justify-content: center;
+            }
+            .toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                padding: 6px 8px;
+                flex-shrink: 0;
+            }
+            .toolbar::-webkit-scrollbar {
+                display: none;
+            }
+            .toolbar-group {
+                flex-shrink: 0;
+                align-items: center;
+                gap: 4px;
+                padding: 0 6px;
+            }
+            .toolbar-btn {
+                min-width: 40px;
+                height: 40px;
+            }
+            .color-btn {
+                width: 30px;
+                height: 30px;
+            }
+            .note-editor {
+                min-height: 200px;
+            }
+            .status-bar {
+                padding: 8px 12px;
+            }
+            .empty-state {
+                padding: 20px;
+                text-align: center;
+            }
+            .empty-state p {
+                font-size: 16px;
+            }
+        }
+
+        .notes-toggle,
+        .notes-backdrop {
+            display: none;
+        }
+
         @media (max-width: 600px) {
+            .header-btn .btn-label,
+            .back-btn span {
+                display: none;
+            }
+            .header-btn,
+            .back-btn {
+                min-width: 40px;
+                padding: 0 10px;
+            }
+            .notes-toggle {
+                display: flex;
+            }
             .notes-sidebar {
                 position: absolute;
                 left: 0;
-                top: 56px;
-                height: calc(calc(var(--app-vh) * 100) - 56px);
+                top: 0;
+                bottom: 0;
+                width: min(300px, 85%);
                 z-index: 100;
                 transform: translateX(-100%);
-                transition: transform 0.3s;
+                visibility: hidden;
+                transition: transform 0.3s, visibility 0.3s;
             }
             .notes-sidebar.open {
                 transform: translateX(0);
+                visibility: visible;
+                box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+            }
+            body.notes-open .notes-backdrop {
+                display: block;
+                position: absolute;
+                inset: 0;
+                background: rgba(15,23,42,0.4);
+                z-index: 90;
+            }
+            .search-box {
+                min-width: 0;
+            }
+            .new-note-btn {
+                width: 40px;
+                height: 40px;
+                flex-shrink: 0;
+            }
+            .note-title-input {
+                font-size: 20px;
+                padding: 14px 16px 8px;
+            }
+            .note-editor-container {
+                padding: 0 16px 16px;
+            }
+        }
+
+        /* Touch screens have no hover: keep the delete button reachable */
+        @media (hover: none) {
+            .note-item .note-item-delete {
+                display: flex;
+                width: 30px;
+                height: 30px;
+                top: 8px;
+                right: 8px;
+                font-size: 13px;
+            }
+            .note-color-dot {
+                right: 46px;
+            }
+            .note-item-title {
+                padding-right: 60px;
             }
         }
 
@@ -461,14 +611,17 @@
             <h1><i class="fas fa-sticky-note"></i> Notes</h1>
         </div>
         <div class="header-right">
-            <button class="header-btn" onclick="printNote()">
-                <i class="fas fa-print"></i> Print
+            <button class="header-btn notes-toggle" onclick="toggleNotesDrawer()" title="All notes" aria-label="Show notes list">
+                <i class="fas fa-list"></i> <span class="btn-label">Notes</span>
             </button>
-            <button class="header-btn" onclick="saveAsPDF()">
-                <i class="fas fa-file-pdf"></i> Save Note
+            <button class="header-btn" onclick="printNote()" title="Print">
+                <i class="fas fa-print"></i> <span class="btn-label">Print</span>
             </button>
-            <button class="header-btn" onclick="exportAllNotesAsZip()">
-                <i class="fas fa-file-archive"></i> Export All
+            <button class="header-btn" onclick="saveAsPDF()" title="Save note as PDF">
+                <i class="fas fa-file-pdf"></i> <span class="btn-label">Save Note</span>
+            </button>
+            <button class="header-btn" onclick="exportAllNotesAsZip()" title="Export all notes">
+                <i class="fas fa-file-archive"></i> <span class="btn-label">Export All</span>
             </button>
         </div>
     </div>
@@ -476,7 +629,7 @@
     <!-- Main Container -->
     <div class="main-container">
         <!-- Notes Sidebar -->
-        <div class="notes-sidebar">
+        <div class="notes-sidebar" id="notesSidebar">
             <div class="sidebar-header">
                 <input type="text" class="search-box" id="searchBox" placeholder="Search notes..." oninput="searchNotes()">
                 <button class="new-note-btn" onclick="createNewNote()">
@@ -485,10 +638,11 @@
             </div>
             <div class="notes-list" id="notesList"></div>
         </div>
+        <div class="notes-backdrop" onclick="toggleNotesDrawer(false)"></div>
 
         <!-- Editor Area -->
         <div class="editor-area" id="editorArea">
-            <div class="empty-state" id="emptyState">
+            <div class="empty-state" id="emptyState" onclick="if (window.matchMedia('(max-width: 600px)').matches) toggleNotesDrawer(true)">
                 <i class="fas fa-sticky-note"></i>
                 <p>Select a note or create a new one</p>
             </div>
@@ -598,9 +752,18 @@
             selectNote(note.id);
         }
 
+        // Notes list as an off-canvas drawer on phones
+        function toggleNotesDrawer(force) {
+            const sidebar = document.getElementById('notesSidebar');
+            const open = typeof force === 'boolean' ? force : !sidebar.classList.contains('open');
+            sidebar.classList.toggle('open', open);
+            document.body.classList.toggle('notes-open', open);
+        }
+
         // Select note
         function selectNote(id) {
             currentNoteId = id;
+            toggleNotesDrawer(false);
             const note = notes.find(n => n.id === id);
 
             if (note) {

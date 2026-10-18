@@ -649,6 +649,44 @@
             .text-display { font-size: 1rem; }
             .keyboard { padding: 10px; }
             .kb-key { height: 34px; min-width: 32px; font-size: 0.6rem; }
+            .app-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+            .level-list { align-items: center; }
+            .main-area, .sidebar { min-width: 0; }
+            .level-item { min-height: 40px; }
+        }
+        @media (max-width: 768px) {
+            .header { flex-wrap: wrap; padding: 10px 16px; gap: 8px 12px; }
+            .header-stats { margin-left: 0; width: 100%; gap: 16px; flex-wrap: wrap; }
+            .back-btn { min-height: 40px; }
+            .text-display-wrap { padding: 28px 18px 18px; }
+            .text-display { word-break: normal; overflow-wrap: anywhere; }
+            .kb-row { gap: 4px; }
+            .kb-key { flex: 1 1 0; min-width: 0; }
+            .kb-key.wide { flex-grow: 1.4; min-width: 0; }
+            .kb-key.wider { flex-grow: 1.8; min-width: 0; }
+            .kb-key.widest { flex-grow: 2.2; min-width: 0; }
+            .kb-key.space { flex-grow: 6; max-width: none; }
+            .results-card { width: min(480px, calc(100% - 32px)); padding: 28px 20px; max-height: calc(var(--app-vh) * 100 - 32px); overflow-y: auto; }
+        }
+        @media (max-width: 600px) {
+            .live-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 10px 14px; }
+            .stat-value { font-size: 1.4rem; }
+            .main-area { gap: 14px; }
+            .keyboard { padding: 8px 6px; gap: 5px; }
+            .kb-row { gap: 3px; }
+            .kb-key { height: 32px; border-radius: 5px; font-size: 0.55rem; }
+            .kb-key.wide, .kb-key.wider, .kb-key.widest { font-size: 0.5rem; }
+            .results-grid { gap: 10px; margin-bottom: 20px; }
+            .result-item .ri-value { font-size: 1.5rem; }
+        }
+        @media (max-height: 500px) and (max-width: 1024px) {
+            .live-stats { display: flex; gap: 8px; }
+            .stat-card { padding: 6px 10px; }
+            .stat-value { font-size: 1.1rem; }
+            .main-area { padding: 10px 16px; gap: 10px; }
+            .text-display-wrap { min-height: 90px; max-height: 140px; }
+            .keyboard-wrap { display: none; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

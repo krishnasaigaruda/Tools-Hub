@@ -425,6 +425,19 @@
             .history-item { grid-template-columns: 1fr auto 1fr; }
             .history-langs { display: none; }
             .shortcut-hint { display: none; }
+            .lang-dropdown { max-height: min(350px, 60vh); }
+        }
+        @media (max-width: 1024px) and (max-height: 600px) {
+            .lang-dropdown { max-height: 60vh; }
+        }
+        @media (max-width: 600px) {
+            .lang-bar { flex-wrap: nowrap; padding: 10px 12px; gap: 8px; }
+            .lang-selector { min-width: 0; }
+            .lang-btn { padding: 10px 12px; min-height: 44px; }
+            .lang-btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .lang-btn .detected { flex-shrink: 1; margin-left: 4px; }
+            .lang-btn > span:first-child { flex: 1; text-align: left; }
+            .swap-btn { flex-shrink: 0; }
         }
 
         /* Scrollbar */

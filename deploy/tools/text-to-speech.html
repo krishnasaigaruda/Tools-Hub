@@ -392,8 +392,11 @@
             .header-title h1 { font-size: 1.2rem; }
             .kbd-hint { display: none; }
             .controls-grid { grid-template-columns: 1fr; }
-            .btn-row { flex-direction: column; }
+            .btn-row { flex-wrap: wrap; }
             .btn { min-width: unset; }
+            .btn-row > .btn:not(.btn-icon), .btn-row > span { flex: 1 1 100%; justify-content: center; text-align: center; }
+            .btn-row > span { margin-left: 0 !important; }
+            .btn-row > .btn-icon { flex: 1 1 0; width: auto; }
         }
 
         @media print {

@@ -539,6 +539,56 @@
         }
 
         /* Responsive */
+        .pages-toggle,
+        .pages-backdrop {
+            display: none;
+        }
+
+        /* Tablets and smaller: the 8.5in page no longer fits beside the
+           sidebar, so let it shrink to the available width while keeping the
+           paper proportions (it grows instead of clipping text). The shell
+           becomes a flex column so the editor area fits the real viewport. */
+        @media (max-width: 1024px) {
+            body {
+                height: calc(var(--app-vh) * 100);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .header,
+            .toolbar {
+                flex-shrink: 0;
+            }
+            .main-layout {
+                flex: 1;
+                min-height: 0;
+                height: auto;
+                padding-bottom: 33px; /* fixed status bar */
+            }
+            .document-container {
+                padding: 20px;
+            }
+            .page {
+                width: 100%;
+                max-width: 8.5in;
+                height: auto;
+                aspect-ratio: 8.5 / 11;
+                display: flex;
+                flex-direction: column;
+            }
+            .editor {
+                flex: 1;
+                height: auto;
+                overflow: visible;
+                overflow-wrap: break-word;
+            }
+            .documents-menu {
+                width: min(380px, calc(100% - 24px));
+                right: 12px;
+                max-height: calc(calc(var(--app-vh) * 100) - 80px);
+            }
+        }
+
         @media (max-width: 768px) {
             .page {
                 padding: 30px 40px;
@@ -551,6 +601,146 @@
             }
             .header h1 {
                 font-size: 1rem;
+            }
+        }
+
+        /* Phones (portrait) and short landscape screens: icon-only header,
+           one scrollable toolbar row, pages sidebar as an off-canvas drawer. */
+        @media (max-width: 768px), (max-height: 500px) and (max-width: 1024px) {
+            .header {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .header-left {
+                gap: 10px;
+                min-width: 0;
+            }
+            .header h1 {
+                font-size: 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .header-right {
+                gap: 6px;
+                flex-shrink: 0;
+            }
+            .header-btn,
+            .back-btn {
+                min-width: 40px;
+                height: 40px;
+                padding: 0 10px;
+                justify-content: center;
+            }
+            .header-btn .btn-label {
+                display: none;
+            }
+            .pages-toggle {
+                display: flex;
+            }
+
+            .toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 6px 8px;
+                gap: 2px;
+            }
+            .toolbar::-webkit-scrollbar {
+                display: none;
+            }
+            .toolbar-group {
+                flex-shrink: 0;
+                align-items: center;
+                padding: 0 6px;
+            }
+            .toolbar-btn {
+                min-width: 40px;
+                height: 40px;
+                font-size: 15px;
+            }
+            .toolbar-select {
+                height: 38px;
+            }
+            #fontFamily {
+                max-width: 120px;
+            }
+            .color-picker {
+                width: 34px;
+                height: 34px;
+            }
+
+            .pages-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(260px, 80vw);
+                z-index: 1100;
+                transform: translateX(-100%);
+                transition: transform 0.25s ease, visibility 0.25s;
+                visibility: hidden;
+            }
+            .pages-sidebar.open {
+                transform: translateX(0);
+                visibility: visible;
+                box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+            }
+            .pages-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(15,23,42,0.4);
+                z-index: 1050;
+            }
+            body.pages-open .pages-backdrop {
+                display: block;
+            }
+            .add-page-btn {
+                padding: 12px;
+            }
+
+            .document-container {
+                padding: 12px;
+            }
+            .page {
+                padding: 28px 24px 40px;
+                margin-bottom: 12px;
+            }
+            .page-number {
+                bottom: 14px;
+                right: 24px;
+            }
+
+            .status-bar {
+                padding: 8px 12px;
+            }
+
+            .doc-action-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .close-menu-btn {
+                padding: 8px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .back-btn span,
+            .header h1 .title-text {
+                display: none;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            .header-right {
+                gap: 4px;
+            }
+            .header-btn,
+            .back-btn {
+                min-width: 38px;
+                padding: 0 9px;
             }
         }
         .editor img {
@@ -612,23 +802,26 @@
                 <i class="fas fa-arrow-left"></i>
                 <span>Back</span>
             </button>
-            <h1><i class="fas fa-file-alt"></i> Document Creator</h1>
+            <h1><i class="fas fa-file-alt"></i> <span class="title-text">Document Creator</span></h1>
         </div>
         <div class="header-right">
-            <button class="header-btn" onclick="toggleDocumentsMenu()">
-                <i class="fas fa-folder-open"></i> My Documents
+            <button class="header-btn pages-toggle" onclick="togglePagesDrawer()" title="Pages" aria-label="Show pages">
+                <i class="fas fa-layer-group"></i> <span class="btn-label">Pages</span>
             </button>
-            <button class="header-btn" onclick="newDocument()">
-                <i class="fas fa-file"></i> New
+            <button class="header-btn" onclick="toggleDocumentsMenu()" title="My Documents">
+                <i class="fas fa-folder-open"></i> <span class="btn-label">My Documents</span>
             </button>
-            <button class="header-btn" onclick="saveCurrentDocument()">
-                <i class="fas fa-save"></i> Save
+            <button class="header-btn" onclick="newDocument()" title="New document">
+                <i class="fas fa-file"></i> <span class="btn-label">New</span>
             </button>
-            <button class="header-btn" onclick="saveDocument()">
-                <i class="fas fa-file-pdf"></i> PDF
+            <button class="header-btn" onclick="saveCurrentDocument()" title="Save">
+                <i class="fas fa-save"></i> <span class="btn-label">Save</span>
             </button>
-            <button class="header-btn" onclick="printDocument()">
-                <i class="fas fa-print"></i> Print
+            <button class="header-btn" onclick="saveDocument()" title="Download PDF">
+                <i class="fas fa-file-pdf"></i> <span class="btn-label">PDF</span>
+            </button>
+            <button class="header-btn" onclick="printDocument()" title="Print">
+                <i class="fas fa-print"></i> <span class="btn-label">Print</span>
             </button>
         </div>
     </div>
@@ -761,7 +954,8 @@
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Pages Sidebar -->
-        <div class="pages-sidebar">
+        <div class="pages-backdrop" onclick="togglePagesDrawer(false)"></div>
+        <div class="pages-sidebar" id="pagesSidebar">
             <div class="sidebar-title">Pages</div>
             <div id="pagesList"></div>
             <button class="add-page-btn" onclick="addPage()">
@@ -1159,8 +1353,20 @@
         // Select page
         function selectPage(pageId) {
             currentPageId = pageId;
-            document.getElementById(`editor-${pageId}`).focus();
+            const editor = document.getElementById(`editor-${pageId}`);
+            editor.focus();
             renderPagesList();
+            if (document.body.classList.contains('pages-open')) {
+                togglePagesDrawer(false);
+                editor.closest('.page').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Pages sidebar as an off-canvas drawer on small screens
+        function togglePagesDrawer(force) {
+            const open = typeof force === 'boolean' ? force : !document.body.classList.contains('pages-open');
+            document.body.classList.toggle('pages-open', open);
+            document.getElementById('pagesSidebar').classList.toggle('open', open);
         }
 
         // Add page

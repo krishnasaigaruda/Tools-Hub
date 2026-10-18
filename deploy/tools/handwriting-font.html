@@ -137,6 +137,42 @@
         .help-tip{background:var(--ord);border:1px solid rgba(219,39,119,.25);border-radius:10px;padding:.75rem 1rem;margin-top:1rem}
         .help-tip-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--or);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem}
         .help-tip p{font-size:.8rem;color:var(--t2);line-height:1.5;margin:0}
+
+        /* Mobile / tablet */
+        @media(max-width:768px){
+            header{position:relative;height:60px;padding:0 1rem;gap:.6rem}
+            #v2.active{height:calc(var(--app-vh) * 100 - 60px)}
+            .logo{min-width:0;gap:.5rem}
+            .logo h1{font-size:1.15rem;line-height:1.2}
+            .logo i{font-size:1.15rem}
+            #v1,#v3{padding:24px 16px 48px}
+            .split{flex-direction:column}
+            .canvas-col{min-height:0}
+            .side-col{width:100%;max-height:42%;border-left:none;border-top:1px solid var(--border)}
+            #charList{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+            #charList .cli{min-width:52px;gap:6px}
+            .btn-sm{min-height:36px}
+            .toolbar{gap:8px;padding:8px 12px}
+            .pp{padding:18px}
+            .dlb{flex-wrap:wrap;gap:10px}
+            .help-overlay{padding:1rem}
+            .help-modal{padding:1.25rem;max-height:calc(var(--app-vh) * 90)}
+        }
+        @media(min-width:769px) and (max-width:1024px) and (max-height:500px){
+            header{padding:.6rem 1.25rem}
+            .logo h1,.logo i{font-size:1.2rem}
+        }
+        @media(max-width:480px){
+            header{padding:0 .85rem;gap:.5rem}
+            .back-btn{padding:.45rem .7rem}
+            .logo i{display:none}
+            .logo h1{font-size:1.05rem}
+            .steps{gap:3px}
+            .step-bar{width:8px}
+            .step-pip{width:22px;height:22px}
+            .help-btn{width:34px;height:34px}
+            .dlbtns{flex-wrap:wrap}
+        }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
 </head>

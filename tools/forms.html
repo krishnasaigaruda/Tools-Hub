@@ -642,6 +642,171 @@
             .field-type-buttons {
                 grid-template-columns: 1fr 1fr;
             }
+            /* Header: icon-only buttons */
+            .header {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            .header-left {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .header h1 {
+                font-size: 1.05rem;
+                white-space: nowrap;
+            }
+            .back-btn {
+                padding: 10px 12px;
+            }
+            .back-btn span {
+                display: none;
+            }
+            .header-right {
+                gap: 6px;
+                min-width: 0;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .header-right::-webkit-scrollbar {
+                display: none;
+            }
+            .header-btn {
+                font-size: 0;
+                gap: 0;
+                padding: 10px 12px;
+                flex-shrink: 0;
+            }
+            .header-btn i {
+                font-size: 15px;
+            }
+            .forms-menu {
+                top: 56px;
+                right: 10px;
+                width: min(380px, calc(100% - 20px));
+                max-height: calc(calc(var(--app-vh) * 100) - 76px);
+            }
+            .form-action-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .close-menu-btn {
+                padding: 8px 10px;
+            }
+            /* Content */
+            .container {
+                margin: 16px auto;
+                padding-bottom: 50px; /* clear the fixed status bar */
+            }
+            .tabs {
+                margin-bottom: 16px;
+            }
+            .tab {
+                flex: 1;
+                padding: 12px 10px;
+            }
+            .form-title-section {
+                margin-bottom: 20px;
+                padding-bottom: 14px;
+            }
+            .form-title-input {
+                font-size: 24px;
+            }
+            .field-types {
+                padding: 14px;
+                margin-bottom: 20px;
+            }
+            .field-type-btn {
+                min-height: 44px;
+                padding: 10px;
+                text-align: left;
+            }
+            .form-field {
+                padding: 14px;
+            }
+            .field-header {
+                gap: 8px;
+            }
+            .field-inputs {
+                min-width: 0;
+            }
+            .field-action-btn {
+                min-width: 36px;
+                min-height: 36px;
+            }
+            .option-input {
+                min-width: 0;
+                width: 100%;
+            }
+            .remove-option-btn {
+                min-width: 32px;
+                min-height: 32px;
+                flex-shrink: 0;
+            }
+            .add-option-btn {
+                padding: 10px 14px;
+            }
+            .options-editor [style*="grid-template-columns"] > * {
+                min-width: 0;
+            }
+            /* Linear-scale rows (inline flex) wrap instead of overflowing */
+            .field-preview [style*="gap: 15px"],
+            .form-preview [style*="gap: 15px"] {
+                flex-wrap: wrap;
+                gap: 10px 14px !important;
+            }
+            .form-preview {
+                padding: 20px;
+                min-height: 0;
+            }
+            .preview-title {
+                font-size: 24px;
+            }
+            .preview-input,
+            .preview-textarea {
+                max-width: 100%;
+            }
+            .status-bar {
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 0;
+            }
+            .header h1 i {
+                font-size: 1.2rem;
+            }
+            .header-btn {
+                padding: 9px 10px;
+            }
+            .form-builder, .form-preview {
+                padding: 14px;
+            }
+            .field-types {
+                padding: 10px;
+            }
+            .field-type-buttons {
+                gap: 8px;
+            }
+            .field-type-btn {
+                font-size: 13px;
+                gap: 6px;
+                padding: 8px;
+            }
+            .field-header {
+                flex-direction: column-reverse;
+                align-items: stretch;
+            }
+            .field-actions {
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .field-type-buttons {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">

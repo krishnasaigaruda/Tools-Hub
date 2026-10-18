@@ -693,6 +693,280 @@
                 width: 640px;
                 height: 360px;
             }
+            /* App shell fills the visible viewport exactly */
+            body {
+                display: flex;
+                flex-direction: column;
+                height: calc(var(--app-vh) * 100);
+            }
+            .header {
+                flex-shrink: 0;
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            .main-container {
+                flex: 1;
+                min-height: 0;
+                height: auto;
+            }
+            .editor-area {
+                min-width: 0;
+                min-height: 0;
+            }
+            /* Header: icon-only buttons */
+            .header-left {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .header h1 {
+                font-size: 1.05rem;
+                white-space: nowrap;
+            }
+            .back-btn {
+                padding: 10px 12px;
+            }
+            .back-btn span {
+                display: none;
+            }
+            .header-right {
+                gap: 6px;
+                min-width: 0;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .header-right::-webkit-scrollbar {
+                display: none;
+            }
+            .header-btn {
+                font-size: 0;
+                gap: 0;
+                padding: 10px 12px;
+                flex-shrink: 0;
+            }
+            .header-btn i {
+                font-size: 15px;
+            }
+            .presentations-menu {
+                top: 56px;
+                right: 10px;
+                width: min(380px, calc(100% - 20px));
+                max-height: calc(calc(var(--app-vh) * 100) - 76px);
+            }
+            .pres-action-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .close-menu-btn {
+                padding: 8px 10px;
+            }
+            /* Toolbar: one horizontally scrollable row */
+            .toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding: 8px 10px;
+                flex-shrink: 0;
+            }
+            .toolbar-group {
+                flex-shrink: 0;
+                align-items: center;
+                padding: 0 6px;
+            }
+            .toolbar-btn {
+                min-width: 38px;
+                min-height: 38px;
+            }
+            .theme-btn {
+                width: 28px;
+                height: 28px;
+            }
+            /* The scrolling toolbar would clip the dropdown, so float it */
+            .shape-menu {
+                position: fixed;
+                top: 108px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .shape-color-picker {
+                position: fixed;
+                left: 50% !important;
+                top: auto !important;
+                bottom: 48px;
+                transform: translateX(-50%);
+            }
+            .slide-canvas-container {
+                padding: 12px;
+                min-height: 0;
+            }
+            .slide-canvas {
+                width: min(100%, 640px, calc((calc(var(--app-vh) * 100) - 170px) * 16 / 9));
+                height: auto;
+                aspect-ratio: 16 / 9;
+                flex-shrink: 0;
+            }
+            .status-bar {
+                padding: 6px 12px;
+                flex-shrink: 0;
+            }
+            /* No hover on touch: show delete on the active slide */
+            .slide-thumbnail.active .slide-delete {
+                display: flex;
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+            /* Presentation mode */
+            .presentation-slide-content {
+                padding: 32px;
+                font-size: 22px;
+            }
+            .presentation-slide-content h1 {
+                font-size: 44px;
+            }
+            .presentation-slide-content h2 {
+                font-size: 34px;
+            }
+            .presentation-slide-content li {
+                font-size: 24px;
+            }
+            .presentation-controls {
+                bottom: 12px;
+                gap: 6px;
+                max-width: calc(100% - 16px);
+            }
+            .presentation-controls button {
+                padding: 10px 14px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+            .slide-counter {
+                padding: 10px 8px;
+                font-size: 14px;
+                white-space: nowrap;
+            }
+        }
+
+        /* Phones / small tablets (portrait): slide strip moves below the editor */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .editor-area {
+                flex: 1;
+            }
+            .slides-panel {
+                order: 2;
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 8px 10px;
+                border-right: none;
+                border-top: 1px solid #2a3f5f;
+                flex-shrink: 0;
+            }
+            .slides-panel h3 {
+                display: none;
+            }
+            #slidesList {
+                display: flex;
+                gap: 8px;
+            }
+            .slide-thumbnail,
+            .add-slide-btn {
+                width: 96px;
+                flex-shrink: 0;
+            }
+            .add-slide-btn {
+                font-size: 20px;
+            }
+            .slide-canvas {
+                width: min(100%, calc((calc(var(--app-vh) * 100) - 250px) * 16 / 9));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .slide-content {
+                padding: 16px;
+                font-size: 14px;
+            }
+            .slide-content h1 {
+                font-size: 28px;
+                margin-bottom: 10px;
+            }
+            .slide-content h2 {
+                font-size: 22px;
+                margin-bottom: 8px;
+            }
+            .slide-content ul, .slide-content ol {
+                margin-left: 20px;
+                margin-bottom: 8px;
+            }
+            .slide-content li {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+            .presentation-slide-content {
+                padding: 20px;
+                font-size: 18px;
+            }
+            .presentation-slide-content h1 {
+                font-size: 32px;
+            }
+            .presentation-slide-content h2 {
+                font-size: 26px;
+            }
+            .presentation-slide-content li {
+                font-size: 20px;
+            }
+            .presentation-controls button {
+                padding: 10px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 0;
+            }
+            .header h1 i {
+                font-size: 1.2rem;
+            }
+            .header-btn {
+                padding: 9px 10px;
+            }
+            /* Keep icons only in the presentation controls */
+            .presentation-controls button {
+                font-size: 0;
+                padding: 12px 16px;
+            }
+            .presentation-controls button i {
+                font-size: 16px;
+            }
+        }
+
+        /* Short landscape phones: slimmer side strip */
+        @media (max-height: 500px) and (max-width: 1024px) {
+            .slides-panel {
+                width: 120px;
+                padding: 8px;
+            }
+            .slide-content {
+                padding: 16px;
+                font-size: 14px;
+            }
+            .slide-content h1 {
+                font-size: 28px;
+                margin-bottom: 10px;
+            }
+            .slide-content h2 {
+                font-size: 22px;
+            }
+            .slide-content li {
+                font-size: 16px;
+            }
+            .presentation-slide-content {
+                padding: 24px 32px;
+            }
         }
 
         /* Print Styles */

@@ -131,6 +131,11 @@
         .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         @media (max-width: 660px) { .converter { width: 100%; padding: 20px 16px; } }
+        @media (max-width: 480px) {
+            .select-row { flex-direction: column; align-items: stretch; gap: 8px; }
+            .select-row > * { width: 100%; }
+            .select-row .swap-btn { width: 42px; align-self: center; transform: rotate(90deg); }
+        }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
 </head>

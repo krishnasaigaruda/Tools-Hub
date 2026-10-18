@@ -243,6 +243,11 @@
             .result-value { font-size: 1.5rem; }
             .conversions-grid { grid-template-columns: 1fr; }
         }
+        @media (max-width: 480px) {
+            .selectors { flex-direction: column; align-items: stretch; gap: 8px; }
+            .selectors > * { width: 100%; }
+            .selectors .swap-btn { width: 42px; align-self: center; transform: rotate(90deg); }
+        }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
 </head>

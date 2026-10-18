@@ -782,6 +782,62 @@
             }
             .sidebar-resize { display: none; }
             .header-right { flex-wrap: wrap; }
+
+            /* Header: compact, keep icons */
+            .header { padding: 6px 10px; gap: 8px; }
+            .header-left { gap: 8px; min-width: 0; }
+            .header h1 { font-size: 15px; white-space: nowrap; }
+            .header-right { flex-wrap: nowrap; align-items: center; }
+            .header-autosave { display: none !important; }
+            .tbtn { min-width: 40px; min-height: 36px; font-size: 14px; }
+            .tbtn.mobile-files-btn { display: inline-block; }
+
+            /* Menu bar: larger tap targets */
+            .menu-item { padding: 9px 12px; font-size: 13px; }
+            .menu-dropdown { min-width: 0; width: max-content; max-width: calc(100vw - 16px); }
+            .menu-dd-item { padding: 10px 12px; font-size: 13px; gap: 16px; }
+
+            /* Sidebar becomes an off-canvas drawer */
+            .sidebar, .sidebar.hidden {
+                display: flex;
+                position: fixed;
+                top: 0; bottom: 0; left: 0;
+                width: min(280px, 85vw);
+                max-height: none;
+                z-index: 400;
+                border-right: 1px solid #334155;
+                border-bottom: none;
+                transform: translateX(-105%);
+                transition: transform .25s ease;
+                box-shadow: 4px 0 24px rgba(0,0,0,.5);
+            }
+            .sidebar.m-open { transform: translateX(0); }
+            .sidebar-backdrop.show { display: block; }
+            .tree-item { min-height: 40px; }
+
+            /* Editor */
+            .minimap { display: none; }
+            .tab { padding: 9px 12px; }
+            .find-panel { left: 8px; right: 8px; min-width: 0; }
+            .goto-dialog { width: min(300px, calc(100% - 32px)); }
+
+            /* Modals */
+            .run-panel { width: calc(100% - 24px); max-height: 85vh; overflow-y: auto; }
+            .shortcuts-panel { width: calc(100% - 24px); padding: 18px; }
+
+            /* Status bar: hide secondary counters */
+            .status-bar { gap: 8px; }
+            #statusChars, #statusWords { display: none; }
+        }
+        @media (max-width: 380px) {
+            .header h1 { font-size: 14px; }
+            .header h1 i { display: none; }
+            #statusLines { display: none; }
+        }
+        .mobile-files-btn { display: none; }
+        .sidebar-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 399;
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
@@ -795,7 +851,8 @@
         <h1><i class="fas fa-code"></i> Code Editor</h1>
     </div>
     <div class="header-right">
-        <span style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:5px;margin-right:8px;opacity:0.7;"><i class="fas fa-check-circle" style="color:#4ade80;font-size:10px;"></i> Autosaved</span>
+        <span class="header-autosave" style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:5px;margin-right:8px;opacity:0.7;"><i class="fas fa-check-circle" style="color:#4ade80;font-size:10px;"></i> Autosaved</span>
+        <button class="tbtn mobile-files-btn" onclick="toggleSidebar()" title="Files"><i class="fas fa-folder-open"></i></button>
         <button class="tbtn" onclick="toggleRunPanel()" title="Run" style="color:#4ade80;"><i class="fas fa-play"></i></button>
         <button class="tbtn" onclick="toggleShortcuts()" title="Keyboard Shortcuts"><i class="fas fa-keyboard"></i></button>
     </div>
@@ -841,6 +898,7 @@
 
 <!-- Main Wrapper -->
 <div class="main-wrapper">
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -1776,6 +1834,8 @@ function renderTabs() {
                 closeTab(parseInt(e.target.closest('.tab-close').dataset.id));
             } else {
                 setActive(f.id);
+                const sb = document.getElementById('sidebar');
+                if (sb.classList.contains('m-open')) toggleSidebar();
             }
         });
         bar.appendChild(div);
@@ -1795,6 +1855,8 @@ function renderFileList() {
                 closeTab(parseInt(e.target.closest('.tree-close').dataset.id));
             } else {
                 setActive(f.id);
+                const sb = document.getElementById('sidebar');
+                if (sb.classList.contains('m-open')) toggleSidebar();
             }
         });
         div.addEventListener('contextmenu', (e) => {
@@ -2520,6 +2582,11 @@ function outdentSelection() {
 // ── Toggle Functions ──
 function toggleSidebar() {
     const sb = document.getElementById('sidebar');
+    if (window.matchMedia('(max-width: 700px)').matches) {
+        const open = sb.classList.toggle('m-open');
+        document.getElementById('sidebarBackdrop').classList.toggle('show', open);
+        return;
+    }
     sb.classList.toggle('hidden');
     localStorage.setItem('ce_sidebarHidden', sb.classList.contains('hidden'));
 }

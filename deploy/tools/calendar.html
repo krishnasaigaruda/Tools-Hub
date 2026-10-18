@@ -761,29 +761,101 @@
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        .sidebar-toggle-btn { display: none; }
+        .sidebar-backdrop { display: none; }
+
+        @media (max-width: 900px) {
+            body {
+                display: flex;
+                flex-direction: column;
+                height: calc(var(--app-vh) * 100);
+                overflow: hidden;
+            }
+            .header { padding: 10px 14px; gap: 10px; flex-shrink: 0; }
+            .header-left { gap: 10px; min-width: 0; }
+            .header h1 { font-size: 1.15rem; white-space: nowrap; }
+            .header-right { gap: 6px; }
+            .header-btn { min-height: 40px; padding: 8px 12px; }
+            .header .sidebar-toggle-btn { display: flex; }
+
+            .main-container {
+                flex: 1;
+                height: auto;
+                min-height: 0;
+                position: relative;
+            }
             .sidebar {
                 position: absolute;
                 left: 0;
-                top: 56px;
-                height: calc(calc(var(--app-vh) * 100) - 56px);
+                top: 0;
+                height: 100%;
+                width: min(300px, 88vw);
                 z-index: 100;
-                transform: translateX(-100%);
+                transform: translateX(-105%);
                 transition: transform 0.3s;
+                overflow-y: auto;
             }
-
             .sidebar.open {
                 transform: translateX(0);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.2);
             }
+            .sidebar-backdrop.show {
+                display: block;
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0.35);
+                z-index: 99;
+            }
+            .upcoming-events { flex: none; overflow: visible; }
 
+            .calendar-area { min-width: 0; }
+            .calendar-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+            .calendar-title { font-size: 20px; }
+            .nav-btn { min-height: 40px; }
+            .view-btn { min-height: 34px; }
+            .calendar-grid-container { padding: 12px 16px; }
             .calendar-grid {
                 gap: 5px;
             }
-
             .day-cell {
                 min-height: 60px;
                 padding: 4px;
             }
+            .week-view.active { overflow-x: auto; }
+            .week-header, .week-grid { min-width: 620px; }
+        }
+
+        @media (max-width: 600px) {
+            .header-btn { font-size: 0; gap: 0; padding: 8px 11px; min-width: 40px; justify-content: center; }
+            .header-btn i { font-size: 15px; }
+            .calendar-header { padding: 10px 12px; }
+            .calendar-title { font-size: 18px; flex: 1 1 100%; }
+            .calendar-nav { width: 100%; gap: 8px; }
+            .nav-btn { font-size: 0; padding: 8px 14px; min-width: 44px; }
+            .nav-btn i { font-size: 14px; }
+            .view-toggle { margin-left: auto; }
+            .calendar-grid-container { padding: 8px; }
+            .calendar-grid { gap: 3px; height: auto; }
+            .day-header { font-size: 11px; padding: 6px 0; }
+            .day-cell { min-height: 56px; padding: 3px; border-radius: 6px; min-width: 0; }
+            .day-cell:hover { transform: none; }
+            .day-number { font-size: 12px; margin-bottom: 3px; }
+            .day-cell.today .day-number { width: 22px; height: 22px; }
+            .day-event { font-size: 9px; padding: 1px 3px; }
+            .day-event-more { font-size: 9px; }
+            .modal { padding: 20px; width: calc(100% - 24px); max-height: 88vh; border-radius: 12px; }
+            .modal-btn { flex: 1; }
+            .notification { left: 12px; right: 12px; top: 70px; }
+        }
+
+        @media (max-width: 420px) {
+            .header { padding: 8px 10px; }
+            .header-left, .header-right { gap: 6px; }
+            .back-btn span { display: none; }
+            .back-btn { min-width: 40px; min-height: 40px; justify-content: center; }
+            .header h1 { font-size: 1.05rem; }
+            .header h1 i { display: none; }
+            .modal-row { grid-template-columns: 1fr; }
         }
 
         /* Print Styles */
@@ -813,6 +885,9 @@
             <h1><i class="fas fa-calendar-alt"></i> Calendar</h1>
         </div>
         <div class="header-right">
+            <button class="header-btn sidebar-toggle-btn" onclick="toggleCalSidebar()" title="Add events &amp; mini calendar">
+                <i class="fas fa-bars"></i> Menu
+            </button>
             <button class="header-btn" onclick="goToToday()">
                 <i class="fas fa-calendar-day"></i> Today
             </button>
@@ -827,8 +902,9 @@
 
     <!-- Main Container -->
     <div class="main-container">
+        <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleCalSidebar(false)"></div>
         <!-- Sidebar -->
-        <div class="sidebar">
+        <div class="sidebar" id="calSidebar">
             <div class="sidebar-section">
                 <div class="sidebar-title">Quick Add</div>
                 <button class="quick-add-btn btn-reminder" onclick="openModal('reminder')">
@@ -1702,6 +1778,16 @@
                 closeModal();
             }
         });
+
+        // Mobile: off-canvas sidebar toggle
+        function toggleCalSidebar(force) {
+            const sb = document.getElementById('calSidebar');
+            const open = sb.classList.toggle('open', force);
+            document.getElementById('sidebarBackdrop').classList.toggle('show', open);
+        }
+        document.getElementById('calSidebar').addEventListener('click', (e) => {
+            if (e.target.closest('.quick-add-btn, .mini-day, .event-item')) toggleCalSidebar(false);
+        }, true);
 
         // Initialize
         init();

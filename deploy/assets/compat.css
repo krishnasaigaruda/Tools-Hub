@@ -135,7 +135,7 @@ body {
     overscroll-behavior-y: contain;
 }
 
-/* --- 6. Vendor prefixes still required in shipping browsers ---------------- */
+/* --- 6. Vendor prefixes still required in shipping browsers ----------------
    iOS Safari paints its own rounded, inset-shadowed chrome on text fields and
    buttons unless the appearance is reset. Text-entry controls only — selects,
    checkboxes, radios, ranges, colour and file pickers keep their native look

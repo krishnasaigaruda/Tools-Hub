@@ -360,7 +360,15 @@
             .matrices-area { flex-direction: column; align-items: center; }
             .matrix-panel, .result-panel { width: 100%; min-width: unset; }
             .ops-bar { gap: 6px; }
-            .ops-bar button { padding: 7px 12px; font-size: 0.75rem; }
+            .ops-bar button { padding: 7px 12px; font-size: 0.75rem; min-height: 36px; }
+            .matrix-grid-container { justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .matrix-actions button { min-height: 34px; }
+        }
+        @media (max-width: 480px) {
+            .matrix-panel, .result-panel { padding: 14px; }
+            .matrix-grid { gap: 3px; --cell-w: 40px; --res-w: auto; }
+            .matrix-grid input { width: 40px; height: 38px; }
+            .result-cell { width: auto; min-width: 40px; padding: 0 3px; font-size: 0.78rem; }
         }
     </style>
     <link rel="stylesheet" href="../assets/compat.css">
@@ -528,7 +536,7 @@
             const grid = document.createElement('div');
             grid.className = 'matrix-grid';
             grid.id = 'grid' + name;
-            grid.style.gridTemplateColumns = `repeat(${cols}, 54px)`;
+            grid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w, 54px))`;
 
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
@@ -630,7 +638,7 @@
 
             const grid = document.createElement('div');
             grid.className = 'matrix-grid';
-            grid.style.gridTemplateColumns = `repeat(${cols}, 64px)`;
+            grid.style.gridTemplateColumns = `repeat(${cols}, var(--res-w, 64px))`;
 
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
