@@ -1306,6 +1306,94 @@
             transition: color 0.15s, border-color 0.15s;
         }
         .top-link:hover { color: var(--text); border-color: var(--border-strong); }
+        button.top-link {
+            background: transparent;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* ======== CREDITS ======== */
+        .credits {
+            width: min(640px, calc(100% - 32px));
+            max-height: min(80vh, calc(var(--app-vh) * 85));
+            margin: auto;
+            padding: 0;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border-strong);
+            border-radius: 14px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+            overflow: hidden;
+        }
+        .credits[open] { display: flex; flex-direction: column; }
+        .credits::backdrop {
+            background: rgba(5,6,9,0.7);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+        }
+
+        .credits-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .credits-head h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+        .credits-head p { color: var(--text-3); font-size: 12.5px; margin-top: 3px; }
+
+        .credits-close {
+            flex-shrink: 0;
+            width: 34px; height: 34px;
+            display: grid;
+            place-items: center;
+            background: transparent;
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .credits-close:hover { color: var(--text); border-color: var(--border-strong); }
+
+        .credits-body {
+            overflow-y: auto;
+            padding: 6px 20px 20px;
+        }
+
+        .credits-body h3 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-3);
+            margin: 18px 0 6px;
+        }
+
+        .credit {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .credit:last-of-type { border-bottom: 0; }
+        .credit a { font-weight: 600; color: var(--text); }
+        .credit a:hover { color: #a5b4fc; }
+        .credit-ver { color: var(--text-3); font-size: 12px; margin-left: 4px; }
+        .credit-use { display: block; color: var(--text-2); font-size: 12.5px; margin-top: 2px; }
+        .credit-lic {
+            flex-shrink: 0;
+            font-size: 11.5px;
+            color: var(--text-2);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 7px;
+            white-space: nowrap;
+        }
 
         /* Compact search in the bar, shown once the hero search scrolls away */
         .topbar .search {
@@ -1706,7 +1794,9 @@
             .top-link span { display: none; }
             .topbar .search { width: auto; flex: 1; }
             .top-actions { flex: 1; }
-            .top-actions .top-link { margin-left: auto; }
+            .top-actions .search + .top-link { margin-left: auto; }
+            .credits-head, .credits-body { padding-left: 16px; padding-right: 16px; }
+            .credit { flex-direction: column; gap: 6px; }
             .search kbd { display: none; }
             .hero { padding: 88px 0 24px; }
             .hero .search input { height: 48px; font-size: 16px; }
@@ -1729,10 +1819,45 @@
                     <input type="search" class="js-search" placeholder="Search tools" aria-label="Search tools" autocomplete="off" tabindex="-1">
                     <kbd>/</kbd>
                 </div>
+                <button type="button" class="top-link" id="creditsBtn" aria-haspopup="dialog"><i class="fas fa-heart" aria-hidden="true"></i><span>Credits</span></button>
                 <a class="top-link" href="https://github.com/krishnasaigaruda/Tools-Hub" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i><span>GitHub</span></a>
             </div>
         </div>
     </header>
+
+    <dialog class="credits" id="credits" aria-labelledby="creditsTitle">
+        <div class="credits-head">
+            <div>
+                <h2 id="creditsTitle">Credits</h2>
+                <p>Open-source libraries, fonts and services that power Tools Hub.</p>
+            </div>
+            <button type="button" class="credits-close" id="creditsClose" aria-label="Close credits"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+        </div>
+        <div class="credits-body">
+            <h3>JavaScript libraries</h3>
+            <div class="credit"><div><a href="https://github.com/eKoopmans/html2pdf.js" target="_blank" rel="noopener">html2pdf.js</a><span class="credit-ver">0.10.1</span><span class="credit-use">PDF export in Document, Notes, Notebook, Presentation, Spreadsheet, Forms and Quiz</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a><span class="credit-ver">3.10.1</span><span class="credit-use">Zip export in Notes and Notebook</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://github.com/exceljs/exceljs" target="_blank" rel="noopener">ExcelJS</a><span class="credit-ver">4.4.0</span><span class="credit-use">Excel import and export in Spreadsheet</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://github.com/eligrey/FileSaver.js" target="_blank" rel="noopener">FileSaver.js</a><span class="credit-ver">2.0.5</span><span class="credit-use">File downloads in Spreadsheet</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://threejs.org/" target="_blank" rel="noopener">Three.js</a><span class="credit-ver">0.160.0</span><span class="credit-use">3D dice in Dice Roller</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://github.com/kazuhikoarase/qrcode-generator" target="_blank" rel="noopener">QR Code Generator</a><span class="credit-ver">1.4.4</span><span class="credit-use">QR codes in QR Generator</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://opentype.js.org/" target="_blank" rel="noopener">opentype.js</a><span class="credit-ver">1.3.4</span><span class="credit-use">Font building in Handwriting Font</span></div><span class="credit-lic">MIT</span></div>
+            <div class="credit"><div><a href="https://github.com/peterkhayes/pitchfinder" target="_blank" rel="noopener">pitchfinder</a><span class="credit-ver">2.3.4</span><span class="credit-use">YIN pitch detection in Tuner (ported from aubio by Paul Brossier)</span></div><span class="credit-lic">GPL-3.0</span></div>
+
+            <h3>Icons &amp; fonts</h3>
+            <div class="credit"><div><a href="https://fontawesome.com/" target="_blank" rel="noopener">Font Awesome Free</a><span class="credit-ver">6.5.1</span><span class="credit-use">Icons across every tool</span></div><span class="credit-lic">CC BY 4.0 · OFL · MIT</span></div>
+            <div class="credit"><div><a href="https://fonts.google.com/" target="_blank" rel="noopener">Google Fonts</a><span class="credit-use">Inter, Outfit, JetBrains Mono, DM Sans, Space Grotesk, IBM Plex Mono, plus the font catalogue in Font Explorer and Font Preview</span></div><span class="credit-lic">SIL OFL 1.1</span></div>
+
+            <h3>Data &amp; services</h3>
+            <div class="credit"><div><a href="https://github.com/fawazahmed0/exchange-api" target="_blank" rel="noopener">Currency API</a><span class="credit-use">Exchange rates in Currency Converter, by Fawaz Ahmed</span></div><span class="credit-lic">CC0</span></div>
+            <div class="credit"><div><a href="https://dictionaryapi.dev/" target="_blank" rel="noopener">Free Dictionary API</a><span class="credit-use">Definitions in Dictionary and Thesaurus</span></div><span class="credit-lic">CC BY-SA 3.0</span></div>
+            <div class="credit"><div><a href="https://en.wiktionary.org/" target="_blank" rel="noopener">Wiktionary</a><span class="credit-use">Definitions in Dictionary and Thesaurus, by Wiktionary contributors</span></div><span class="credit-lic">CC BY-SA</span></div>
+            <div class="credit"><div><a href="https://www.datamuse.com/api/" target="_blank" rel="noopener">Datamuse API</a><span class="credit-use">Synonyms and related words in Thesaurus</span></div><span class="credit-lic">Free API</span></div>
+            <div class="credit"><div><a href="https://mymemory.translated.net/" target="_blank" rel="noopener">MyMemory</a><span class="credit-use">Translations in Translator, by Translated</span></div><span class="credit-lic">Free API</span></div>
+            <div class="credit"><div><a href="https://github.com/thedaviddelta/lingva-translate" target="_blank" rel="noopener">Lingva Translate</a><span class="credit-use">MP3 audio download in Text to Speech</span></div><span class="credit-lic">AGPL-3.0</span></div>
+            <div class="credit"><div><a href="https://images-of-elements.com/" target="_blank" rel="noopener">Images of Elements</a> &amp; <a href="https://periodictable.com/" target="_blank" rel="noopener">periodictable.com</a><span class="credit-use">Element photos in Periodic Table</span></div><span class="credit-lic">Photos</span></div>
+        </div>
+    </dialog>
 
     <div class="hero" id="hero">
         <div class="wrap">
@@ -1905,6 +2030,14 @@
     </footer>
 
     <script>
+        (function () {
+            const credits = document.getElementById('credits');
+            document.getElementById('creditsBtn').addEventListener('click', () => credits.showModal());
+            document.getElementById('creditsClose').addEventListener('click', () => credits.close());
+            // Clicking the backdrop (the dialog element itself, outside its content) closes it.
+            credits.addEventListener('click', e => { if (e.target === credits) credits.close(); });
+        })();
+
         (function () {
             const heroBox = document.getElementById('searchBox');
             const boxes = Array.from(document.querySelectorAll('.js-search'));
